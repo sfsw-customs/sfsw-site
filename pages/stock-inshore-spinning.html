@@ -107,15 +107,15 @@
   // ════════════════════════════════════════════════════════════════
   const BLANK = 'Rainshadow SP';
   const DESCRIPTION = "Our go-to South Florida inshore and nearshore spinning rod. The Rainshadow SP has a responsive tip that throws light jigs and live bait a mile, with enough backbone to pull snapper out of structure and handle a hot jack or mackerel on the run. Light, sensitive and built to take the salt — a do-it-all rod for the bridges, inlets, piers and reef edges.";
-  const REEL_RANGE = '2000 – 4000 size';
+  const REEL_RANGE = '2000 – 4000 size reels';
   const SPECIES = ['Mangrove Snapper', 'Yellowtail Snapper', 'Jacks', 'Spanish Mackerel', 'Cero Mackerel',
                    'Snook', 'Seatrout', 'Redfish', 'Pompano', 'Bluefish', 'Ladyfish'];
   const SIZES = [
-    { length: "7'0", lineWt: '8-17lb',  lureWt: '0.25-0.75oz', blankWt: '1.7oz', adder: 0,  reel: '2000–3000' },
-    { length: "7'0", lineWt: '10-20lb', lureWt: '0.5-0.75oz',  blankWt: '1.8oz', adder: 0,  reel: '3000–4000' },
-    { length: "7'0", lineWt: '12-25lb', lureWt: '0.75-1.0oz',  blankWt: '2.2oz', adder: 0,  reel: '4000' },
-    { length: "8'0", lineWt: '8-17lb',  lureWt: '0.25-0.75oz', blankWt: '2.2oz', adder: 10, reel: '2500–3000' },
-    { length: "8'0", lineWt: '10-20lb', lureWt: '0.5-0.75oz',  blankWt: '2.3oz', adder: 15, reel: '3000–4000' },
+    { length: "7'0", lineWt: '8-17lb',  lureWt: '0.25-0.75oz', blankWt: '1.7oz', adder: 0 },
+    { length: "7'0", lineWt: '10-20lb', lureWt: '0.5-0.75oz',  blankWt: '1.8oz', adder: 0 },
+    { length: "7'0", lineWt: '12-25lb', lureWt: '0.75-1.0oz',  blankWt: '2.2oz', adder: 0 },
+    { length: "8'0", lineWt: '8-17lb',  lureWt: '0.25-0.75oz', blankWt: '2.2oz', adder: 10 },
+    { length: "8'0", lineWt: '10-20lb', lureWt: '0.5-0.75oz',  blankWt: '2.3oz', adder: 15 },
   ];
   const MODELS = [
     { id: 'standard', tier: 'Standard', price: 250, photo: null,
@@ -152,7 +152,6 @@
         <div class="len">${s.length}"</div>
         <div class="lw">${s.lineWt}</div>
         <div class="meta">Lure ${s.lureWt} · Blank ${s.blankWt}</div>
-        <div class="reel">Reel ${s.reel}</div>
         ${s.adder ? `<div class="add">+$${s.adder}</div>` : ''}
       </button>`).join('');
   }
@@ -170,7 +169,6 @@
           <span class="stock-tier">${m.tier}</span>
           <div class="stock-name">${m.tier} Inshore Spinning</div>
           <div class="stock-size">${s.length}" · ${s.lineWt} · Lure ${s.lureWt}</div>
-          <div class="stock-reel">Pairs with a ${s.reel} size reel</div>
           <div class="stock-price">$${price}</div>
           ${body}
           ${m.specs
@@ -193,7 +191,7 @@
       lureLabel: 'Lure Rating',
       lines: [
         { label: 'Model', value: `${m.tier} (stock build)` },
-        { label: 'Recommended Reel', value: `${s.reel} size` },
+        { label: 'Recommended Reel', value: REEL_RANGE },
         { label: 'Blank', value: `${BLANK} — ${s.length} · ${s.lineWt}  (Lure ${s.lureWt}, ${s.blankWt})` + (s.adder ? `  +$${s.adder}` : '') },
         ...m.specs.filter(([k]) => k !== 'Blank').map(([k, v]) => ({ label: k, value: v })),
       ],
