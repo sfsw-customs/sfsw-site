@@ -14,13 +14,19 @@ const SHIPPING_COST = 55;
 //           amount off the order once. The flat amount is the highest tier any
 //           eligible rod qualifies for (tiers by rodType, else tierDefault).
 //           Performance-only builds are excluded from the whole calculation.
+//   type 'wrapSale': percent off every upgraded Rod Wrap, and 100% off the
+//           Rod Wraps named in freeWraps. Split Wraps, Guide Wraps, Abalone and
+//           Performance-only builds are not discounted.
 const PROMO_CODES = {
   'SFRW50':    { type: 'flat',    value: 50,  target: 'rodwrap' },
   'SFSWLC':    { type: 'wrapPlusTier',
                  tiers: { 'Finesse': 25, 'Inshore Spinning': 25 },
                  tierDefault: 50 },
   'SFSW2100':  { type: 'flat',    value: 100, minItems: 2 },
-  'SFLD50':    { type: 'flat',    value: 50,  target: 'rodwrap', expires: '2026-10-01' }
+  'SFLD50':    { type: 'flat',    value: 50,  target: 'rodwrap', expires: '2026-10-01' },
+  '50WRAPS':   { type: 'wrapSale', percent: 50,
+                 freeWraps: ['Snowflake Wrap', '2 Axis Cross Wrap'],
+                 expires: '2026-11-30' }
 };
 
 // Performance-only builds are the ones carrying a "Performance Discount" line.
@@ -38,6 +44,26 @@ function wrapPlusTierDiscount(promo, items, rodSubtotal) {
       ? promo.tiers[it.rodType]
       : promo.tierDefault));
   return Math.min(wrapCost + tier, rodSubtotal);
+}
+
+// 'wrapSale': percent off each upgraded Rod Wrap, free for the wraps in freeWraps.
+// Reads the "+$NN" adder from each item's Rod Wrap line (e.g. "Snowflake Wrap  +$100").
+function wrapSaleDiscount(promo, items) {
+  let d = 0;
+  (items || []).forEach(item => {
+    if (isPerformanceItem(item)) return;
+    (item.lines || []).forEach(l => {
+      if (l.label !== 'Rod Wrap') return;
+      const v = String(l.value);
+      if (v.includes('Abalone')) return;
+      const m = v.match(/\+\$([\d.]+)/);
+      if (!m) return;
+      const adder = parseFloat(m[1]);
+      const free = (promo.freeWraps || []).some(n => v.startsWith(n));
+      d += free ? adder : adder * (promo.percent || 0) / 100;
+    });
+  });
+  return Math.round(d * 100) / 100;
 }
 
 function wrapTargetLabel(target) { return target === 'splitwrap' ? 'Split Wrap' : 'Rod Wrap'; }
@@ -104,6 +130,12 @@ exports.handler = async function(event) {
       if (qualifies && promo.type === 'shipping') {
         appliedPromoCode = String(promoCode).trim().toUpperCase();
         shipping = 0;
+      } else if (qualifies && promo.type === 'wrapSale') {
+        const d = Math.min(wrapSaleDiscount(promo, items), rodSubtotal);
+        if (d > 0) {
+          appliedPromoCode = String(promoCode).trim().toUpperCase();
+          discount = d;
+        }
       } else if (qualifies && promo.type === 'wrapPlusTier') {
         const d = wrapPlusTierDiscount(promo, items, rodSubtotal);
         if (d > 0) {

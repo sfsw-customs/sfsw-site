@@ -408,7 +408,12 @@ function buildNav(activePage) {
   ];
   const isStockPage = stockLinks.some(r => r.label === activePage);
 
-  const html = `<div class="promo-banner"><strong>$50 OFF</strong> Rod Wraps — use code <span class="promo-code">SFLD50</span> at checkout — ends 10/01</div>
+  // Top promo banner — hides itself automatically after NAV_PROMO_UNTIL.
+  const NAV_PROMO_UNTIL = '2026-11-30T23:59:59';
+  const navPromo = Date.now() <= new Date(NAV_PROMO_UNTIL).getTime()
+    ? `<div class="promo-banner"><strong>50% OFF</strong> Rod Wraps + <strong>FREE</strong> Snowflake &amp; 2 Axis Cross Wraps — use code <span class="promo-code">50WRAPS</span> at checkout — November only</div>`
+    : '';
+  const html = `${navPromo}
   <nav class="nav">
     <a href="../index.html" class="nav-logo">
       <span class="nav-logo-main">SFSW</span>

@@ -445,6 +445,9 @@
   //   minItems: minimum number of rods required in cart to apply
   //   perItem: true — value = $ off EACH rod in cart (requires minItems)
   //   extraPerItem: value = $ off total, PLUS this many $ off each rod beyond minItems
+  //   type 'wrapSale': percent off every upgraded Rod Wrap, and 100% off the
+  //           Rod Wraps named in freeWraps. Split Wraps, Guide Wraps, Abalone and
+  //           Performance-only builds are not discounted.
   // Keep this in sync with PROMO_CODES in netlify/functions/create-checkout.js.
   const PROMO_CODES = {
     'SFRW50':    { type: 'flat',    value: 50,  target: 'rodwrap' },
@@ -452,7 +455,10 @@
                    tiers: { 'Finesse': 25, 'Inshore Spinning': 25 },
                    tierDefault: 50 },
     'SFSW2100':  { type: 'flat',    value: 100, minItems: 2 },
-    'SFLD50':    { type: 'flat',    value: 50,  target: 'rodwrap', expires: '2026-10-01' }
+    'SFLD50':    { type: 'flat',    value: 50,  target: 'rodwrap', expires: '2026-10-01' },
+    '50WRAPS':   { type: 'wrapSale', percent: 50,
+                   freeWraps: ['Snowflake Wrap', '2 Axis Cross Wrap'],
+                   expires: '2026-11-30' }
   };
   let appliedPromo = null; // { code, type, value, minItems?, target?, perItem?, extraPerItem? }
 
@@ -479,9 +485,33 @@
     return (item.lines || []).some(l => l.label === 'Performance Discount');
   }
 
+  // 'wrapSale': percent off each upgraded Rod Wrap, free for the wraps in freeWraps.
+  // Reads the "+$NN" adder from each item's Rod Wrap line (e.g. "Snowflake Wrap  +$100").
+  function wrapSaleDiscount(promo, items) {
+    let d = 0;
+    (items || []).forEach(item => {
+      if (isPerformanceItem(item)) return;
+      (item.lines || []).forEach(l => {
+        if (l.label !== 'Rod Wrap') return;
+        const v = String(l.value);
+        if (v.includes('Abalone')) return;
+        const m = v.match(/\+\$([\d.]+)/);
+        if (!m) return;
+        const adder = parseFloat(m[1]);
+        const free = (promo.freeWraps || []).some(n => v.startsWith(n));
+        d += free ? adder : adder * (promo.percent || 0) / 100;
+      });
+    });
+    return Math.round(d * 100) / 100;
+  }
+
   function getPromoEffect(promo, cart, rodSubtotal) {
     if (!promo) return { discount: 0, freeShipping: false };
     if (promo.type === 'shipping') return { discount: 0, freeShipping: true };
+    if (promo.type === 'wrapSale') {
+      const d = Math.min(wrapSaleDiscount(promo, cart), rodSubtotal);
+      return d > 0 ? { discount: d, freeShipping: false } : { discount: 0, freeShipping: false, ineligible: true };
+    }
     if (promo.type === 'wrapPlusTier') {
       const eligible = (cart || []).filter(it => !isPerformanceItem(it));
       if (!eligible.length) return { discount: 0, freeShipping: false, ineligible: true };
@@ -566,6 +596,12 @@
       msg.style.display = 'block';
       return;
     }
+    if (promo.type === 'wrapSale' && wrapSaleDiscount(promo, cart) <= 0) {
+      msg.textContent = 'This code requires an upgraded Rod Wrap on your order (Split Wraps and Abalone are not included).';
+      msg.style.color = '#f87171';
+      msg.style.display = 'block';
+      return;
+    }
     if (promo.target && sumLineAdder(cart, wrapTargetLabel(promo.target)) <= 0) {
       msg.textContent = 'This code requires an upgraded ' + wrapTargetLabel(promo.target) + ' on your order.';
       msg.style.color = '#f87171';
@@ -577,7 +613,8 @@
     input.disabled = true;
     btn.textContent = 'Remove';
     msg.textContent = 'Code "' + code + '" applied — ' +
-      (promo.type === 'wrapPlusTier' ? 'free Rod Wrap upgrade, plus up to $' + promo.tierDefault + ' off your build.' :
+      (promo.type === 'wrapSale' ? promo.percent + '% off Rod Wrap upgrades, and Snowflake & 2 Axis Cross Wraps are free.' :
+       promo.type === 'wrapPlusTier' ? 'free Rod Wrap upgrade, plus up to $' + promo.tierDefault + ' off your build.' :
        promo.type === 'shipping' ? 'free shipping.' :
        promo.perItem      ? '$' + promo.value + ' off each rod.' :
        promo.extraPerItem ? '$' + promo.value + ' off, plus $' + promo.extraPerItem + ' off each additional rod.' :
