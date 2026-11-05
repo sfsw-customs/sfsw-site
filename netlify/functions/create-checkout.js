@@ -24,6 +24,9 @@ const PROMO_CODES = {
 };
 
 // Performance-only builds are the ones carrying a "Performance Discount" line.
+// Stock (set-spec) rods never get promo discounts — promos are for custom builds only.
+function isStockItem(item) { return /^Stock\b/.test(String(item.rodType || '')); }
+
 function isPerformanceItem(item) {
   return (item.lines || []).some(l => l.label === 'Performance Discount');
 }
@@ -45,7 +48,7 @@ function wrapPlusTierDiscount(promo, items, rodSubtotal) {
 function wrapSaleDiscount(promo, items) {
   let d = 0;
   (items || []).forEach(item => {
-    if (isPerformanceItem(item)) return;
+    if (isPerformanceItem(item) || isStockItem(item)) return;
     (item.lines || []).forEach(l => {
       if (l.label !== 'Rod Wrap') return;
       const v = String(l.value);
