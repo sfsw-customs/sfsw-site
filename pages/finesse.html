@@ -1,0 +1,2323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Finesse — SFSW</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/favicon-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="../css/global.css">
+  <style>
+    .config-wrap{max-width:1200px;margin:0 auto;padding:0 2rem}
+
+    /* Desktop: strip stays above the steps in the left column, sidebar stays to the right */
+    .configurator-layout{grid-template-areas:"strip sidebar" "steps sidebar"}
+    .build-strip{grid-area:strip}
+    .cfg-steps{grid-area:steps}
+    .config-sidebar{grid-area:sidebar}
+
+    /* Mobile/tablet (matches global.css's single-column breakpoint): steps first,
+       then the build-strip photos as a "here's your build" recap, then the
+       summary + Add to Cart — instead of 3 full-height photos before any choices. */
+    @media (max-width:900px){
+      .configurator-layout{grid-template-areas:"steps" "strip" "sidebar"}
+    }
+
+    /* Build strip — top showcase of 3 selected photos */
+    .build-strip{background:var(--c-dark2);border:1px solid var(--c-border);border-radius:var(--radius-md);padding:18px;margin-bottom:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(max(130px,31%),1fr));gap:12px}
+    .build-strip-slot{background:radial-gradient(ellipse at center,#25282d 0%,#15171a 70%);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;align-items:center;min-height:200px}
+    .build-strip-img-wrap{flex:1;width:100%;display:flex;align-items:center;justify-content:center;height:130px}
+    .build-strip-img-wrap img{max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 6px 16px rgba(0,0,0,.55))}
+    .build-strip-img-wrap.empty{color:var(--c-muted);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-family:var(--font-cond)}
+    .build-strip-caption{margin-top:10px;text-align:center;width:100%}
+    .build-strip-label{font-family:var(--font-cond);font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--c-gold);margin-bottom:3px}
+    .build-strip-name{font-size:12px;color:var(--c-text);line-height:1.35}
+
+    /* Blank cards */
+    .blank-cards{display:flex;flex-direction:column;gap:8px}
+    .blank-card{background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius-md);padding:12px 14px;cursor:pointer;transition:border-color .15s,background .15s}
+    .blank-card:hover{border-color:var(--c-border2)}
+    .blank-card.selected{border-color:var(--c-gold);background:rgba(201,148,26,.06)}
+    .blank-card-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+    .blank-card-name{font-family:var(--font-cond);font-size:15px;font-weight:600;color:var(--c-text);letter-spacing:.04em}
+    .blank-card-price{font-family:var(--font-cond);font-size:14px;font-weight:600;color:var(--c-gold)}
+    .blank-card-price-orig{font-family:var(--font-cond);font-size:12px;font-weight:600;color:var(--c-muted);text-decoration:line-through;margin-right:5px}
+    .blank-card-made{font-family:var(--font-cond);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--c-teal-light);margin-bottom:6px}
+    .blank-card-desc{font-size:12px;color:var(--c-muted);line-height:1.55;margin:4px 0 8px}
+    .variant-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+    .variant-table thead th{font-family:var(--font-cond);font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--c-gold);text-align:left;padding:10px 12px;border-bottom:1px solid var(--c-border);background:rgba(0,0,0,.18)}
+    .variant-table thead th.radio-th{width:34px;padding-left:14px;padding-right:0}
+    .variant-table tbody tr.variant-row{cursor:pointer;border-bottom:1px solid var(--c-border);transition:background .15s}
+    .variant-table tbody tr.variant-row:hover{background:rgba(255,255,255,.025)}
+    .variant-table tbody tr.variant-row.checked{background:rgba(201,148,26,.07)}
+    .variant-table tbody tr.variant-row:last-child{border-bottom:none}
+    .variant-table tbody td{padding:10px 12px;color:var(--c-muted)}
+    .variant-table tbody tr.variant-row.checked td{color:var(--c-text)}
+    .variant-table td.radio-cell{width:34px;padding-left:14px;padding-right:0}
+    .variant-table .radio-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--c-muted);display:inline-block;position:relative;vertical-align:middle;transition:border-color .15s}
+    .variant-table tr.variant-row:hover .radio-dot{border-color:var(--c-text)}
+    .variant-table tr.variant-row.checked .radio-dot{border-color:var(--c-gold)}
+    .variant-table tr.variant-row.checked .radio-dot::after{content:'';width:7px;height:7px;border-radius:50%;background:var(--c-gold);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+    .variant-adder{color:var(--c-gold);font-size:11px;margin-left:6px;font-family:var(--font-cond);font-weight:600}
+    .blank-specs-toggle{display:flex;align-items:center;gap:6px;margin-top:8px;padding:7px 0 2px;cursor:pointer;color:var(--c-muted);font-family:var(--font-cond);font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;border-top:1px solid var(--c-border);user-select:none;transition:color .15s}
+    .blank-specs-toggle:hover{color:var(--c-gold)}
+    .blank-specs-chevron{font-size:10px;transition:transform .2s;display:inline-block}
+    .blank-specs-chevron.open{transform:rotate(180deg)}
+    .blank-specs-body{display:none;margin-top:4px}
+    .blank-specs-body.open{display:block}
+    .blank-variant-pill{display:inline-block;margin-top:4px;font-size:11px;color:var(--c-muted);background:rgba(255,255,255,.05);border:1px solid var(--c-border);border-radius:4px;padding:3px 8px;font-family:var(--font-cond);letter-spacing:.04em}
+
+    /* Section accordion */
+    .cfg-section{background:var(--c-dark2);border:1px solid var(--c-border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:10px}
+    .cfg-section-head{display:flex;justify-content:space-between;align-items:center;min-width:0;padding:12px 16px;cursor:pointer;user-select:none}
+    .cfg-section-head:hover{background:rgba(255,255,255,.02)}
+    .cfg-section-head-left{display:flex;align-items:center;gap:12px;min-width:0}
+    .cfg-section-label{font-family:var(--font-cond);font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--c-gold);white-space:nowrap;flex-shrink:0}
+    .cfg-section-chosen{font-size:13px;color:var(--c-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto}
+    .cfg-section-chevron{color:var(--c-muted);font-size:12px;transition:transform .2s;margin-left:8px;flex-shrink:0}
+    .cfg-section-chevron.open{transform:rotate(180deg)}
+    .cfg-section-body{padding:14px 16px;display:none;border-top:1px solid var(--c-border)}
+    .cfg-section-body.open{display:block}
+
+    /* Option list items */
+    .option-list{display:flex;flex-direction:column;gap:6px}
+    .option-item{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 12px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius);cursor:pointer;font-size:13px;transition:border-color .15s}
+    .option-item:hover{border-color:var(--c-border2)}
+    .option-item.selected{border-color:var(--c-gold);background:rgba(201,148,26,.05)}
+    .option-item-body{display:flex;flex-direction:column;min-width:0;flex:1}
+    .option-item-name{color:var(--c-text)}
+    .option-item-desc{font-size:11.5px;color:var(--c-muted);line-height:1.5;margin-top:3px}
+    .option-item-price{font-family:var(--font-cond);font-size:12px;font-weight:600;color:var(--c-gold);flex-shrink:0;margin-left:1rem;padding-top:1px}
+    .sub-group{margin-bottom:16px}
+    .sub-group:last-child{margin-bottom:0}
+    .sub-group-label{font-family:var(--font-cond);font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--c-muted);margin-bottom:7px}
+    .guide-group-label{font-family:var(--font-cond);font-size:13px;font-weight:600;color:var(--c-text);margin-bottom:4px;padding-bottom:0;border-bottom:none}
+    .guide-group-desc{font-size:11.5px;color:var(--c-muted);line-height:1.5;margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--c-border);font-style:italic}
+
+    /* Shared photo preview — seat / grip / guide */
+    .seat-preview,.grip-preview,.guide-preview{background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius-md);padding:14px;margin-bottom:14px}
+    .seat-photo-wrap,.grip-photo-wrap,.guide-photo-wrap{background:radial-gradient(ellipse at center,#25282d 0%,#15171a 70%);border-radius:var(--radius);padding:1.25rem;display:flex;align-items:center;justify-content:center;height:260px}
+    .seat-photo-wrap img,.grip-photo-wrap img,.guide-photo-wrap img{max-width:100%;max-height:300px;width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 6px 16px rgba(0,0,0,.55))}
+    .grip-photo-cork-strip{display:flex;align-items:center;justify-content:center;gap:.6rem;width:100%;height:100%;flex-wrap:nowrap}
+    .grip-photo-cork-strip-item{display:flex;flex-direction:column;align-items:center;gap:.4rem;flex:1 1 0;min-width:0;max-width:150px}
+    .grip-photo-cork-strip-item img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;border:2px solid var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.18),0 6px 16px rgba(0,0,0,.55)}
+    .grip-photo-cork-strip-name{font-family:var(--font-cond);font-size:11px;font-weight:600;letter-spacing:.05em;color:var(--c-text)}
+    .grip-photo-cork-strip-empty{font-size:12.5px;color:var(--c-muted);text-align:center}
+    .seat-meta,.grip-meta,.guide-meta{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-top:12px;flex-wrap:wrap}
+    .seat-meta-left,.grip-meta-left,.guide-meta-left{flex:1;min-width:0}
+    .seat-meta-name,.grip-meta-name,.guide-meta-name{font-family:var(--font-cond);font-size:16px;font-weight:600;color:var(--c-text);letter-spacing:.03em}
+    .seat-meta-price,.grip-meta-price,.guide-meta-price{font-family:var(--font-cond);font-size:14px;font-weight:600;color:var(--c-gold);margin-left:.6rem}
+    .seat-meta-desc,.grip-meta-desc,.guide-meta-desc{font-size:12px;color:var(--c-muted);line-height:1.55;margin-top:6px}
+    .seat-color-block,.guide-color-block{text-align:right;min-width:180px}
+    .seat-color-label,.guide-color-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--c-muted);margin-bottom:6px}
+    .seat-swatch-row,.guide-swatch-row{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+    .seat-swatch,.guide-swatch{width:28px;height:28px;border-radius:50%;border:2px solid var(--c-border);cursor:pointer;transition:transform .15s,border-color .15s;position:relative}
+    .seat-swatch:hover,.guide-swatch:hover{transform:scale(1.1)}
+    .seat-swatch.active,.guide-swatch.active{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.25)}
+    @media (hover:hover) and (pointer:fine){.seat-swatch[title]:hover::after,.guide-swatch[title]:hover::after{content:attr(title);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#000;color:#fff;padding:3px 7px;font-size:10.5px;border-radius:3px;white-space:nowrap;pointer-events:none;z-index:10}}
+    .seat-color-name,.guide-color-name{font-size:11px;color:var(--c-muted);margin-top:6px}
+    .grip-variant-block{margin-top:1.25rem;padding:1rem 1.1rem;background:var(--c-dark2);border:1px solid var(--c-border);border-radius:var(--radius)}
+    .grip-variant-label{font-family:var(--font-cond);font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--c-gold);margin-bottom:.85rem;display:flex;justify-content:space-between;align-items:baseline;gap:.75rem}
+    .grip-variant-current{font-size:11.5px;color:var(--c-muted);font-weight:500;letter-spacing:.05em;text-transform:none;font-family:var(--font-base,inherit)}
+    .grip-variant-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:.55rem}
+    .grip-variant-item{cursor:pointer;border:2px solid var(--c-border);border-radius:6px;overflow:hidden;background:#15171a;transition:border-color .15s,transform .15s;display:flex;flex-direction:column}
+    .grip-variant-item:hover{border-color:rgba(201,148,26,.45);transform:translateY(-2px)}
+    .grip-variant-item.active{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.18)}
+    .grip-variant-item img{width:100%;height:54px;object-fit:cover;display:block;background:#1a1d22}
+    .grip-variant-item .vname{font-size:10.5px;color:var(--c-muted);text-align:center;padding:4px 4px 5px;line-height:1.2;letter-spacing:.02em}
+    .grip-variant-item.active .vname{color:var(--c-text)}
+    .ccork-selected-strip{display:flex;gap:.6rem;margin-bottom:.9rem;flex-wrap:wrap}
+    .ccork-selected-thumb{position:relative;width:72px;border:2px solid var(--c-gold);border-radius:6px;overflow:hidden;background:#15171a;box-shadow:0 0 0 2px rgba(201,148,26,.18)}
+    .ccork-selected-thumb img{width:100%;height:54px;object-fit:cover;display:block}
+    .ccork-selected-name{font-size:9.5px;color:var(--c-text);text-align:center;padding:3px 3px 4px;line-height:1.15}
+    .ccork-selected-remove{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:11px;line-height:16px;text-align:center;cursor:pointer}
+    .ccork-pieces{display:flex;flex-direction:column;gap:.55rem}
+    .ccork-section{margin-bottom:.9rem}
+    .ccork-section:last-of-type{margin-bottom:0}
+    .ccork-section-head{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;margin-bottom:.4rem}
+    .ccork-section-title{font-family:var(--font-cond);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--c-gold)}
+    .ccork-optional{font-family:var(--font-body);font-size:9.5px;font-weight:400;letter-spacing:.08em;text-transform:none;color:var(--c-muted);font-style:italic;margin-left:5px}
+    .ccork-section-sum{font-family:var(--font-cond);font-size:11.5px;font-weight:600;color:var(--c-muted);letter-spacing:.03em;white-space:nowrap}
+    .ccork-empty{border:1px dashed var(--c-border);border-radius:6px;padding:.7rem;text-align:center;font-size:11.5px;color:var(--c-dim);font-style:italic}
+    .ccork-piece{display:flex;gap:.85rem;align-items:center;background:#15171a;border:1px solid var(--c-border);border-radius:6px;padding:.55rem .75rem;cursor:pointer;transition:border-color .15s}
+    .ccork-piece:hover{border-color:rgba(201,148,26,.45)}
+    .ccork-piece.active{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.15)}
+    .ccork-piece-thumb{width:54px;height:54px;border-radius:4px;object-fit:cover;flex-shrink:0;background:#1a1d22;cursor:zoom-in}
+    .ccork-piece-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:.4rem}
+    .ccork-piece-row1{display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+    .ccork-piece-name{font-family:var(--font-cond);font-size:13.5px;font-weight:600;color:var(--c-text);letter-spacing:.02em}
+    .ccork-piece-row2{display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap}
+    .ccork-piece-fee{font-family:var(--font-cond);font-size:13px;font-weight:600;color:var(--c-gold);letter-spacing:.02em}
+    .ccork-stepper{display:inline-flex;align-items:center;gap:.4rem;background:#0e1013;border:1px solid var(--c-border);border-radius:5px;padding:3px 5px}
+    .ccork-step-btn{background:transparent;border:1px solid var(--c-border);color:var(--c-text);width:28px;height:28px;border-radius:4px;font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s,background .15s}
+    .ccork-step-btn:hover:not(:disabled){border-color:var(--c-gold);color:var(--c-gold)}
+    .ccork-step-btn:disabled{opacity:.35;cursor:not-allowed}
+    .ccork-step-val{font-family:var(--font-cond);font-size:14.5px;font-weight:600;color:var(--c-text);min-width:54px;text-align:center;letter-spacing:.02em}
+    .ccork-step-unit{font-size:10.5px;color:var(--c-muted);font-weight:500;margin-left:2px;letter-spacing:.05em}
+    .ccork-remove-btn{background:transparent;border:none;color:var(--c-muted);font-size:18px;line-height:1;cursor:pointer;padding:2px 6px;border-radius:3px;transition:color .15s,background .15s}
+    .ccork-remove-btn:hover{color:#e85a5a;background:rgba(232,90,90,.08)}
+    .ccork-add-btn{margin-top:.65rem;width:100%;background:transparent;border:1px dashed var(--c-border);color:var(--c-muted);padding:9px;border-radius:6px;font-family:var(--font-cond);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:border-color .15s,color .15s}
+    .ccork-add-btn:hover{border-color:var(--c-gold);color:var(--c-gold)}
+    .ccork-rec{margin:-.1rem 0 .85rem;font-size:11.5px;color:var(--c-muted);font-style:italic;letter-spacing:.02em;text-align:center}
+    .seat-st-toggle{display:inline-flex;align-items:center;gap:.5rem;background:var(--c-dark2);border:1px solid var(--c-border);color:var(--c-text);padding:.4rem .8rem;border-radius:999px;cursor:pointer;font-size:12px;transition:all .15s;margin-top:10px}
+    .seat-st-toggle:hover{border-color:var(--c-border2)}
+    .seat-st-toggle.active{border-color:var(--c-gold);background:rgba(201,148,26,.12);color:var(--c-gold)}
+    .seat-st-toggle .dot{width:8px;height:8px;border-radius:50%;background:#333;border:1px solid #555}
+    .seat-st-toggle.active .dot{background:var(--c-gold);border-color:var(--c-gold);box-shadow:0 0 6px rgba(201,148,26,.6)}
+    .seat-st-fee{color:var(--c-muted);font-size:11px}
+    .seat-st-toggle.active .seat-st-fee{color:var(--c-gold);opacity:.85}
+
+    /* Color selection + wrap selection rows */
+    .wrap-note{font-size:12px;color:var(--c-muted);line-height:1.55;margin-bottom:10px;padding:8px 10px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius)}
+
+    /* Accessories / Upgrades section */
+    .acc-group{margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid var(--c-border)}
+    .acc-group:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+    .acc-group-label{font-family:var(--font-cond);font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--c-gold);margin-bottom:6px}
+    .acc-group-desc{font-size:12px;color:var(--c-muted);line-height:1.55;margin-bottom:10px}
+    .acc-stepper-row{display:flex;align-items:center;gap:1rem;padding:10px 12px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius)}
+    .acc-stepper-label{flex:1;font-size:13px;color:var(--c-text)}
+    .acc-stepper{display:inline-flex;align-items:center;gap:0;border:1px solid var(--c-border);border-radius:999px;background:var(--c-dark2);overflow:hidden}
+    .acc-stepper-btn{background:transparent;border:0;color:var(--c-text);width:32px;height:28px;cursor:pointer;font-size:16px;line-height:1;transition:background .15s}
+    .acc-stepper-btn:hover{background:rgba(201,148,26,.15);color:var(--c-gold)}
+    .acc-stepper-val{display:inline-block;min-width:32px;text-align:center;font-family:var(--font-cond);font-weight:600;color:var(--c-text)}
+    .acc-stepper-price{min-width:54px;text-align:right;font-family:var(--font-cond);font-size:13px;font-weight:600;color:var(--c-gold)}
+    .acc-thumb{width:54px;height:54px;flex-shrink:0;background:radial-gradient(ellipse at center,#25282d 0%,#15171a 70%);border-radius:6px;display:flex;align-items:center;justify-content:center;margin-right:.85rem;overflow:hidden;cursor:zoom-in;transition:transform .15s,border-color .15s;border:1px solid var(--c-border)}
+    .acc-thumb:hover{border-color:var(--c-gold);transform:scale(1.04)}
+    .acc-thumb img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+    .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:9999;padding:2rem;cursor:zoom-out}
+    .lightbox.open{display:flex}
+    .lightbox img{max-width:95%;max-height:95%;object-fit:contain;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.6)}
+    .lightbox-close{position:absolute;top:1.5rem;right:2rem;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff;width:42px;height:42px;border-radius:50%;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+    .lightbox-close:hover{background:rgba(255,255,255,.2);border-color:var(--c-gold)}
+    .trim-color-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+    .trim-swatch{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--c-border);cursor:pointer;transition:transform .15s,border-color .15s;position:relative}
+    .trim-swatch:hover{transform:scale(1.18)}
+    .trim-swatch.active{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.3)}
+    @media (hover:hover) and (pointer:fine){.trim-swatch[title]:hover::after{content:attr(title);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#000;color:#fff;padding:3px 7px;font-size:10px;border-radius:3px;white-space:nowrap;pointer-events:none;z-index:10}}
+    .trim-color-name{font-size:11px;color:var(--c-muted);margin-top:4px;font-style:italic}
+
+    /* Deposit note under total */
+    .price-deposit-note{margin-top:8px;font-size:11.5px;color:var(--c-muted);text-align:right;font-style:italic;letter-spacing:.01em}
+
+    /* Performance-only toggle */
+    .perf-only-banner{margin-bottom:10px}
+    .perf-only-btn{position:relative;width:100%;background:var(--c-dark2);border:2px solid var(--c-border);border-radius:var(--radius-md);padding:14px 100px 14px 16px;cursor:pointer;text-align:left;transition:border-color .15s,background .15s;display:flex;flex-direction:column;gap:5px}
+    .perf-only-btn:hover{border-color:var(--c-border2)}
+    .perf-only-btn.active{border-color:var(--c-gold);background:rgba(201,148,26,.07)}
+    .perf-btn-row{display:flex;align-items:center}
+    .perf-btn-title{font-family:var(--font-cond);font-size:15px;font-weight:700;color:var(--c-text);letter-spacing:.04em}
+    .perf-btn-badge{position:absolute;top:50%;right:16px;transform:translateY(-50%);font-family:var(--font-cond);font-size:13px;font-weight:700;color:var(--c-gold);background:rgba(201,148,26,.12);border:1px solid rgba(201,148,26,.3);border-radius:4px;padding:2px 8px;display:inline-flex;align-items:center;gap:3px}
+    .perf-btn-badge-amt{font-size:26px}
+    .perf-btn-sub{font-size:12px;color:var(--c-muted);line-height:1.45}
+    .perf-only-btn.active .perf-btn-sub{color:var(--c-text)}
+    .perf-active-note{background:rgba(201,148,26,.07);border:1px solid rgba(201,148,26,.22);border-radius:var(--radius);padding:9px 14px;font-size:12px;color:var(--c-gold);margin-bottom:10px;display:none}
+    .perf-active-note.visible{display:block}
+
+    /* Rod wrap preview — single-photo layout with prev/next arrows */
+    .wrap-preview{margin-bottom:1rem}
+    .wrap-photo-wrap{position:relative;background:radial-gradient(ellipse at center,#25282d 0%,#15171a 70%);border-radius:var(--radius);padding:1.25rem;display:flex;align-items:center;justify-content:center;height:260px}
+    .wrap-photo-wrap img{max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 6px 16px rgba(0,0,0,.55));border-radius:6px}
+    .wrap-photo-empty{display:none;font-size:12px;color:var(--c-muted);font-style:italic}
+    .wrap-photo-wrap.is-empty img{display:none}
+    .wrap-photo-wrap.is-empty .wrap-photo-empty{display:block}
+    .wrap-nav-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.15);width:38px;height:38px;border-radius:50%;font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s;z-index:2;padding:0}
+    .wrap-nav-btn:hover{background:rgba(201,148,26,.85);border-color:var(--c-gold)}
+    .wrap-nav-btn[disabled]{opacity:.25;cursor:not-allowed}
+    .wrap-nav-btn[disabled]:hover{background:rgba(0,0,0,.55);border-color:rgba(255,255,255,.15)}
+    .wrap-nav-prev{left:10px}
+    .wrap-nav-next{right:10px}
+    .wrap-meta{display:flex;justify-content:space-between;align-items:center;margin-top:.75rem;gap:1rem;flex-wrap:wrap}
+    .wrap-meta-name{font-family:var(--font-display);font-size:17px;font-weight:500;color:var(--c-text);margin-right:8px}
+    .wrap-meta-price{font-family:var(--font-cond);font-size:13px;color:var(--c-gold);font-weight:600}
+    .wrap-photo-counter{font-size:11px;color:var(--c-muted);letter-spacing:.14em;text-transform:uppercase}
+    .wrap-color-row{margin-bottom:14px}
+    .wrap-color-row:last-child{margin-bottom:0}
+    .wrap-color-row-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+    .wrap-color-row-label{font-family:var(--font-cond);font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--c-muted)}
+    .wrap-color-row-price{font-family:var(--font-cond);font-size:11px;font-weight:600;color:var(--c-gold)}
+      @media (max-width:600px){
+      .config-wrap{padding:0 .25rem}
+      .build-strip{grid-template-columns:1fr}
+      .seat-meta,.grip-meta,.guide-meta{flex-direction:column;align-items:stretch}
+      .seat-color-block,.guide-color-block{text-align:left;min-width:0;width:100%;margin-top:.75rem}
+      .seat-swatch-row,.guide-swatch-row{justify-content:flex-start}
+      .acc-stepper-row{flex-wrap:wrap;row-gap:.6rem}
+      .acc-stepper-label{flex:1 1 140px;min-width:140px}
+      .acc-stepper-price{margin-left:auto}
+    }
+  </style>
+</head>
+<body>
+<div id="nav-mount"></div>
+
+<div class="page-hero">
+  <h1 class="page-hero-title">Finesse</h1>
+  <p class="page-hero-sub">Ultra-light, ultra-sensitive. Designed for light-tackle techniques and bait fishing</p>
+</div>
+<hr class="divider">
+
+<section class="section">
+  <div class="config-wrap">
+    <div class="configurator-layout">
+
+      <div class="build-strip">
+          <div class="build-strip-slot">
+            <div class="build-strip-img-wrap" id="build-grip-wrap"><img id="build-grip-img" src="" alt=""></div>
+            <div class="build-strip-caption">
+              <div class="build-strip-label">Grips</div>
+              <div class="build-strip-name" id="build-grip-name">—</div>
+            </div>
+          </div>
+          <div class="build-strip-slot">
+            <div class="build-strip-img-wrap" id="build-seat-wrap"><img id="build-seat-img" src="" alt=""></div>
+            <div class="build-strip-caption">
+              <div class="build-strip-label">Reel Seat</div>
+              <div class="build-strip-name" id="build-seat-name">—</div>
+            </div>
+          </div>
+          <div class="build-strip-slot">
+            <div class="build-strip-img-wrap" id="build-guide-wrap"><img id="build-guide-img" src="" alt=""></div>
+            <div class="build-strip-caption">
+              <div class="build-strip-label">Guides</div>
+              <div class="build-strip-name" id="build-guide-name">—</div>
+            </div>
+          </div>
+          <div class="build-strip-slot" id="build-rodwrap-slot" style="display:none">
+            <div class="build-strip-img-wrap"><img id="build-rodwrap-img" src="" alt=""></div>
+            <div class="build-strip-caption">
+              <div class="build-strip-label">Rod Wrap</div>
+              <div class="build-strip-name" id="build-rodwrap-name">—</div>
+            </div>
+          </div>
+          <div class="build-strip-slot" id="build-colors-slot" style="display:none">
+            <div class="build-strip-img-wrap" style="flex-direction:column;gap:6px;justify-content:center;align-items:flex-start;padding:10px 12px">
+              <div id="build-wrap-colors-list" style="display:flex;flex-direction:column;gap:7px;width:100%"></div>
+            </div>
+            <div class="build-strip-caption">
+              <div class="build-strip-label">Colors</div>
+              <div class="build-strip-name" id="build-colors-name">—</div>
+            </div>
+          </div>
+          <div class="build-strip-slot" id="build-splitwrap-slot" style="display:none">
+            <div class="build-strip-img-wrap"><img id="build-splitwrap-img" src="" alt=""></div>
+            <div class="build-strip-caption">
+              <div class="build-strip-label">Split Wrap</div>
+              <div class="build-strip-name" id="build-splitwrap-name">—</div>
+            </div>
+          </div>
+        </div>
+
+      <div class="cfg-steps">
+        <!-- PERFORMANCE ONLY -->
+        <div class="perf-only-banner">
+          <button class="perf-only-btn" id="perf-only-btn" onclick="togglePerformance()">
+            <div class="perf-btn-row">
+              <span class="perf-btn-title">⚡ Performance Only</span>
+            </div>
+            <span class="perf-btn-sub">No Rod Wrap, just Trim Bands - Two Color Selections</span>
+            <span class="perf-btn-badge"><span class="perf-btn-badge-amt">$50</span> off</span>
+          </button>
+        </div>
+        <div class="perf-active-note" id="perf-active-note">Includes trim bands instead of rod wraps. Select one main color and one supporting color. Your choice of Grip, seat, guides, and butt</div>
+
+        <!-- 1. BLANK -->
+        <div class="cfg-section">
+          <div class="cfg-section-head" onclick="toggleSection('sec-blank')">
+            <div class="cfg-section-head-left">
+              <span class="cfg-section-label">1 — Blank</span>
+              <span class="cfg-section-chosen" id="chosen-blank">—</span>
+            </div>
+            <span class="cfg-section-chevron open" id="chev-blank">▾</span>
+          </div>
+          <div class="cfg-section-body open" id="sec-blank">
+            <div class="blank-cards" id="blank-cards"></div>
+          </div>
+        </div>
+
+        <!-- 2. REEL SEAT -->
+        <div class="cfg-section">
+          <div class="cfg-section-head" onclick="toggleSection('sec-seat')">
+            <div class="cfg-section-head-left">
+              <span class="cfg-section-label">2 — Reel Seat</span>
+              <span class="cfg-section-chosen" id="chosen-seat">—</span>
+            </div>
+            <span class="cfg-section-chevron" id="chev-seat">▾</span>
+          </div>
+          <div class="cfg-section-body" id="sec-seat">
+            <div class="seat-preview">
+              <div class="seat-photo-wrap">
+                <img id="seat-photo" src="" alt="">
+              </div>
+              <div class="seat-meta">
+                <div class="seat-meta-left">
+                  <div><span class="seat-meta-name" id="seat-meta-name">—</span><span class="seat-meta-price" id="seat-meta-price"></span></div>
+                  <div class="seat-meta-desc" id="seat-meta-desc">—</div>
+                  <div id="seat-softtouch-wrap"></div>
+                </div>
+                <div class="seat-color-block" id="seat-color-block" style="display:none">
+                  <div class="seat-color-label" id="seat-color-label">Body Color</div>
+                  <div class="seat-swatch-row" id="seat-swatch-row"></div>
+                  <div class="seat-color-name" id="seat-color-name"></div>
+                </div>
+              </div>
+            </div>
+            <div class="option-list" id="seat-options"></div>
+          </div>
+        </div>
+
+        <!-- 3. GRIP -->
+        <div class="cfg-section">
+          <div class="cfg-section-head" onclick="toggleSection('sec-grip')">
+            <div class="cfg-section-head-left">
+              <span class="cfg-section-label">3 — Grip</span>
+              <span class="cfg-section-chosen" id="chosen-grip">—</span>
+            </div>
+            <span class="cfg-section-chevron" id="chev-grip">▾</span>
+          </div>
+          <div class="cfg-section-body" id="sec-grip">
+            <div class="grip-preview">
+              <div class="grip-photo-wrap">
+                <img id="grip-photo" src="" alt="">
+                <div class="grip-photo-cork-strip" id="grip-photo-cork-strip" style="display:none"></div>
+              </div>
+              <div class="grip-meta">
+                <div class="grip-meta-left">
+                  <div><span class="grip-meta-name" id="grip-meta-name">—</span><span class="grip-meta-price" id="grip-meta-price"></span></div>
+                  <div class="grip-meta-desc" id="grip-meta-desc">—</div>
+                </div>
+              </div>
+            </div>
+            <div id="grip-variants"></div>
+            <div id="grip-groups"></div>
+          </div>
+        </div>
+
+        <!-- 4. BUTT -->
+        <div class="cfg-section" id="butt-section">
+          <div class="cfg-section-head" onclick="toggleSection('sec-butt')">
+            <div class="cfg-section-head-left">
+              <span class="cfg-section-label">4 — Butt</span>
+              <span class="cfg-section-chosen" id="chosen-butt">—</span>
+            </div>
+            <span class="cfg-section-chevron" id="chev-butt">▾</span>
+          </div>
+          <div class="cfg-section-body" id="sec-butt">
+            <div class="option-list" id="butt-options"></div>
+          </div>
+        </div>
+
+        <!-- 5. GUIDES -->
+        <div class="cfg-section">
+          <div class="cfg-section-head" onclick="toggleSection('sec-guides')">
+            <div class="cfg-section-head-left">
+              <span class="cfg-section-label">5 — Guides</span>
+              <span class="cfg-section-chosen" id="chosen-guides">—</span>
+            </div>
+            <span class="cfg-section-chevron" id="chev-guides">▾</span>
+          </div>
+          <div class="cfg-section-body" id="sec-guides">
+            <div class="guide-preview">
+              <div class="guide-photo-wrap">
+                <img id="guide-photo" src="" alt="">
+              </div>
+              <div class="guide-meta">
+                <div class="guide-meta-left">
+                  <div><span class="guide-meta-name" id="guide-meta-name">—</span><span class="guide-meta-price" id="guide-meta-price"></span></div>
+                  <div class="guide-meta-desc" id="guide-meta-desc">—</div>
+                </div>
+                <div class="guide-color-block" id="guide-color-block">
+                  <div class="guide-color-label">Frame Color</div>
+                  <div class="guide-swatch-row" id="guide-swatch-row"></div>
+                  <div class="guide-color-name" id="guide-color-name"></div>
+                </div>
+              </div>
+            </div>
+            <div id="guide-groups"></div>
+          </div>
+        </div>
+
+        <!-- 5. COLOR SELECTION -->
+        <div class="cfg-section">
+          <div class="cfg-section-head" onclick="toggleSection('sec-wrap-color')">
+            <div class="cfg-section-head-left">
+              <span class="cfg-section-label">6 — Color Selection</span>
+              <span class="cfg-section-chosen" id="chosen-wrap-color">—</span>
+            </div>
+            <span class="cfg-section-chevron" id="chev-wrap-color">▾</span>
+          </div>
+          <div class="cfg-section-body" id="sec-wrap-color">
+            <div class="wrap-note" id="color-included-note">
+              One main color and 2 supporting colors included. +$10 for each additional color
+            </div>
+            <div class="wrap-color-row">
+              <div class="wrap-color-row-head">
+                <span class="wrap-color-row-label">Main Color</span>
+                <span class="wrap-color-row-price">Included</span>
+              </div>
+              <div class="swatch-grid" id="main-swatches"></div>
+            </div>
+            <div id="supporting-color-rows"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:.5rem">
+              <button type="button" class="btn btn-outline" id="add-support-btn" style="font-size:12px;padding:8px 14px">+ Add Supporting Color</button>
+              <span style="font-size:11px;color:var(--c-muted)" id="support-price-hint">First 2 supporting colors included · each additional +$10</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. ROD WRAPS -->
+        <div class="cfg-section">
+          <div class="cfg-section-head" onclick="toggleSection('sec-rod-wraps')">
+            <div class="cfg-section-head-left">
+              <span class="cfg-section-label">7 — Rod Wrap</span>
+              <span class="cfg-section-chosen" id="chosen-rod-wrap">—</span>
+            </div>
+            <span class="cfg-section-chevron" id="chev-rod-wraps">▾</span>
+          </div>
+          <div class="cfg-section-body" id="sec-rod-wraps">
+            <div class="wrap-preview" id="wrap-preview">
+              <div class="wrap-photo-wrap">
+                <button class="wrap-nav-btn wrap-nav-prev" id="wrap-prev" onclick="prevWrapPhoto()" aria-label="Previous photo">‹</button>
+                <img id="wrap-photo" src="" alt="">
+                <button class="wrap-nav-btn wrap-nav-next" id="wrap-next" onclick="nextWrapPhoto()" aria-label="Next photo">›</button>
+                <div class="wrap-photo-empty" id="wrap-photo-empty">No reference photos yet for this wrap.</div>
+              </div>
+              <div class="wrap-meta">
+                <div class="wrap-meta-left">
+                  <div><span class="wrap-meta-name" id="wrap-meta-name">—</span><span class="wrap-meta-price" id="wrap-meta-price"></span></div>
+                </div>
+                <div class="wrap-meta-right">
+                  <div class="wrap-photo-counter" id="wrap-photo-counter"></div>
+                </div>
+              </div>
+            </div>
+            <p style="font-size:12.5px;color:var(--c-muted);line-height:1.6;margin:10px 0 12px">Below are various different wrapping styles, please select which style you like. We will work together to make sure the wrap is designed to your preference. If you have a photo of a wrap you want, feel free to text me a copy.</p>
+            <div class="option-list" id="rod-wrap-options"></div>
+            <div id="wrap-abalone-colors" style="display:none;margin-top:12px;padding:10px 12px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius)"></div>
+          </div>
+        </div>
+
+        <!-- 6b. SPLIT WRAP (only shown for split-style grips) -->
+        <div class="cfg-section" id="split-wrap-cfg-section" style="display:none">
+          <div class="cfg-section-head" onclick="toggleSection('sec-split-wrap')">
+            <div class="cfg-section-head-left">
+              <span class="cfg-section-label">Split Wrap</span>
+              <span class="cfg-section-chosen" id="chosen-split-wrap">None</span>
+            </div>
+            <span class="cfg-section-chevron" id="chev-split-wrap">▾</span>
+          </div>
+          <div class="cfg-section-body" id="sec-split-wrap">
+            <div class="wrap-preview" id="split-wrap-preview">
+              <div class="wrap-photo-wrap" id="split-wrap-photo-wrap">
+                <button class="wrap-nav-btn wrap-nav-prev" id="split-wrap-prev" onclick="prevSplitWrapPhoto()" aria-label="Previous photo">‹</button>
+                <img id="split-wrap-photo" src="" alt="">
+                <button class="wrap-nav-btn wrap-nav-next" id="split-wrap-next" onclick="nextSplitWrapPhoto()" aria-label="Next photo">›</button>
+                <div class="wrap-photo-empty" id="split-wrap-photo-empty">No reference photos yet for this wrap.</div>
+              </div>
+              <div class="wrap-meta">
+                <div class="wrap-meta-left">
+                  <div><span class="wrap-meta-name" id="split-wrap-meta-name">—</span><span class="wrap-meta-price" id="split-wrap-meta-price"></span></div>
+                </div>
+                <div class="wrap-meta-right">
+                  <div class="wrap-photo-counter" id="split-wrap-photo-counter"></div>
+                </div>
+              </div>
+            </div>
+            <div class="option-list" id="split-wrap-options"></div>
+            <div id="split-wrap-abalone-colors" style="display:none;margin-top:12px;padding:10px 12px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius)"></div>
+          </div>
+        </div>
+
+        <!-- 7. ACCESSORIES / UPGRADES -->
+        <div class="cfg-section">
+          <div class="cfg-section-head" onclick="toggleSection('sec-accessories')">
+            <div class="cfg-section-head-left">
+              <span class="cfg-section-label">8 — Accessories / Upgrades</span>
+              <span class="cfg-section-chosen" id="chosen-accessories">—</span>
+            </div>
+            <span class="cfg-section-chevron" id="chev-accessories">▾</span>
+          </div>
+          <div class="cfg-section-body" id="sec-accessories">
+
+            <!-- Decals -->
+            <div class="acc-group">
+              <div class="acc-group-label">Decals</div>
+              <div class="acc-group-desc">Each decal is +$5. Will confirm decals with you — feel free to send a pic or give a description.</div>
+              <div class="acc-stepper-row">
+                <span class="acc-stepper-label">Decals</span>
+                <div class="acc-stepper">
+                  <button class="acc-stepper-btn" onclick="adjDecals(-1)" aria-label="Decrease">−</button>
+                  <span class="acc-stepper-val" id="acc-decal-count">0</span>
+                  <button class="acc-stepper-btn" onclick="adjDecals(1)" aria-label="Increase">+</button>
+                </div>
+                <span class="acc-stepper-price" id="acc-decal-price">+$0</span>
+              </div>
+            </div>
+
+            <!-- Heat Shrink -->
+            <div class="acc-group">
+              <div class="acc-group-label">Heat Shrink</div>
+              <div class="option-list" id="acc-heatshrink-options"></div>
+            </div>
+
+            <!-- Trim Rings -->
+            <div class="acc-group">
+              <div class="acc-group-label">Trim Rings</div>
+              <div class="option-list" id="acc-trim-options"></div>
+            </div>
+
+            <!-- Hook Keeper -->
+            <div class="acc-group">
+              <div class="acc-group-label">Hook Keeper</div>
+              <div class="option-list" id="acc-hookkeeper-options"></div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SIDEBAR -->
+      <div class="config-sidebar">
+        <div class="config-summary">
+          <h3>Your Build</h3>
+          <div id="summary"></div>
+          <div class="price-row">
+            <span class="price-label">Total</span>
+            <span class="price-amount" id="price-display">—</span>
+          </div>
+        </div>
+        <button id="order-btn" class="btn btn-primary" style="width:100%;justify-content:center;font-size:15px;padding:15px;">
+          Add to Cart →
+        </button>
+        <button id="discuss-btn" class="btn btn-outline" style="width:100%;justify-content:center;font-size:15px;padding:15px;margin-top:0.75rem;">
+          Discuss Build →
+        </button>
+        <div style="margin-top:2rem;background:var(--c-dark2);border:1px solid var(--c-border);border-radius:var(--radius-md);padding:1.25rem">
+          <div style="font-family:var(--font-cond);font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--c-gold);margin-bottom:1rem">About This Rod</div>
+          <table class="specs-table" id="about-specs">
+            <tr><td>Length</td><td id="about-length">—</td></tr>
+            <tr><td>Line Weight</td><td id="about-line">—</td></tr>
+            <tr><td>Lure Rating</td><td id="about-lure">—</td></tr>
+            <tr><td>Blank Weight</td><td id="about-weight">—</td></tr>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div id="footer-mount"></div>
+<script src="../js/sfsw.js"></script>
+<script>
+document.getElementById('nav-mount').innerHTML = buildNav('Finesse');
+document.getElementById('footer-mount').innerHTML = buildFooter();
+
+// ── BLANKS ──
+const BLANKS = [
+  {id:"nfc-lmx", name:"NFC X-Ray LMX - Made by Gary Loomis", price:375, madeInUSA:true,
+    desc:"One of the lightest and most sensitive finesse blanks available. The best bang for your buck by far. Note: Lead time 5-12 weeks",
+    variants:[
+      {length:"7'0", lineWt:"2-6lb", lureWt:"0.05-0.25oz", blankWt:"1.08oz", adder:0}
+    ]},
+  {id:"phenix-elixir", name:"Phenix Elixir", price:400, madeInUSA:false,
+    desc:"Ultra-light high modulus graphite blank that is exceptionally fun to fish with",
+    variants:[
+      {length:"7'0", lineWt:"2-6lb", lureWt:"1/32-1/4oz", blankWt:"1.02oz", adder:0},
+      {length:"7'6", lineWt:"2-6lb", lureWt:"1/32-1/4oz", blankWt:"1.2oz",  adder:0}
+    ]},
+  {id:"rainshadow-immortal", name:"Rainshadow Immortal", price:400, madeInUSA:false,
+    desc:"An ultra-high modulus carbon blank that is extremely sensitivity, responsive, and has a crisp fast action.",
+    variants:[
+      {length:"7'0", lineWt:"6-12lb", lureWt:"0.15-0.4oz", blankWt:"1.65oz", adder:0},
+      {length:"7'6", lineWt:"6-12lb", lureWt:"0.15-0.4oz", blankWt:"2oz",    adder:0}
+    ]},
+  {id:"phenix-iron", name:"Phenix Iron Feather", price:550, madeInUSA:false,
+    desc:"A Toray carbon fiber blank with exceptional strength and sensitivity.",
+    variants:[
+      {length:"7'0", lineWt:"1-9lb", lureWt:"0.05-0.25oz", blankWt:"1.0oz", adder:0},
+      {length:"7'6", lineWt:"1-9lb", lureWt:"0.05-0.25oz", blankWt:"1.2oz", adder:0}
+    ]},
+  {id:"century-demon", name:"Century Demon", price:600, madeInUSA:false,
+    desc:"A graphene-enhanced carbon fiber blank with an ultra soft tip, strong backbone, and anti-twist properties.",
+    variants:[
+      {length:"7'0", lineWt:"6-20lb", lureWt:"0.05-0.75oz", blankWt:"1.2oz", adder:0},
+      {length:"8'0", lineWt:"6-20lb", lureWt:"0.05-1.25oz", blankWt:"1.5oz", adder:40}
+    ]}
+];
+
+// ── REEL SEATS ──
+const LOCKING_RING_FEE = 5;
+const SEATS = [
+  {id:"fuji-deluxe", name:"Fuji Deluxe", adder:0, lockingRingEligible:true, colors:'fujiDeluxe'},
+  {id:"fuji-tvs", name:"Fuji TVS", adder:0, lockingRingEligible:true},
+  {id:"alps-vtg", name:"ALPS VTG", adder:0, lockingRingEligible:true},
+  {id:"alps-mvt", name:"ALPS MVT", adder:35,
+    colors:'mvtNut', colorLabel:'Lock Nut', colorPhotoPath:'../preview/mvt-lock-nuts/mvt-nut'}
+];
+
+const SEAT_COLORS = {
+  lockingRing: [
+    {name:'Black',    hex:'#1a1a1a'},
+    {name:'Blue',     hex:'#1a5fb8'},
+    {name:'Gold',     hex:'#b58a2a'},
+    {name:'Silver',   hex:'#c8ccd1'},
+    {name:'Gunmetal', hex:'#3a3d42'},
+    {name:'Red',      hex:'#c41e1e'},
+    {name:'Purple',   hex:'#7a2aa8'},
+    {name:'SeaFoam',  hex:'#79c9a3'},
+  ],
+  mvtNut: [
+    {name:'Black',  hex:'#1a1a1a'},
+    {name:'Silver', hex:'#c8ccd1'},
+    {name:'Blue',   hex:'#1a5fb8'},
+    {name:'Purple', hex:'#7a2aa8'},
+    {name:'Red',    hex:'#c41e1e'},
+    {name:'Gold',   hex:'#b58a2a'},
+  ],
+  fujiDeluxe: [
+    {name:'Silver', hex:'#c8ccd1'},
+    {name:'Grey',   hex:'#4a4d52'},
+  ],
+};
+
+// ── GRIPS ──
+// Each item maps to one of the 4 photos in /preview/grips/.
+// Extra options (custom cork, customized eva) share the closest existing photo until more are added.
+const GRIPS = [
+  {group:"Cork", items:[
+    {id:"cork-split", name:"Split - Super Grade Cork",  adder:0,  style:'split', mat:'cork'},
+    {id:"cork-full",  name:"Full - Super Grade Cork",   adder:15, style:'full',  mat:'cork'},
+    {id:"ccork-custom-split", name:"Custom - Split", adder:30, style:'split', mat:'cork', desc:"Choose up to 3 different cork designs below. If you have a photo of something you like, please contact us"},
+    {id:"ccork-custom-full",  name:"Custom - Full",  adder:50, style:'full',  mat:'cork', desc:"Choose up to 3 different cork designs below. If you have a photo of something you like, please contact us"}
+  ]},
+  {group:"Foam", items:[
+    {id:"eva-split",  name:"Split",       adder:0,  style:'split', mat:'eva'},
+    {id:"eva-full",   name:"Full",        adder:0,  style:'full',  mat:'eva'},
+    {id:"eva-custom", name:"Custom",  adder:30, style:'split', mat:'eva', desc:"Please select a color below. We will work with you to shape the grips to your preferences"}
+  ]},
+  {group:"Carbon Fiber", items:[
+    {id:"carbon-fiber", name:"Carbon Fiber", adder:45, style:'carbon', mat:'carbon'}
+  ]}
+];
+
+const CCORK_PRICE_PER_INCH = 6;
+const CCORK_MIN_INCHES = 0;     // pieces start at 0" and can be dialled back to 0
+const CCORK_MAX_INCHES = 60;    // per-piece maximum
+const CCORK_STEP_INCHES = 0.5;  // stepper increment
+
+// Custom cork pattern photos live at ../preview/grips/ccork-{id}.png
+const CUSTOM_CORK_PATTERNS = [
+  {id:'burl-horizontal', name:'Burl Horizontal'},
+  {id:'burl-vertical',   name:'Burl Vertical'},
+  {id:'burnt',           name:'Burnt', step:0.25},
+  {id:'burnt-mix',       name:'Burnt Mix'},
+  {id:'cactus-1',        name:'Cactus 1'},
+  {id:'cactus-2',        name:'Cactus 2'},
+  {id:'cactus-3',        name:'Cactus 3'},
+  {id:'green',           name:'Green'},
+  {id:'meadow',          name:'Meadow'},
+  {id:'red',             name:'Red'},
+  {id:'stacked-1',       name:'Stacked 1'},
+  {id:'stacked-2',       name:'Stacked 2'},
+  {id:'stacked-3',       name:'Stacked 3'}
+];
+
+// Custom EVA color photos live at ../preview/grips/eva-color-{id}.{ext}
+const EVA_COLORS = [
+  {id:'black',      name:'Black',      ext:'png'},
+  {id:'white',      name:'White',      ext:'png'},
+  {id:'gray',       name:'Gray',       ext:'png'},
+  {id:'graygrain',  name:'Gray Grain', ext:'png'},
+  {id:'blue',       name:'Blue',       ext:'png'},
+  {id:'lightblue',  name:'Light Blue', ext:'png'},
+  {id:'darkblue',   name:'Dark Blue',  ext:'png'},
+  {id:'bluegrain',  name:'Blue Grain', ext:'png'},
+  {id:'bluecamo',   name:'Blue Camo',  ext:'png'},
+  {id:'camo',       name:'Camo',       ext:'png'},
+  {id:'darkgreen',  name:'Dark Green', ext:'png'},
+  {id:'limegreen',  name:'Lime Green', ext:'png'},
+  {id:'teal',       name:'Teal',       ext:'png'},
+  {id:'red',        name:'Red',        ext:'png'},
+  {id:'orange',     name:'Orange',     ext:'png'},
+  {id:'pink',       name:'Pink',       ext:'png'},
+  {id:'purple',     name:'Purple',     ext:'png'}
+];
+const evaColorSrc = c => `../preview/grips/eva-color-${c.id}.${c.ext || 'jpg'}`;
+
+// ── CARBON FIBER GRIP COLORS ──
+const CARBON_COLORS = [
+  {name:'Black', hex:'#1a1a1a'},
+  {name:'Teal',  hex:'#0e7c72'},
+  {name:'Blue',  hex:'#1a5fb8'},
+  {name:'Red',   hex:'#c41e1e'},
+  {name:'White', hex:'#ddd9d0'},
+];
+
+// ── GUIDES ──
+// Ring material drives price. Frame type + frame color determine photo.
+const GUIDES = [
+  {group:"Fuji KL-H (High Frame)", frame:'klh', framePhotoSlug:'fuji-klh', colors:['Grey','Silver'],
+   desc:"High-framed KR Concept guide engineered to cast smoother and farther while reducing overall rod weight.",
+   items:[
+     {id:"klh-alc", name:"Alconite",          adder:0,   desc:"The most commonly used guide ring. Durable, affordable, and very smooth"},
+     {id:"klh-sic", name:"SiC",               adder:40,  colors:['Gunmetal'], colorPhoto:{Gunmetal:'grey'}, desc:"A premium guide ring made from ultra-hard silicon carbide and engineered for maximum heat dissipation, smooth line flow, and extreme resistance to heavy friction under high drag"},
+     {id:"klh-tit", name:"Titanium Torzite",  adder:110, titanium:true, desc:"Titanium frame paired with Torzite rings - the lightest, strongest, smoothest, and most durable guide on the market. Dramatically reduces line friction and total rod weight"}
+   ]},
+  {group:"TiForged High Frame Titanium", framePhotoSlug:'ti-forged-high-frame', colors:['Black','Silver'],
+   desc:"American Tackle's TiForged high-frame guide — titanium-forged construction for reduced weight and superior corrosion resistance.",
+   items:[
+     {id:"at-tiforged", name:"AT TiForged High Frame", adder:30, desc:""}
+   ]}
+];
+
+// Master color defs — groups pull names from this list via their `colors` array.
+const GUIDE_COLOR_DEFS = {
+  Grey:     {name:'Grey',     hex:'#4a4d52'},
+  Silver:   {name:'Silver',   hex:'#c8ccd1'},
+  Black:    {name:'Black',    hex:'#1a1a1a'},
+  Gunmetal: {name:'Gunmetal', hex:'#3a3d42'}
+};
+const GUIDE_COLORS = ['Grey','Silver'].map(n => GUIDE_COLOR_DEFS[n]);
+const slugGuideColor = n => n.toLowerCase().replace(/\+/g,'-').replace(/\s+/g,'-');
+const guideColorList = () => {
+  const grp = getGuideGroup();
+  const guide = getGuide();
+  // item-level override beats group-level
+  const names = (guide && guide.colors) ? guide.colors
+              : ((grp && grp.colors) ? grp.colors : ['Grey','Silver']);
+  return names.map(n => GUIDE_COLOR_DEFS[n] || {name:n, hex:'#666'});
+};
+const guideColorAt = idx => {
+  const list = guideColorList();
+  return list[Math.min(idx, list.length - 1)] || list[0];
+};
+const guideFrameSlug = () => {
+  const guide = getGuide();
+  const grp   = getGuideGroup();
+  return (guide && guide.framePhotoSlug) || (grp && grp.framePhotoSlug) || `fuji-${(grp && grp.frame) || 'klh'}`;
+};
+
+// ── ROD WRAPS (decorative patterns) ──
+// photoCount = how many gallery images live at ../preview/rod-wraps/{photoSlug||id}-{n}.png
+const ROD_WRAPS = [
+  {id:"diam-2",       name:"Diamond — 2 Axis",                          adder:0,   photoSlug:"wrap-2axis-d",     photoCount:3},
+  {id:"chev-2",       name:"Chevron — 2 Axis",                          adder:0,   photoSlug:"chev-2",           photoCount:2},
+  {id:"dragon",       name:"Dragon Scale",                              adder:0,   photoSlug:"dragon",           photoCount:3},
+  {id:"chev-4",       name:"Chevron — 4 Axis",                          adder:0,   photoSlug:"wrap-4axis-c",     photoCount:8},
+  {id:"diam-4",       name:"Diamond — 4 Axis",                          adder:0,   photoSlug:"wrap-4axis-d",     photoCount:9},
+  {id:"abalone",      name:"Abalone Wrap",                              adder:50,  splitPrice:50, photo:"../preview/rod-wraps/abalone.png", colors:["Classic","Blue","Purple","Red","Teal","Lava","Green","Gold"]},
+  {id:"dec-4",        name:"4 Axis Decorative Chevron or Diamond",      adder:50,  photoSlug:"wrap-4axis-dec",   photoCount:3},
+  {id:"closed-4",     name:"8 Axis Wrap",                               adder:75,  photoSlug:"wrap-8axis-c",     photoCount:5},
+  {id:"axis-16",      name:"16 Axis Wrap",                              adder:100, photoSlug:"wrap-16axis",      photoCount:1},
+  {id:"2axis-dragon", name:"2 Axis Wrap Over Dragon Scales",            adder:100, photoSlug:"2axis-dragon",     photoCount:5},
+  {id:"snowflake",    name:"Snowflake Wrap",                            adder:100, photoSlug:"wrap-snowflake",   photoCount:1},
+  {id:"cross-2",      name:"2 Axis Cross Wrap",                         adder:125, photoSlug:"wrap-cross-2axis", photoCount:7},
+  {id:"cross-4",      name:"4 Axis Cross Wrap",                         adder:150, photoSlug:"wrap-cross-4axis", photoCount:2}
+];
+
+// ── ACCESSORIES / UPGRADES ──
+const DECAL_EXTRA_FEE = 5;
+
+const HEATSHRINK_OPTIONS = [
+  {id:"xwrap",     name:"X Wrap",      adder:15, photo:"../preview/heat-shrink/x-wrap.png"},
+  {id:"scale",     name:"Fish Scale",  adder:15, photo:"../preview/heat-shrink/fish-scale.png"},
+  {id:"honey",     name:"Honeycomb",   adder:25, photo:"../preview/heat-shrink/honeycomb.png"}
+];
+
+const TRIM_COLOR_DEFS = {
+  Silver:   {name:'Silver',   hex:'#c8ccd1'},
+  Gold:     {name:'Gold',     hex:'#b58a2a'},
+  'Pale Gold': {name:'Pale Gold', hex:'#d4b96a'},
+  Gunmetal: {name:'Gunmetal', hex:'#3a3d42'},
+  Gunsmoke: {name:'Gunsmoke', hex:'#5b5e63'},
+  'Dark Gunmetal': {name:'Dark Gunmetal', hex:'#25272b'},
+  Black:    {name:'Black',    hex:'#1a1a1a'},
+  Red:      {name:'Red',      hex:'#c41e1e'},
+  Blue:     {name:'Blue',     hex:'#1a5fb8'},
+  Purple:   {name:'Purple',   hex:'#7a2aa8'},
+  Green:    {name:'Green',    hex:'#2a8a3a'},
+  Titanium: {name:'Titanium', hex:'#767880'}
+};
+const TRIM_RINGS = [
+  {id:"at-trim",   name:"ALPS TRC Trim Ring",   adder:5,  desc:"",  photo:"../preview/trim-rings/ALPS-TRC-Trim.png",
+    colors:['Gunsmoke','Silver','Pale Gold','Gold','Black','Green','Blue','Purple','Red']},
+  {id:"matagi-trim", name:"Matagi Trim Ring", adder:5, desc:"", photo:"../preview/trim-rings/matagi-trim.png",
+    colors:['Gold','Purple','Red','Silver','Dark Gunmetal','Blue','Black']}
+];
+
+const HOOK_KEEPERS = [
+  {id:"hook-keeper", name:"Hook Keeper", adder:10, photo:"../preview/hook-keepers/hook-keeper.png",
+    colors:['Black','Silver','Gunmetal','Titanium']}
+];
+
+const BUTT_OPTIONS = [
+  // Cork-matched butt cap. `corkOnly` keeps it hidden unless the chosen grip is
+  // cork (plain cork or custom cork) — see the filter in renderButt().
+  // Listed first, but deliberately never the default: see defaultButt().
+  {id:"rubberized-cork-butt", name:"Rubberized Cork Butt", adder:0, photo:"../preview/butts/rubberized-cork-butt.png", corkOnly:true},
+  {id:"eva-butt", name:"EVA Butt", adder:0, photo:"../preview/butts/eva-butt.png"},
+  {id:"alps-rubber", isDefault:true,     name:"ALPS Rubber Butt",             adder:0,  photo:"../preview/butts/alps-rubber-butt.png",            desc:"Standard Rod Butt"},
+  {id:"alps-aluminum-rubber-butt", name:"ALPS Aluminum Rubber Butt", adder:10, photo:"../preview/butts/alps-aluminum-rubber-butt.png", colors:['Gold','Blue','Gunmetal','Black','Silver']},
+  {id:"alps-aluminum-butt", name:"ALPS Aluminum Butt",  adder:15, photo:"../preview/butts/alps-aluminum-butt-2.png",   colors:['Gold','Blue','Gunmetal','Black','Silver']},
+  {id:"alps-tri-butt",   name:"ALPS Triangle Weighted Butt",  adder:15, photo:"../preview/butts/alps-triangle-weighted-butt.png", colors:['Gold','Blue','Gunmetal','Black','Silver']},
+  {id:"at-weighted-butt",name:"AT Weighted Butt",             adder:15, photo:"../preview/butts/at-weighted-butt.png",            colors:['Gold','Blue','Gunmetal','Black','Silver','Red']}
+];
+
+const SUPPORT_INCLUDED_COUNT = 2;
+const EXTRA_COLOR_FEE = 10;
+
+const variantLabel = v => `${v.length} · ${v.lineWt}`;
+const variantSub   = v => `Lure ${v.lureWt} · ${v.blankWt}`;
+
+const blankSpecsOpen = new Set();
+
+const S = {
+  blankId: BLANKS[0].id,
+  variantIdx: 0,
+  variantAdder: BLANKS[0].variants[0].adder || 0,
+  seatId:  SEATS[0].id,
+  seatColorIdx: {mvtNut:-1, fujiDeluxe:0},
+  seatLockingRing: {},
+  seatLockingRingColorIdx: {},
+  gripId:  GRIPS[0].items[0].id,
+  buttId: 'alps-rubber',      // a butt is always selected; see defaultButt()
+  buttColor: {'alps-aluminum-butt':'Gunmetal', 'alps-aluminum-rubber-butt':'Gunmetal', 'alps-tri-butt':'Blue', 'at-weighted-butt':'Blue'},
+  // Custom Cork — three sections down the grip. Each section holds any number
+  // of pieces, and each piece has its own pattern and length. Bottom and Top
+  // always keep at least one piece; Middle is optional and may be left empty.
+  customCork: {
+    bottom: [{ patternId: 'burl-horizontal', inches: 2 }],
+    middle: [{ patternId: 'burl-horizontal', inches: 2 }],
+    top:    [{ patternId: 'burl-horizontal', inches: 2 }]
+  },
+  customCorkActive: { section: 'bottom', idx: 0 },   // piece the pattern grid targets
+  corkPatternIdxs: ['burl-horizontal'],               // up to 3 selected cork patterns (glow + preview strip)
+  evaColorIdx:   0,           // selected EVA color when eva-custom chosen
+  carbonColorIdx: 0,          // selected color when carbon-fiber chosen
+  guideId: GUIDES[0].items[0].id,
+  guideColorIdx: 0,           // 0 = Grey, 1 = Silver (frame color)
+  tipUpgrade: null,           // null | 'sic' | 'torzite' — eligibility depends on selected guide
+  mainIdx:  0,                // Main thread color (WRAP_COLORS)
+  supportIdxs: [],            // Supporting colors (indices into WRAP_COLORS). First 2 included, each additional +$10.
+  wrapId:  ROD_WRAPS[0].id,
+  wrapUserSelected: false,
+  abaloneColorIdx: 0,          // selected abalone color
+  wrapPhotoIdx: 0,            // 0-based index of current rod-wrap photo
+  splitWrapId: null,          // optional Split Wrap design (only offered for split-style grips) — null = none selected
+  splitWrapPhotoIdx: 0,       // 0-based index of current split-wrap photo
+  splitAbaloneColorIdx: 0,    // selected abalone color for split wrap
+  // Accessories / Upgrades
+  decalExtras: 0,             // additional decals beyond the 1 free one
+  heatShrinkId: null,         // one of HEATSHRINK_OPTIONS.id or null
+  trimRingQty: {'at-trim':0, 'matagi-trim':0}, // quantity per trim ring id
+  trimRingColor: {'at-trim':'Silver', 'matagi-trim':'Silver'}, // selected color per trim ring
+  hookKeeperId: null,         // one of HOOK_KEEPERS.id or null
+  hookKeeperColor: {'hook-keeper':'Black'}, // selected color
+  performanceOnly: false,       // $50 off — hides colors/wrap/guide wrap, bars custom cork/EVA
+};
+
+const allGripItems  = () => GRIPS.flatMap(g => g.items);
+const allGuideItems = () => GUIDES.flatMap(g => g.items);
+const getBlank    = () => BLANKS.find(b => b.id === S.blankId);
+const getVariant  = () => getBlank().variants[S.variantIdx];
+const getSeat     = () => SEATS.find(s => s.id === S.seatId);
+const getGrip     = () => allGripItems().find(g => g.id === S.gripId);
+const getGuide    = () => allGuideItems().find(g => g.id === S.guideId);
+const getGuideGroup = () => GUIDES.find(g => g.items.some(i => i.id === S.guideId));
+const getWrap    = () => ROD_WRAPS.find(w => w.id === S.wrapId);
+const isSplitGrip     = () => getGrip().style === 'split' || getGrip().style === 'carbon';
+const SPLIT_WRAP_OPTIONS = [
+  {id:'trim-bands', name:'Trim Bands', price:0, photo:null, photoSlug:'Trim-wrap', photoCount:2},
+  ...ROD_WRAPS.map(w => ({id:w.id, name:w.name, price:(w.splitPrice != null ? w.splitPrice : w.adder+50), photo:w.photo, photoSlug:w.photoSlug, photoCount:w.photoCount, colors:w.colors}))
+];
+const getSplitWrap    = () => SPLIT_WRAP_OPTIONS.find(w => w.id === S.splitWrapId) || null;
+const splitWrapAdder  = () => (isSplitGrip() && getSplitWrap()) ? getSplitWrap().price : 0;
+const PERF_SUPPORT_INCLUDED_COUNT = 1;
+const PERF_EXTRA_COLOR_FEE = 10;
+const effectiveSupportIncluded = () => S.performanceOnly ? PERF_SUPPORT_INCLUDED_COUNT : SUPPORT_INCLUDED_COUNT;
+const effectiveExtraColorFee   = () => S.performanceOnly ? PERF_EXTRA_COLOR_FEE : EXTRA_COLOR_FEE;
+const extraSupportCount = () => Math.max(0, S.supportIdxs.length - effectiveSupportIncluded());
+const supportExtraFee   = () => extraSupportCount() * effectiveExtraColorFee();
+
+const lockingRingActive = () => {
+  const seat = getSeat();
+  return !!(seat.lockingRingEligible && S.seatLockingRing[seat.id]);
+};
+const lockingRingAdder = () => lockingRingActive() ? LOCKING_RING_FEE : 0;
+const selectedLockingRingColor = () => {
+  if (!lockingRingActive()) return null;
+  const idx = S.seatLockingRingColorIdx[getSeat().id];
+  if (idx == null || idx < 0) return null;
+  return SEAT_COLORS.lockingRing[idx] || null;
+};
+const seatTotal = () => getSeat().adder + lockingRingAdder();
+
+const selectedSeatColor = () => {
+  const seat = getSeat();
+  if (!seat.colors) return null;
+  const idx = S.seatColorIdx[seat.colors];
+  if (idx == null || idx < 0) return null;
+  return SEAT_COLORS[seat.colors][idx] || null;
+};
+
+const slugSeatColor = n => n.toLowerCase().replace(/\+/g,'-').replace(/\s+/g,'-');
+const seatPhotoSrc = () => {
+  const seat = getSeat();
+  if (selectedLockingRingColor()) return '../preview/seats/aluminum-locking-nut.png';
+  const color = selectedSeatColor();
+  if (color) {
+    const base = seat.colorPhotoPath || `../preview/seats/${seat.id}`;
+    return `${base}-${slugSeatColor(color.name)}.png`;
+  }
+  return `../preview/seats/${seat.id}.png`;
+};
+const seatDisplayName = () => {
+  const seat = getSeat();
+  let name = seat.name;
+  const ringColor = selectedLockingRingColor();
+  if (ringColor) name += ` + ${ringColor.name} Aluminum Locking Nut`;
+  return name;
+};
+
+const isCustomCorkGrip  = () => S.gripId === 'ccork-custom-split' || S.gripId === 'ccork-custom-full';
+// Any cork grip: plain cork split/full, or the custom cork build-up.
+const isCorkGrip = () => (getGrip() || {}).mat === 'cork';
+const isCustomEvaGrip   = () => S.gripId === 'eva-custom';
+const isCarbonFiberGrip = () => S.gripId === 'carbon-fiber';
+
+const ccorkPatternById = id => CUSTOM_CORK_PATTERNS.find(p => p.id === id) || CUSTOM_CORK_PATTERNS[0];
+const ccorkStepFor = id => ccorkPatternById(id).step || CCORK_STEP_INCHES;
+const ccorkFmt = n => Number.isInteger(n) ? `${n}` : n.toFixed(2).replace(/0$/,'').replace(/\.$/,'');
+// Bottom and Top are required (never empty); Middle is optional.
+const CCORK_SECTIONS = [
+  { key: 'bottom', label: 'Bottom', required: true  },
+  { key: 'middle', label: 'Middle', required: false },
+  { key: 'top',    label: 'Top',    required: true  }
+];
+const ccorkSectionConf = key => CCORK_SECTIONS.find(s => s.key === key);
+const ccorkSection = key => S.customCork[key] || [];
+const ccorkAllPieces = () => CCORK_SECTIONS.reduce((acc, s) => acc.concat(ccorkSection(s.key)), []);
+const ccorkSectionInches = key => ccorkSection(key).reduce((s,p) => s + (p.inches || 0), 0);
+const customCorkTotalInches = () => ccorkAllPieces().reduce((s,p) => s + (p.inches || 0), 0);
+const customCorkAdder = () => 0; // Custom Split/Full now charge a flat fee via the grip item's own adder
+const customCorkActivePiece = () => {
+  const a = S.customCorkActive || {};
+  return ccorkSection(a.section)[a.idx] || ccorkAllPieces()[0] || null;
+};
+const customCorkActiveLabel = () => {
+  const a = S.customCorkActive || {};
+  const piece = ccorkSection(a.section)[a.idx];
+  if (!piece) return '—';
+  const conf = ccorkSectionConf(a.section);
+  return `${conf ? conf.label : a.section} ${a.idx + 1} · ${ccorkPatternById(piece.patternId).name}`;
+};
+
+const gripPriceTotal = () => getGrip().adder + customCorkAdder();
+
+const gripPhotoSrc = () => {
+  const g = getGrip();
+  if (isCustomEvaGrip()) {
+    return evaColorSrc(EVA_COLORS[S.evaColorIdx]);
+  }
+  if (isCarbonFiberGrip()) {
+    return `../preview/grips/carbon-grips.png`;
+  }
+  // Custom Split/Full cork share the same plain split/full cork photo as
+  // their non-custom counterparts — the chosen patterns are shown separately.
+  return `../preview/grips/grips-${g.style}-${g.mat}.png`;
+};
+const gripDisplayName = () => {
+  const g = getGrip();
+  const group = GRIPS.find(gr => gr.items.some(i => i.id === g.id));
+  const shortName = g.name.replace(' - Super Grade Cork', '');
+  let label = `${group.group} — ${shortName}`;
+  if (isCustomEvaGrip())   label += ` · ${EVA_COLORS[S.evaColorIdx].name}`;
+  if (isCarbonFiberGrip()) label += ` · ${CARBON_COLORS[S.carbonColorIdx].name}`;
+  return label;
+};
+
+const guidePhotoSrc = () => {
+  const guide = getGuide();
+  const grp   = getGuideGroup();
+  if (grp.photo) return grp.photo;
+  const slug  = guideFrameSlug();
+  if (guide.titanium) {
+    const ext = (guide.titaniumExt || grp.titaniumExt || 'png');
+    return `../preview/guide-types/${slug}-titanium.${ext}`;
+  }
+  const color = guideColorAt(S.guideColorIdx);
+  // A guide can display a colour under a different name than its photo file uses
+  // (KL-H SiC shows "Gunmetal" but reuses the existing fuji-klh-grey.png).
+  const alias = (guide.colorPhoto && guide.colorPhoto[color.name])
+             || (grp.colorPhoto && grp.colorPhoto[color.name]);
+  return `../preview/guide-types/${slug}-${alias || slugGuideColor(color.name)}.png`;
+};
+const guideDisplayName = () => {
+  const guide = getGuide();
+  const group = getGuideGroup();
+  return `${group.group.replace(/Fuji /,'Fuji ')} · ${guide.name}`;
+};
+const guideColorLabel = () => getGuide().titanium ? '' : guideColorAt(S.guideColorIdx).name;
+
+const TIP_UPGRADE_FEES = {sic: 10, torzite: 30};
+const TIP_UPGRADE_ELIGIBLE_IDS = ['klh-alc','klh-sic','kl-alc','kl-sic'];
+const tipUpgradeEligibleOptions = () => {
+  const guide = getGuide();
+  if (!guide || !TIP_UPGRADE_ELIGIBLE_IDS.includes(guide.id)) return [];
+  if (guide.id.endsWith('-alc')) return ['sic'];
+  if (guide.id.endsWith('-sic')) return ['torzite'];
+  return [];
+};
+const tipUpgradeActive = () => tipUpgradeEligibleOptions().includes(S.tipUpgrade);
+const tipUpgradeFee    = () => tipUpgradeActive() ? TIP_UPGRADE_FEES[S.tipUpgrade] : 0;
+const tipUpgradeLabel  = () => S.tipUpgrade === 'sic' ? 'SiC tip upgrade' : (S.tipUpgrade === 'torzite' ? 'Titanium Torzite tip upgrade' : '');
+
+// ── Accessories helpers ──
+const decalAdder     = () => Math.max(0, S.decalExtras) * DECAL_EXTRA_FEE;
+const heatShrinkItem = () => HEATSHRINK_OPTIONS.find(o => o.id === S.heatShrinkId) || null;
+const heatShrinkAdder= () => heatShrinkItem() ? heatShrinkItem().adder : 0;
+const trimAdder      = () => TRIM_RINGS.reduce((sum,t) => sum + (S.trimRingQty[t.id]||0) * t.adder, 0);
+const hookKeeperItem  = () => HOOK_KEEPERS.find(h => h.id === S.hookKeeperId) || null;
+const hookKeeperAdder = () => hookKeeperItem() ? hookKeeperItem().adder : 0;
+// The cork butt sits first in the list but must never be the implicit default —
+// it is hidden on non-cork grips, so falling back to it would select something
+// the customer can't see. Fall back to the first always-visible option instead.
+// Carbon fibre grips are built without a butt, so the whole section is hidden
+// and nothing is charged for one — even if a butt was picked before switching.
+const buttAllowed     = () => !isCarbonFiberGrip();
+const defaultButt     = () => BUTT_OPTIONS.find(b => b.isDefault) || BUTT_OPTIONS.find(b => !b.corkOnly) || BUTT_OPTIONS[0];
+const getButt         = () => BUTT_OPTIONS.find(b => b.id === S.buttId) || defaultButt();
+const buttAdder       = () => buttAllowed() ? getButt().adder : 0;
+const buttDisplayName = () => {
+  const b = getButt();
+  return b.name + (S.buttColor[b.id] ? ' (' + S.buttColor[b.id] + ')' : '');
+};
+
+const accessoriesAdder = () => decalAdder() + heatShrinkAdder() + trimAdder() + hookKeeperAdder();
+
+const calcTotal = () => {
+  const b = getBlank();
+  return b.price + (S.variantAdder||0) + seatTotal() + getGrip().adder + customCorkAdder() + getGuide().adder + tipUpgradeFee() + supportExtraFee() + getWrap().adder + splitWrapAdder() + buttAdder() + accessoriesAdder() + calcUVMetallicFee(WRAP_COLORS, S.mainIdx, S.supportIdxs) - (S.performanceOnly ? 50 : 0);
+};
+
+// ── PERFORMANCE ONLY ──
+function togglePerformance() {
+  S.performanceOnly = !S.performanceOnly;
+  applyPerformanceMode(S.performanceOnly);
+}
+
+function applyPerformanceMode(on) {
+  const btn  = document.getElementById('perf-only-btn');
+  const note = document.getElementById('perf-active-note');
+  if (btn)  btn.classList.toggle('active', on);
+  if (note) note.classList.toggle('visible', on);
+
+  // Hide/show sections
+  ['sec-rod-wraps','sec-guide-wraps'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { const sec = el.closest('.cfg-section'); if (sec) sec.style.display = on ? 'none' : ''; }
+  });
+
+  if (on) {
+    S.mainIdx = WRAP_COLORS.findIndex(c => c.name === 'Black');
+    // Two color selection included in Performance Only: keep a main color and
+    // seed one supporting color (free) so both slots are ready to pick.
+    if (!S.supportIdxs.length) {
+      const usedIdx = new Set([S.mainIdx]);
+      let defaultSupportIdx = 0;
+      for (let i = 0; i < WRAP_COLORS.length; i++) {
+        if (!usedIdx.has(i)) { defaultSupportIdx = i; break; }
+      }
+      S.supportIdxs = [defaultSupportIdx];
+    } else {
+      S.supportIdxs = S.supportIdxs.slice(0, 1);
+    }
+    S.wrapId = ROD_WRAPS[0].id;
+    S.wrapUserSelected = false;
+    S.guideWrapId = 'blacked-out';
+    S.guideWrapUserSelected = false;
+  }
+
+  renderGrips();
+  renderGripPreview();
+  renderBlankCards();
+  updateAll();
+}
+
+// ── BLANK CARDS ──
+function renderBlankCards() {
+  document.getElementById('blank-cards').innerHTML = BLANKS.map(b => {
+    const sel  = b.id === S.blankId;
+    const open = blankSpecsOpen.has(b.id);
+    const selVariant = sel ? b.variants[S.variantIdx] : null;
+    const pill = (!open && selVariant)
+      ? `<div class="blank-variant-pill">${selVariant.length} — ${selVariant.lineWt} &nbsp;·&nbsp; ${selVariant.lureWt} &nbsp;·&nbsp; ${selVariant.blankWt}</div>`
+      : '';
+    return `<div class="blank-card ${sel?'selected':''}" onclick="pickBlank('${b.id}')">
+      <div class="blank-card-header">
+        <span class="blank-card-name">${b.name}</span>
+        <span class="blank-card-price">${S.performanceOnly ? `<span class="blank-card-price-orig">$${b.price}</span>$${b.price - 50}` : `$${b.price}`}</span>
+      </div>
+      ${b.madeInUSA ? '<div class="blank-card-made">★ Made in USA</div>' : ''}
+      ${b.desc ? `<div class="blank-card-desc">${b.desc}</div>` : ''}
+      ${pill}
+      <div class="blank-specs-toggle" onclick="event.stopPropagation();toggleBlankSpecs('${b.id}')">
+        <span class="blank-specs-chevron ${open?'open':''}">▾</span>
+        Specs
+      </div>
+      <div class="blank-specs-body ${open?'open':''}">
+        <table class="variant-table">
+          <thead>
+            <tr>
+              <th class="radio-th"></th>
+              <th>Length / Line WT</th>
+              <th>Lure WT</th>
+              <th>Blank WT</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${b.variants.map((v,i) => {
+              const checked = sel && i === S.variantIdx;
+              const adderTxt = v.adder ? ` <span class="variant-adder">+$${v.adder}</span>` : '';
+              return `<tr class="variant-row ${checked?'checked':''}" onclick="event.stopPropagation();pickVariant('${b.id}',${i},${v.adder||0})">
+                <td class="radio-cell"><span class="radio-dot"></span></td>
+                <td>${v.length} — ${v.lineWt}${adderTxt}</td>
+                <td>${v.lureWt}</td>
+                <td>${v.blankWt}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleBlankSpecs(id) {
+  requestAnimationFrame(() => {
+  if (blankSpecsOpen.has(id)) blankSpecsOpen.delete(id);
+  else blankSpecsOpen.add(id);
+  renderBlankCards();
+  });
+}
+
+function pickBlank(id) {
+  requestAnimationFrame(() => {
+  S.blankId = id; S.variantIdx = 0; S.variantAdder = BLANKS.find(b=>b.id===id).variants[0].adder||0;
+  blankSpecsOpen.add(id);
+  renderBlankCards(); updateAll();
+  });
+}
+function pickVariant(blankId, idx, adder) {
+  requestAnimationFrame(() => {
+  S.blankId = blankId; S.variantIdx = idx; S.variantAdder = adder;
+  renderBlankCards(); updateAll();
+  });
+}
+
+function renderOptionList(containerId, items, currentId, setter) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = items.map(item => `
+    <div class="option-item ${item.id===currentId?'selected':''}" onclick="${setter}('${item.id}')">
+      <div class="option-item-body">
+        <span class="option-item-name">${item.name}</span>
+        ${item.desc ? `<span class="option-item-desc">${item.desc}</span>` : ''}
+      </div>
+      <span class="option-item-price">${item.adder===0?'Included':'+$'+item.adder}</span>
+    </div>`).join('');
+}
+
+function pickSeat(id)  {
+  requestAnimationFrame(() => { S.seatId = id; if (id === 'alps-mvt') { S.seatColorIdx.mvtNut = -1; } renderSeats(); renderSeatPreview(); updateAll();   });
+}
+function pickSeatColor(key, idx) { requestAnimationFrame(() => { S.seatColorIdx[key] = idx; renderSeatPreview(); updateAll(); }); }
+function toggleLockingRing() {
+  requestAnimationFrame(() => {
+  const seat = getSeat();
+  if (!seat.lockingRingEligible) return;
+  S.seatLockingRing[seat.id] = !S.seatLockingRing[seat.id];
+  if (!S.seatLockingRing[seat.id]) S.seatLockingRingColorIdx[seat.id] = -1;
+  renderSeatPreview();
+  updateAll();
+  });
+}
+function pickLockingRingColor(idx) {
+  requestAnimationFrame(() => {
+    const seat = getSeat();
+    S.seatLockingRingColorIdx[seat.id] = idx;
+    renderSeatPreview();
+    updateAll();
+  });
+}
+function pickGrip(id)  {
+  requestAnimationFrame(() => {
+    S.gripId = id;
+    // A cork-only butt can't stay selected once the grip is no longer cork.
+    if (!isCorkGrip()) {
+      const cur = BUTT_OPTIONS.find(b => b.id === S.buttId);
+      if (cur && cur.corkOnly) S.buttId = defaultButt().id;
+    }
+    renderGrips(); renderGripPreview(); renderButt(); updateAll();
+  });
+}
+function renderButt() {
+  const el = document.getElementById('butt-options');
+  if (!el) return;
+  const section = document.getElementById('butt-section');
+  if (section) section.style.display = buttAllowed() ? '' : 'none';
+  if (!buttAllowed()) { el.innerHTML = ''; return; }
+  // Cork-only butts appear only alongside a cork grip.
+  el.innerHTML = BUTT_OPTIONS.filter(b => !b.corkOnly || isCorkGrip()).map(b => {
+    const sel = S.buttId === b.id;
+    const selectedColor = S.buttColor[b.id];
+    const colorSwatches = (b.colors || []).map(cName => {
+      const c = TRIM_COLOR_DEFS[cName] || {name:cName, hex:'#666'};
+      return `<div class="trim-swatch ${selectedColor===c.name?'active':''}" style="background:${c.hex}" title="${c.name}" onclick="event.stopPropagation();pickButtColor('${b.id}','${c.name}')"></div>`;
+    }).join('');
+    return `
+    <div class="option-item has-thumb ${sel?'selected':''}" onclick="pickButt('${b.id}')">
+      <div class="acc-thumb" onclick="event.stopPropagation();openLightbox('${b.photo}','${b.name}')"><img src="${b.photo}" alt="${b.name}" loading="lazy"></div>
+      <div class="option-item-body">
+        <span class="option-item-name">${b.name}</span>
+        ${b.desc ? `<span class="option-item-desc">${b.desc}</span>` : ''}
+        ${b.colors ? `<div class="trim-color-row">${colorSwatches}</div><div class="trim-color-name">Color: ${selectedColor || '—'}</div>` : ''}
+      </div>
+      <span class="option-item-price">${b.adder === 0 ? 'Included' : '+$' + b.adder}</span>
+    </div>`;
+  }).join('');
+}
+function pickButt(id) {
+  S.buttId = id;
+  renderButt(); updateAll();
+}
+function pickButtColor(id, color) {
+  S.buttColor[id] = color;
+  renderButt(); updateAll();
+}
+function pickGuide(id) {
+  requestAnimationFrame(() => { S.guideId = id; renderGuides(); renderGuidePreview(); updateAll();   });
+}
+function pickGuideColor(idx) { requestAnimationFrame(() => { S.guideColorIdx = idx; renderGuidePreview(); updateAll(); }); }
+function pickTipUpgrade(e, kind) {
+  requestAnimationFrame(() => {
+  if (e) e.stopPropagation();
+  S.tipUpgrade = (S.tipUpgrade === kind) ? null : kind;
+  renderGuides(); updateAll();
+  });
+}
+function pickWrap(id)  {
+  requestAnimationFrame(() => { S.wrapId = id; S.wrapPhotoIdx = 0; S.wrapUserSelected = true; renderWraps(); updateAll();   });
+}
+function pickSplitWrap(id) {
+  requestAnimationFrame(() => { S.splitWrapId = (S.splitWrapId === id) ? null : id; S.splitWrapPhotoIdx = 0; renderSplitWrapOptions(); updateAll();   });
+}
+function prevSplitWrapPhoto() {
+  const w = getSplitWrap();
+  if (!w || !w.photoCount) return;
+  S.splitWrapPhotoIdx = (S.splitWrapPhotoIdx - 1 + w.photoCount) % w.photoCount;
+  renderSplitWrapPreview();
+}
+function nextSplitWrapPhoto() {
+  const w = getSplitWrap();
+  if (!w || !w.photoCount) return;
+  S.splitWrapPhotoIdx = (S.splitWrapPhotoIdx + 1) % w.photoCount;
+  renderSplitWrapPreview();
+}
+function pickSplitAbaloneColor(i) {
+  S.splitAbaloneColorIdx = parseInt(i);
+  renderSplitWrapPreview();
+}
+
+// Accessories pickers
+function adjDecals(delta) {
+  S.decalExtras = Math.max(0, Math.min(20, S.decalExtras + delta));
+  renderAccessories(); updateAll();
+}
+function pickHeatShrink(id) {
+  requestAnimationFrame(() => {
+  S.heatShrinkId = (S.heatShrinkId === id) ? null : id;
+  renderAccessories(); updateAll();
+  });
+}
+function adjTrimRing(id, delta) {
+  const cur = S.trimRingQty[id] || 0;
+  S.trimRingQty[id] = Math.max(0, Math.min(20, cur + delta));
+  renderAccessories(); updateAll();
+}
+function pickTrimColor(id, color) {
+  requestAnimationFrame(() => {
+    S.trimRingColor[id] = color;
+    renderAccessories(); updateAll();
+  });
+}
+function pickHookKeeper(id) {
+  requestAnimationFrame(() => {
+  S.hookKeeperId = (S.hookKeeperId === id) ? null : id;
+  renderAccessories(); updateAll();
+  });
+}
+function pickHookKeeperColor(id, color) {
+  requestAnimationFrame(() => {
+    S.hookKeeperColor[id] = color;
+    renderAccessories(); updateAll();
+  });
+}
+function prevWrapPhoto() {
+  const wrap = getWrap();
+  if (!wrap.photoCount) return;
+  S.wrapPhotoIdx = (S.wrapPhotoIdx - 1 + wrap.photoCount) % wrap.photoCount;
+  renderWrapPreview();
+}
+function nextWrapPhoto() {
+  const wrap = getWrap();
+  if (!wrap.photoCount) return;
+  S.wrapPhotoIdx = (S.wrapPhotoIdx + 1) % wrap.photoCount;
+  renderWrapPreview();
+}
+
+function renderWraps() {
+  const el = document.getElementById('rod-wrap-options');
+  if (el) {
+    el.innerHTML = ROD_WRAPS.map(w => {
+      let html = `<div class="option-item ${w.id===S.wrapId?'selected':''}" onclick="pickWrap('${w.id}')">
+        <div class="option-item-body">
+          <span class="option-item-name">${w.name}</span>
+          ${w.desc ? `<span class="option-item-desc">${w.desc}</span>` : ''}
+        </div>
+        <span class="option-item-price">${w.adder===0?'Included':'+$'+w.adder}</span>
+      </div>`;
+      if (w.id === 'abalone' && S.wrapId === 'abalone' && w.colors) {
+        html += `<div style="margin:4px 0 6px;padding:8px 10px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius)">
+          <label style="font-family:var(--font-cond);font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--c-gold);display:block;margin-bottom:6px">Shell Cover</label>
+          <select onchange="pickAbaloneColor(this.value)" style="width:100%;background:var(--c-dark2);color:var(--c-text);border:1px solid var(--c-border);border-radius:4px;padding:6px 8px;font-family:var(--font-cond);font-size:13px;font-weight:600;letter-spacing:.05em;cursor:pointer">
+            ${w.colors.map((c,i) => `<option value="${i}" ${i===S.abaloneColorIdx?'selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>`;
+      }
+      return html;
+    }).join('');
+  }
+  renderWrapPreview();
+}
+
+function renderSplitWrapOptions() {
+  const el = document.getElementById('split-wrap-options');
+  if (!el) return;
+  el.innerHTML = SPLIT_WRAP_OPTIONS.map(w => {
+    return `<div class="option-item ${w.id===S.splitWrapId?'selected':''}" onclick="pickSplitWrap('${w.id}')">
+      <div class="option-item-body">
+        <span class="option-item-name">${w.name}</span>
+      </div>
+      <span class="option-item-price">${w.price===0?'Included':'+$'+w.price}</span>
+    </div>`;
+  }).join('');
+  const chosen = document.getElementById('chosen-split-wrap');
+  if (chosen) chosen.textContent = getSplitWrap() ? getSplitWrap().name : 'None';
+  renderSplitWrapPreview();
+}
+
+function renderSplitWrapPreview() {
+  const wrapEl  = document.getElementById('split-wrap-photo-wrap');
+  const imgEl   = document.getElementById('split-wrap-photo');
+  const nameEl  = document.getElementById('split-wrap-meta-name');
+  const priceEl = document.getElementById('split-wrap-meta-price');
+  const counter = document.getElementById('split-wrap-photo-counter');
+  const prevBtn = document.getElementById('split-wrap-prev');
+  const nextBtn = document.getElementById('split-wrap-next');
+  const colorEl = document.getElementById('split-wrap-abalone-colors');
+  if (!wrapEl) return;
+
+  const w = getSplitWrap();
+  if (!w) {
+    nameEl.textContent = '—';
+    priceEl.textContent = '';
+    wrapEl.classList.add('is-empty');
+    imgEl.removeAttribute('src');
+    counter.textContent = '';
+    prevBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
+    if (colorEl) colorEl.style.display = 'none';
+    return;
+  }
+
+  nameEl.textContent  = w.name;
+  priceEl.textContent = w.price ? '  +$' + w.price : '  Included';
+
+  if (w.photo) {
+    wrapEl.classList.remove('is-empty');
+    imgEl.src = w.photo;
+    imgEl.alt = w.name;
+    imgEl.onerror = () => { imgEl.style.opacity = 0.2; };
+    imgEl.style.opacity = 1;
+    counter.textContent = '';
+    prevBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
+    if (colorEl && w.colors) {
+      const ABALONE_HEX = {Classic:'#b8d4c8',Blue:'#1a5fb8',Purple:'#7a2aa8',Red:'#c41e1e',Teal:'#0e7c72',Lava:'#d4621a',Green:'#2a8a3a',Gold:'#c9941a'};
+      const cur = w.colors[S.splitAbaloneColorIdx];
+      colorEl.style.display = '';
+      colorEl.innerHTML = `<div style="font-family:var(--font-cond);font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--c-gold);margin-bottom:8px">Shell Color</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${w.colors.map((c,i)=>`<div onclick="pickSplitAbaloneColor(${i})" title="${c}"
+            style="width:28px;height:28px;border-radius:50%;background:${ABALONE_HEX[c]||'#888'};cursor:pointer;
+                   border:2px solid ${i===S.splitAbaloneColorIdx?'var(--c-gold)':'var(--c-border)'};
+                   box-shadow:${i===S.splitAbaloneColorIdx?'0 0 0 2px rgba(201,148,26,.25)':'none'};
+                   transition:border-color .15s"></div>`).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--c-muted);margin-top:6px">${cur}</div>`;
+    }
+    return;
+  }
+
+  if (colorEl) colorEl.style.display = 'none';
+
+  if (!w.photoCount) {
+    wrapEl.classList.add('is-empty');
+    imgEl.removeAttribute('src');
+    counter.textContent = '';
+    prevBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
+    return;
+  }
+
+  wrapEl.classList.remove('is-empty');
+  if (S.splitWrapPhotoIdx >= w.photoCount) S.splitWrapPhotoIdx = 0;
+  const n = S.splitWrapPhotoIdx + 1;
+  const src = `../preview/rod-wraps/${w.photoSlug || w.id}-${n}.png`;
+  imgEl.src = src;
+  imgEl.alt = `${w.name} — example ${n}`;
+  imgEl.onerror = () => { imgEl.style.opacity = 0.2; imgEl.title = 'Missing: ' + src; };
+  imgEl.style.opacity = 1;
+
+  counter.textContent = w.photoCount > 1 ? `${n} / ${w.photoCount}` : '';
+  const showNav = w.photoCount > 1;
+  prevBtn.style.display = showNav ? '' : 'none';
+  nextBtn.style.display = showNav ? '' : 'none';
+}
+
+function renderAccessories() {
+  // Decals
+  document.getElementById('acc-decal-count').textContent = S.decalExtras;
+  document.getElementById('acc-decal-price').textContent = S.decalExtras ? ('+$' + decalAdder()) : '+$0';
+
+  // Heat Shrink
+  document.getElementById('acc-heatshrink-options').innerHTML = HEATSHRINK_OPTIONS.map(o => `
+    <div class="option-item has-thumb ${S.heatShrinkId===o.id?'selected':''}" onclick="pickHeatShrink('${o.id}')">
+      ${o.photo ? `<div class="acc-thumb" onclick="event.stopPropagation();openLightbox('${o.photo}','${o.name}')"><img src="${o.photo}" alt="${o.name}" loading="lazy"></div>` : ''}
+      <div class="option-item-body">
+        <span class="option-item-name">${o.name}</span>
+      </div>
+      <span class="option-item-price">+$${o.adder}</span>
+    </div>`).join('');
+
+  // Trim Rings — each with its own qty stepper
+  document.getElementById('acc-trim-options').innerHTML = TRIM_RINGS.map(t => {
+    const qty = S.trimRingQty[t.id] || 0;
+    const line = qty > 0 ? ('+$' + (qty * t.adder)) : ('+$' + t.adder + ' ea');
+    const selectedColor = S.trimRingColor[t.id];
+    const colorSwatches = (t.colors || []).map(cName => {
+      const c = TRIM_COLOR_DEFS[cName] || {name:cName, hex:'#666'};
+      return `<div class="trim-swatch ${selectedColor===c.name?'active':''}" style="background:${c.hex}" title="${c.name}" onclick="event.stopPropagation();pickTrimColor('${t.id}','${c.name}')"></div>`;
+    }).join('');
+    return `
+    <div class="acc-stepper-row" style="margin-bottom:8px">
+      ${t.photo ? `<div class="acc-thumb" onclick="openLightbox('${t.photo}','${t.name}')"><img src="${t.photo}" alt="${t.name}" loading="lazy"></div>` : ''}
+      <span class="acc-stepper-label">
+        <strong style="display:block;margin-bottom:2px">${t.name}</strong>
+        ${t.desc ? `<span style="font-size:11.5px;color:var(--c-muted);font-weight:normal">${t.desc}</span>` : ''}
+        ${t.colors ? `<div class="trim-color-row">${colorSwatches}</div><div class="trim-color-name">Color: ${selectedColor || '—'}</div>` : ''}
+      </span>
+      <div class="acc-stepper">
+        <button class="acc-stepper-btn" onclick="adjTrimRing('${t.id}',-1)" aria-label="Decrease">−</button>
+        <span class="acc-stepper-val">${qty}</span>
+        <button class="acc-stepper-btn" onclick="adjTrimRing('${t.id}',1)" aria-label="Increase">+</button>
+      </div>
+      <span class="acc-stepper-price">${line}</span>
+    </div>`;
+  }).join('');
+
+  // Hook Keeper
+  document.getElementById('acc-hookkeeper-options').innerHTML = HOOK_KEEPERS.map(h => {
+    const sel = S.hookKeeperId === h.id;
+    const selectedColor = S.hookKeeperColor[h.id];
+    const colorSwatches = (h.colors || []).map(cName => {
+      const c = TRIM_COLOR_DEFS[cName] || {name:cName, hex:'#666'};
+      return `<div class="trim-swatch ${selectedColor===c.name?'active':''}" style="background:${c.hex}" title="${c.name}" onclick="event.stopPropagation();pickHookKeeperColor('${h.id}','${c.name}')"></div>`;
+    }).join('');
+    return `
+    <div class="option-item has-thumb ${sel?'selected':''}" onclick="pickHookKeeper('${h.id}')">
+      <div class="acc-thumb" onclick="event.stopPropagation();openLightbox('${h.photo}','${h.name}')"><img src="${h.photo}" alt="${h.name}" loading="lazy"></div>
+      <div class="option-item-body">
+        <span class="option-item-name">${h.name}</span>
+        ${h.colors ? `<div class="trim-color-row">${colorSwatches}</div><div class="trim-color-name">Color: ${selectedColor || '—'}</div>` : ''}
+      </div>
+      <span class="option-item-price">+$${h.adder}</span>
+    </div>`;
+  }).join('');
+}
+
+function accessoriesSummaryText() {
+  const parts = [];
+  if (S.decalExtras > 0) parts.push(`${S.decalExtras} extra decal${S.decalExtras>1?'s':''} +$${decalAdder()}`);
+  const hs = heatShrinkItem(); if (hs) parts.push(`${hs.name} +$${hs.adder}`);
+  TRIM_RINGS.forEach(t => {
+    const qty = S.trimRingQty[t.id] || 0;
+    if (qty > 0) parts.push(`${qty}× ${t.name} (${S.trimRingColor[t.id]||'—'}) +$${qty * t.adder}`);
+  });
+  const hk = hookKeeperItem(); if (hk) parts.push(`${hk.name} (${S.hookKeeperColor[hk.id]||'—'}) +$${hk.adder}`);
+  return parts.length ? parts.join(' · ') : 'None';
+}
+
+function renderWrapPreview() {
+  const wrap = getWrap();
+  const wrapEl   = document.getElementById('wrap-photo-wrap') || document.querySelector('.wrap-photo-wrap');
+  const imgEl    = document.getElementById('wrap-photo');
+  const nameEl   = document.getElementById('wrap-meta-name');
+  const priceEl  = document.getElementById('wrap-meta-price');
+  const counter  = document.getElementById('wrap-photo-counter');
+  const prevBtn  = document.getElementById('wrap-prev');
+  const nextBtn  = document.getElementById('wrap-next');
+  const colorEl  = document.getElementById('wrap-abalone-colors');
+
+  nameEl.textContent  = wrap.name;
+  priceEl.textContent = wrap.adder ? '  +$' + wrap.adder : '  Included';
+
+  // Abalone: static photo + color swatches
+  if (wrap.photo) {
+    wrapEl.classList.remove('is-empty');
+    imgEl.src = wrap.photo;
+    imgEl.alt = wrap.name;
+    imgEl.onerror = () => { imgEl.style.opacity = 0.2; };
+    imgEl.style.opacity = 1;
+    counter.textContent = '';
+    prevBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
+    if (colorEl && wrap.colors) {
+      const ABALONE_HEX = {Classic:'#b8d4c8',Blue:'#1a5fb8',Purple:'#7a2aa8',Red:'#c41e1e',Teal:'#0e7c72',Lava:'#d4621a',Green:'#2a8a3a',Gold:'#c9941a'};
+      const cur = wrap.colors[S.abaloneColorIdx];
+      colorEl.style.display = '';
+      colorEl.innerHTML = `<div style="font-family:var(--font-cond);font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--c-gold);margin-bottom:8px">Shell Color</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${wrap.colors.map((c,i)=>`<div onclick="pickAbaloneColor(${i})" title="${c}"
+            style="width:28px;height:28px;border-radius:50%;background:${ABALONE_HEX[c]||'#888'};cursor:pointer;
+                   border:2px solid ${i===S.abaloneColorIdx?'var(--c-gold)':'var(--c-border)'};
+                   box-shadow:${i===S.abaloneColorIdx?'0 0 0 2px rgba(201,148,26,.25)':'none'};
+                   transition:border-color .15s"></div>`).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--c-muted);margin-top:6px">${cur}</div>`;
+    }
+    return;
+  }
+
+  // Hide abalone color picker for other wraps
+  if (colorEl) colorEl.style.display = 'none';
+
+  if (!wrap.photoCount) {
+    wrapEl.classList.add('is-empty');
+    imgEl.removeAttribute('src');
+    counter.textContent = '';
+    prevBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
+    return;
+  }
+
+  wrapEl.classList.remove('is-empty');
+  if (S.wrapPhotoIdx >= wrap.photoCount) S.wrapPhotoIdx = 0;
+  const n = S.wrapPhotoIdx + 1;
+  const src = `../preview/rod-wraps/${wrap.photoSlug || wrap.id}-${n}.png`;
+  imgEl.src = src;
+  imgEl.alt = `${wrap.name} — example ${n}`;
+  imgEl.onerror = () => { imgEl.style.opacity = 0.2; imgEl.title = 'Missing: ' + src; };
+  imgEl.style.opacity = 1;
+
+  counter.textContent = wrap.photoCount > 1 ? `${n} / ${wrap.photoCount}` : '';
+  const showNav = wrap.photoCount > 1;
+  prevBtn.style.display = showNav ? '' : 'none';
+  nextBtn.style.display = showNav ? '' : 'none';
+}
+
+function pickAbaloneColor(i) {
+  requestAnimationFrame(() => {
+  S.abaloneColorIdx = parseInt(i);
+  renderWraps();
+  updateAll();
+  });
+}
+
+function renderSeats() { renderOptionList('seat-options', SEATS, S.seatId, 'pickSeat'); }
+
+function renderSeatPreview() {
+  const seat = getSeat();
+  const color = selectedSeatColor();
+  const photoEl   = document.getElementById('seat-photo');
+  const nameEl    = document.getElementById('seat-meta-name');
+  const priceEl   = document.getElementById('seat-meta-price');
+  const descEl    = document.getElementById('seat-meta-desc');
+  const colorWrap = document.getElementById('seat-color-block');
+  const swatchRow = document.getElementById('seat-swatch-row');
+  const colorName = document.getElementById('seat-color-name');
+  const stWrap    = document.getElementById('seat-softtouch-wrap');
+
+  const src = seatPhotoSrc();
+  photoEl.src = src;
+  photoEl.alt = seatDisplayName() + (color ? ` — ${color.name}` : '');
+  photoEl.onerror = () => { photoEl.style.opacity = 0.2; photoEl.title = 'Missing: ' + src; };
+  photoEl.style.opacity = 1;
+
+  nameEl.textContent = seatDisplayName();
+  const total = seatTotal();
+  priceEl.textContent = total === 0 ? 'Included' : `+$${total}`;
+  descEl.textContent = seat.desc;
+
+  if (seat.colors) {
+    const list = SEAT_COLORS[seat.colors];
+    const rawIdx = S.seatColorIdx[seat.colors];
+    const idx = (rawIdx == null || rawIdx < 0) ? -1 : rawIdx;
+    const labelEl = document.getElementById('seat-color-label');
+    if (labelEl) labelEl.textContent = seat.colorLabel || 'Body Color';
+    colorWrap.style.display = '';
+    swatchRow.innerHTML = list.map((c,i) => {
+      const bg = c.twoTone ? `linear-gradient(135deg, ${c.hex} 0 50%, ${c.twoTone} 50% 100%)` : c.hex;
+      return `<div class="seat-swatch ${i===idx?'active':''}" title="${c.name}"
+              style="background:${bg}"
+              onclick="pickSeatColor('${seat.colors}',${i})"></div>`;
+    }).join('');
+    colorName.textContent = (idx >= 0 && list[idx]) ? list[idx].name : 'Choose a color';
+  } else {
+    colorWrap.style.display = 'none';
+    swatchRow.innerHTML = '';
+    colorName.textContent = '';
+  }
+
+  if (seat.lockingRingEligible) {
+    const ringOn = !!S.seatLockingRing[seat.id];
+    const ringIdx = S.seatLockingRingColorIdx[seat.id];
+    const ringSwatches = SEAT_COLORS.lockingRing.map((c,i) => `<div class="seat-swatch ${i===ringIdx?'active':''}" title="${c.name}" style="background:${c.hex}" onclick="pickLockingRingColor(${i})"></div>`).join('');
+    stWrap.innerHTML = `
+      <button class="seat-st-toggle ${ringOn?'active':''}" onclick="toggleLockingRing()">
+        <span class="dot"></span>Aluminum Locking Nut<span class="seat-st-fee">+$${LOCKING_RING_FEE}</span>
+      </button>
+      ${ringOn ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">${ringSwatches}</div>` : ''}
+    `;
+  } else {
+    stWrap.innerHTML = '';
+  }
+}
+
+function renderGrips() {
+  document.getElementById('grip-groups').innerHTML = GRIPS.map(g => `
+    <div class="sub-group">
+      <div class="sub-group-label">${g.group}</div>
+      <div class="option-list">${g.items.map(item => {
+        const priceLabel = item.perInch
+          ? ('$' + CCORK_PRICE_PER_INCH + ' /inch')
+          : (item.adder===0 ? 'Included' : '+$'+item.adder);
+        let html = `
+        <div class="option-item ${item.id===S.gripId?'selected':''}" onclick="pickGrip('${item.id}')">
+          <div class="option-item-body">
+            <span class="option-item-name">${item.name}</span>
+          </div>
+          <span class="option-item-price">${priceLabel}</span>
+        </div>`;
+        if (item.id === 'eva-custom' && S.gripId === 'eva-custom') {
+          html += `<div style="margin:4px 0 6px;padding:8px 10px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius)">
+            <label style="font-family:var(--font-cond);font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--c-gold);display:block;margin-bottom:6px">Choose Color</label>
+            <select onchange="pickEvaColor(parseInt(this.value))" style="width:100%;background:var(--c-dark2);color:var(--c-text);border:1px solid var(--c-border);border-radius:4px;padding:6px 8px;font-family:var(--font-cond);font-size:13px;font-weight:600;letter-spacing:.05em;cursor:pointer">
+              ${EVA_COLORS.map((c,i) => `<option value="${i}" ${i===S.evaColorIdx?'selected':''}>${c.name}</option>`).join('')}
+            </select>
+          </div>`;
+        }
+        if ((item.id === 'ccork-custom-split' || item.id === 'ccork-custom-full') && S.gripId === item.id) {
+          html += corkSelectionHtml();
+        }
+        return html;
+      }).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function renderGripPreview() {
+  const grip = getGrip();
+  const photoEl = document.getElementById('grip-photo');
+  const stripEl = document.getElementById('grip-photo-cork-strip');
+  if (isCustomCorkGrip()) {
+    photoEl.style.display = 'none';
+    stripEl.style.display = '';
+    const selected = S.corkPatternIdxs.map(id => ccorkPatternById(id));
+    stripEl.innerHTML = selected.length
+      ? selected.map(p => `
+        <div class="grip-photo-cork-strip-item">
+          <img src="../preview/grips/ccork-${p.id}.png" alt="${p.name}">
+          <div class="grip-photo-cork-strip-name">${p.name}</div>
+        </div>`).join('')
+      : '<div class="grip-photo-cork-strip-empty">Choose up to 3 cork designs below</div>';
+  } else {
+    photoEl.style.display = '';
+    stripEl.style.display = 'none';
+    const src = gripPhotoSrc();
+    photoEl.src = src;
+    photoEl.alt = gripDisplayName();
+    photoEl.onerror = () => { photoEl.style.opacity = 0.2; photoEl.title = 'Missing: ' + src; };
+    photoEl.style.opacity = 1;
+  }
+
+  document.getElementById('grip-meta-name').textContent = gripDisplayName();
+  const gpt = gripPriceTotal();
+  let priceLabel;
+  if (isCustomCorkGrip()) priceLabel = gpt === 0 ? ('$' + CCORK_PRICE_PER_INCH + ' /inch') : `+$${gpt}`;
+  else                    priceLabel = gpt === 0 ? 'Included'                       : `+$${gpt}`;
+  document.getElementById('grip-meta-price').textContent = priceLabel;
+  document.getElementById('grip-meta-desc').textContent = grip.desc || '';
+  renderGripVariants();
+}
+
+function corkSelectionHtml() {
+  return `<div style="margin:4px 0 6px;padding:10px 12px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius)">
+    <div class="grip-variant-label" style="margin-bottom:.6rem">
+      <span>Cork Selection - Choose up to 3 different designs</span>
+      <span class="grip-variant-current">${S.corkPatternIdxs.length}/3 selected</span>
+    </div>
+    <div class="grip-variant-grid">${CUSTOM_CORK_PATTERNS.map(p => `
+      <div class="grip-variant-item ${S.corkPatternIdxs.includes(p.id)?'active':''}" onclick="event.stopPropagation();toggleCorkPattern('${p.id}')" title="${p.name}">
+        <img src="../preview/grips/ccork-${p.id}.png" alt="${p.name}" loading="lazy">
+        <div class="vname">${p.name}</div>
+      </div>`).join('')}</div>
+  </div>`;
+}
+
+function toggleCorkPattern(id) {
+  const i = S.corkPatternIdxs.indexOf(id);
+  if (i > -1) {
+    S.corkPatternIdxs.splice(i, 1);
+  } else if (S.corkPatternIdxs.length < 3) {
+    S.corkPatternIdxs.push(id);
+  }
+  renderGrips();
+  renderGripPreview();
+  updateAll();
+}
+
+function renderGripVariants() {
+  const wrap = document.getElementById('grip-variants');
+  if (!wrap) return;
+  if (isCarbonFiberGrip()) {
+    const cur = CARBON_COLORS[S.carbonColorIdx];
+    wrap.innerHTML = `
+      <div class="grip-variant-block">
+        <div class="grip-variant-label"><span>Choose Color</span><span class="grip-variant-current">${cur.name}</span></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+          ${CARBON_COLORS.map((c,i) => `
+            <div onclick="pickCarbonColor(${i})" title="${c.name}"
+                 style="width:32px;height:32px;border-radius:50%;background:${c.hex};cursor:pointer;
+                        border:2px solid ${i===S.carbonColorIdx?'var(--c-gold)':'var(--c-border)'};
+                        box-shadow:${i===S.carbonColorIdx?'0 0 0 2px rgba(201,148,26,.25)':'none'};
+                        transition:border-color .15s,box-shadow .15s"></div>`).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--c-muted);margin-top:8px">${cur.name}</div>
+      </div>`;
+  } else {
+    wrap.innerHTML = '';
+  }
+}
+
+function setActiveCorkPiece(section, i) {
+  const list = ccorkSection(section);
+  if (!list.length) return;
+  S.customCorkActive = { section, idx: Math.max(0, Math.min(list.length - 1, i)) };
+  renderGripPreview();
+  updateAll();
+}
+// Cork pattern tap handler.
+// The pattern tile both selects a pattern and (on a second tap) opens the photo
+// large. A plain `ondblclick` on the <img> can never fire here: the first tap
+// runs pickCorkPiecePattern, which re-renders #grip-variants via innerHTML and
+// destroys the element mid-gesture, so the second tap lands on a brand-new node.
+// Keying the double-tap off the pattern id instead of the DOM node survives that
+// re-render.
+let _ccorkLastTap = { id: null, t: 0 };
+const CCORK_DBLTAP_MS = 400;
+function ccorkPatternTap(patternId, name) {
+  const now = Date.now();
+  if (_ccorkLastTap.id === patternId && now - _ccorkLastTap.t < CCORK_DBLTAP_MS) {
+    _ccorkLastTap = { id: null, t: 0 };
+    openLightbox('../preview/grips/ccork-' + patternId + '.png', name);
+    return;
+  }
+  _ccorkLastTap = { id: patternId, t: now };
+  pickCorkPiecePattern(patternId);
+}
+
+function pickCorkPiecePattern(patternId) {
+  requestAnimationFrame(() => {
+  const piece = customCorkActivePiece();
+  if (!piece) return;
+  piece.patternId = patternId;
+  const step = ccorkStepFor(patternId);
+  piece.inches = Math.max(CCORK_MIN_INCHES, Math.round(piece.inches / step) * step);
+  renderGripPreview();
+  updateAll();
+  });
+}
+function adjCorkPieceInches(section, i, delta) {
+  requestAnimationFrame(() => {
+  const piece = ccorkSection(section)[i];
+  if (!piece) return;
+  const step = ccorkStepFor(piece.patternId);
+  const next = Math.round((piece.inches + delta) / step) * step; // snap to pattern step
+  piece.inches = Math.max(CCORK_MIN_INCHES, Math.min(CCORK_MAX_INCHES, next));
+  renderGripPreview();
+  updateAll();
+  });
+}
+function addCorkPiece(section) {
+  requestAnimationFrame(() => {
+  const list = S.customCork[section];
+  if (!list) return;
+  // Inherit the pattern from the piece above it, else whatever is selected.
+  const seed = list[list.length - 1] || customCorkActivePiece();
+  const patternId = seed ? seed.patternId : CUSTOM_CORK_PATTERNS[0].id;
+  list.push({ patternId, inches: CCORK_MIN_INCHES });
+  S.customCorkActive = { section, idx: list.length - 1 };
+  renderGripPreview();
+  updateAll();
+  });
+}
+function removeCorkPiece(section, i) {
+  requestAnimationFrame(() => {
+  const list = S.customCork[section];
+  if (!list || !list[i]) return;
+  const conf = ccorkSectionConf(section);
+  if (conf && conf.required && list.length <= 1) return;  // bottom/top keep one
+  list.splice(i, 1);
+  // Re-anchor the active piece if it sat at or after the removed index.
+  const A = S.customCorkActive || {};
+  if (A.section === section && A.idx >= i) {
+    const idx = Math.min(Math.max(A.idx - (A.idx > i ? 1 : 0), 0), list.length - 1);
+    if (list.length) {
+      S.customCorkActive = { section, idx };
+    } else {
+      const fallback = CCORK_SECTIONS.map(s => s.key).find(k => ccorkSection(k).length) || 'bottom';
+      S.customCorkActive = { section: fallback, idx: 0 };
+    }
+  }
+  renderGripPreview();
+  updateAll();
+  });
+}
+function pickEvaColor(i) {
+  requestAnimationFrame(() => {
+  S.evaColorIdx = i;
+  renderGripPreview();
+  updateAll();
+  });
+}
+
+function pickCarbonColor(i) {
+  requestAnimationFrame(() => {
+  S.carbonColorIdx = i;
+  renderGripPreview();
+  updateAll();
+  });
+}
+
+function renderGuides() {
+  document.getElementById('guide-groups').innerHTML = GUIDES.map(g => `
+    <div class="sub-group">
+      <div class="guide-group-label">${g.group}</div>
+      ${g.desc ? `<div class="guide-group-desc">${g.desc}</div>` : ''}
+      <div class="option-list">${g.items.map(item => {
+        const selected = item.id===S.guideId;
+        const tipKind = (selected && TIP_UPGRADE_ELIGIBLE_IDS.includes(item.id)) ? tipUpgradeEligibleOptions()[0] : null;
+        const tipRowLabel = tipKind === 'sic' ? 'Upgrade to SiC tip' : 'Upgrade tip to Titanium Torzite';
+        const tipRowDesc = tipKind === 'sic' ? 'SiC ring — smoother, harder, and more wear-resistant than Alconite.' : 'Premium Torzite ring — reduces friction and weight at the rod tip.';
+        return `
+        <div class="option-item ${selected?'selected':''}" onclick="pickGuide('${item.id}')">
+          <div class="option-item-body">
+            <span class="option-item-name">${item.name}</span>
+            ${item.desc ? `<span class="option-item-desc">${item.desc}</span>` : ''}
+            ${item.titanium ? `<span class="option-item-note" style="display:block;margin-top:6px;font-size:11.5px;color:var(--c-muted);font-style:italic">Comes standard with Titanium SiC tip.</span>` : ''}
+          </div>
+          <span class="option-item-price">${item.adder===0?'Included':'+$'+item.adder}</span>
+        </div>
+        ${tipKind ? `
+        <div class="option-item tip-upgrade-row ${S.tipUpgrade===tipKind?'selected':''}" onclick="pickTipUpgrade(event,'${tipKind}')" style="margin-left:18px;margin-top:-6px;margin-bottom:8px;background:rgba(201,148,26,0.04);border-left:2px solid var(--c-gold)">
+          <div class="option-item-body">
+            <span class="option-item-name" style="font-size:13px">
+              <input type="checkbox" ${S.tipUpgrade===tipKind?'checked':''} onclick="pickTipUpgrade(event,'${tipKind}')" style="margin-right:8px;vertical-align:middle;accent-color:var(--c-gold)">
+              ${tipRowLabel}
+            </span>
+            <span class="option-item-desc">${tipRowDesc}</span>
+          </div>
+          <span class="option-item-price">+$${TIP_UPGRADE_FEES[tipKind]}</span>
+        </div>` : ''}
+        `;
+      }).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function renderGuidePreview() {
+  const guide = getGuide();
+  const colors = guideColorList();
+  if (S.guideColorIdx >= colors.length) S.guideColorIdx = 0;
+
+  const photoEl = document.getElementById('guide-photo');
+  const src = guidePhotoSrc();
+  photoEl.src = src;
+  photoEl.alt = guideDisplayName() + (guide.titanium ? '' : ' — ' + guideColorAt(S.guideColorIdx).name);
+  photoEl.onerror = () => { photoEl.style.opacity = 0.2; photoEl.title = 'Missing: ' + src; };
+  photoEl.style.opacity = 1;
+
+  document.getElementById('guide-meta-name').textContent = guideDisplayName();
+  document.getElementById('guide-meta-price').textContent = guide.adder === 0 ? 'Included' : `+$${guide.adder}`;
+  document.getElementById('guide-meta-desc').textContent = '';
+
+  const colorBlock = document.getElementById('guide-color-block');
+  if (guide.titanium) {
+    colorBlock.style.display = 'none';
+  } else {
+    colorBlock.style.display = '';
+    const row = document.getElementById('guide-swatch-row');
+    row.innerHTML = colors.map((c,i) => `
+      <div class="guide-swatch ${i===S.guideColorIdx?'active':''}" title="${c.name}"
+           style="background:${c.hex}"
+           onclick="pickGuideColor(${i})"></div>`).join('');
+    document.getElementById('guide-color-name').textContent = guideColorAt(S.guideColorIdx).name;
+  }
+}
+
+// ── BUILD STRIP (top showcase) ──
+function renderBuildStrip() {
+  const gripImg = document.getElementById('build-grip-img');
+  const seatImg = document.getElementById('build-seat-img');
+  const guideImg = document.getElementById('build-guide-img');
+
+  gripImg.src = gripPhotoSrc();
+  gripImg.alt = gripDisplayName();
+  gripImg.onerror = () => { gripImg.style.opacity = 0.15; };
+  gripImg.style.opacity = 1;
+  document.getElementById('build-grip-name').textContent = gripDisplayName();
+
+  seatImg.src = seatPhotoSrc();
+  const seatColor = selectedSeatColor();
+  seatImg.alt = seatDisplayName() + (seatColor ? ` — ${seatColor.name}` : '');
+  seatImg.onerror = () => { seatImg.style.opacity = 0.15; };
+  seatImg.style.opacity = 1;
+  document.getElementById('build-seat-name').textContent = seatDisplayName() + (seatColor ? ` — ${seatColor.name}` : '');
+
+  guideImg.src = guidePhotoSrc();
+  guideImg.alt = guideDisplayName() + (guideColorLabel() ? ' — ' + guideColorLabel() : '');
+  guideImg.onerror = () => { guideImg.style.opacity = 0.15; };
+  guideImg.style.opacity = 1;
+  document.getElementById('build-guide-name').textContent = guideDisplayName() + (guideColorLabel() ? ' — ' + guideColorLabel() : '');
+
+  // Rod Wrap slot
+  const rodWrapSlot = document.getElementById('build-rodwrap-slot');
+  if (rodWrapSlot && S.wrapUserSelected) {
+    rodWrapSlot.style.display = '';
+    const wrap = getWrap();
+    const wrapImg = document.getElementById('build-rodwrap-img');
+    const wrapSrc = wrap.photo ? wrap.photo : (wrap.photoCount ? `../preview/rod-wraps/${wrap.photoSlug || wrap.id}-1.png` : '');
+    if (wrapSrc) { wrapImg.src = wrapSrc; wrapImg.alt = wrap.name; wrapImg.onerror = () => { wrapImg.style.opacity = 0.15; }; wrapImg.style.opacity = 1; }
+    document.getElementById('build-rodwrap-name').textContent = wrap.name;
+    // Colors slot
+    const colorsSlot = document.getElementById('build-colors-slot');
+    const colorsList = document.getElementById('build-wrap-colors-list');
+    if (colorsSlot && colorsList && typeof WRAP_COLORS !== 'undefined') {
+      colorsSlot.style.display = '';
+      const mainC = WRAP_COLORS[S.mainIdx];
+      const supportCs = (S.supportIdxs || []).map(i => WRAP_COLORS[i]);
+      const rows = [{label:'Main Color', color: mainC}, ...supportCs.map((c, i) => ({label: i === 0 ? 'Supporting' : 'Supporting ' + (i + 1), color: c}))];
+      colorsList.innerHTML = rows.map(r => `<div style="display:flex;align-items:center;gap:8px">
+        <div style="width:14px;height:14px;border-radius:50%;background:${r.color.hex};border:1px solid rgba(255,255,255,.25);flex-shrink:0"></div>
+        <div>
+          <div style="font-family:var(--font-cond);font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--c-gold);line-height:1.2">${r.label}</div>
+          <div style="font-size:11px;color:var(--c-text);line-height:1.3">${colorSpecLabel(r.color)}</div>
+        </div>
+      </div>`).join('');
+      document.getElementById('build-colors-name').textContent = rows.map(r => colorSpecLabel(r.color)).join(' · ');
+    }
+  }
+
+  // Split Wrap slot
+  const splitWrapSlot = document.getElementById('build-splitwrap-slot');
+  if (splitWrapSlot) {
+    const sw = getSplitWrap();
+    if (sw) {
+      splitWrapSlot.style.display = '';
+      const swImg = document.getElementById('build-splitwrap-img');
+      let swSrc = '';
+      if (sw.photo) swSrc = sw.photo;
+      else if (sw.photoCount) swSrc = `../preview/rod-wraps/${sw.photoSlug || sw.id}-${(S.splitWrapPhotoIdx || 0) + 1}.png`;
+      if (swSrc) { swImg.src = swSrc; swImg.alt = sw.name; swImg.onerror = () => { swImg.style.opacity = 0.15; }; swImg.style.opacity = 1; }
+      document.getElementById('build-splitwrap-name').textContent = sw.name;
+    } else {
+      splitWrapSlot.style.display = 'none';
+    }
+  }
+}
+
+// ── ACCORDION ──
+function toggleSection(id) {
+  const body = document.getElementById(id);
+  const chev = document.getElementById('chev-' + id.replace('sec-',''));
+  body.classList.toggle('open');
+  if (chev) chev.classList.toggle('open', body.classList.contains('open'));
+
+  // Opening Split Wrap with nothing chosen shows an empty photo frame. Preselect
+  // Trim Bands (the $0 baseline) so a preview is on screen immediately.
+  if (id === 'sec-split-wrap' && body.classList.contains('open')
+      && !S.splitWrapId && typeof SPLIT_WRAP_OPTIONS !== 'undefined') {
+    S.splitWrapId = 'trim-bands';
+    S.splitWrapPhotoIdx = 0;
+    if (typeof renderSplitWrapOptions === 'function') renderSplitWrapOptions();
+    if (typeof renderSplitWrapPreview === 'function') renderSplitWrapPreview();
+    updateAll();
+  }
+}
+
+// ── SUPPORTING COLORS (dynamic, unlimited) ──
+function renderSupportingRows() {
+  const container = document.getElementById('supporting-color-rows');
+  if (!container) return;
+  container.innerHTML = S.supportIdxs.map((_, i) => {
+    const isExtra = i >= effectiveSupportIncluded();
+    const priceLabel = isExtra ? '+$' + effectiveExtraColorFee() : 'Included';
+    return `
+      <div class="wrap-color-row">
+        <div class="wrap-color-row-head">
+          <span class="wrap-color-row-label">Supporting Color ${i+1}</span>
+          <span class="wrap-color-row-price">
+            ${priceLabel}
+            <a href="javascript:void(0)" onclick="removeSupport(${i})" title="Remove this supporting color"
+               style="color:var(--c-muted);margin-left:10px;text-decoration:none;font-size:13px">&times;</a>
+          </span>
+        </div>
+        <div class="swatch-grid" id="support-swatch-${i}"></div>
+      </div>`;
+  }).join('');
+  S.supportIdxs.forEach((colorIdx, i) => {
+    buildSwatches('support-swatch-' + i, WRAP_COLORS, colorIdx, idx => { S.supportIdxs[i] = idx; updateAll(); });
+  });
+}
+
+function addSupport() {
+  // Pick a default color not yet used (or fallback to index 0)
+  const used = new Set([S.mainIdx, ...S.supportIdxs]);
+  let defaultIdx = 0;
+  for (let i = 0; i < WRAP_COLORS.length; i++) {
+    if (!used.has(i)) { defaultIdx = i; break; }
+  }
+  S.supportIdxs.push(defaultIdx);
+  updateAll();
+}
+
+function removeSupport(idx) {
+  requestAnimationFrame(() => {
+  S.supportIdxs.splice(idx, 1);
+  updateAll();
+  });
+}
+
+// ── FULL UPDATE ──
+function updateAll() {
+  const blank   = getBlank();
+  const variant = getVariant();
+  const grip    = getGrip();
+  const guide   = getGuide();
+  const wrap    = getWrap();
+
+  const seatColor = selectedSeatColor();
+  const seatChosen = seatDisplayName() + (seatColor ? ` · ${seatColor.name}` : '');
+
+  // Split Wrap — only offered for split-style grips, hidden + cleared otherwise
+  const splitWrapWrap = document.getElementById('split-wrap-cfg-section');
+  const showSplitWrap = !S.performanceOnly && isSplitGrip();
+  if (splitWrapWrap) splitWrapWrap.style.display = showSplitWrap ? '' : 'none';
+  if (!showSplitWrap && S.splitWrapId) S.splitWrapId = null;
+  renderSplitWrapOptions();
+
+  // Color summary
+  const mainName = colorSpecLabel(WRAP_COLORS[S.mainIdx]);
+  const supportingNames = S.supportIdxs.map(i => colorSpecLabel(WRAP_COLORS[i]));
+  const colorSummary = supportingNames.length ? `${mainName} / ${supportingNames.join(' / ')}` : `${mainName} (no supporting)`;
+
+  document.getElementById('chosen-blank').textContent       = blank.name + ' · ' + variantLabel(variant);
+  document.getElementById('chosen-seat').textContent        = seatChosen;
+  document.getElementById('chosen-grip').textContent        = gripDisplayName();
+  document.getElementById('chosen-guides').textContent      = guideDisplayName() + (guideColorLabel() ? ' · ' + guideColorLabel() : '');
+  document.getElementById('chosen-wrap-color').textContent  = colorSummary;
+  document.getElementById('chosen-rod-wrap').textContent    = S.performanceOnly ? 'Performance — None' : wrap.name;
+  document.getElementById('chosen-butt').textContent = buttAllowed() ? buttDisplayName() : '—';
+  const accSummary = accessoriesSummaryText();
+  document.getElementById('chosen-accessories').textContent = accSummary;
+
+  const extraFee = supportExtraFee();
+  const seatLine = seatDisplayName()
+    + (seatColor ? ` (${seatColor.name})` : '')
+    + (seatTotal() ? '  +$' + seatTotal() : '');
+  const accAdd = accessoriesAdder();
+  document.getElementById('summary').innerHTML = [
+    ['Blank',       blank.name + ' — ' + variantLabel(variant)],
+    ['Reel Seat',   seatLine],
+    ['Grip',        gripDisplayName() + (gripPriceTotal() ? '  +$'+gripPriceTotal() : '')],
+    ['Guides',      guideDisplayName() + (guideColorLabel() ? ' (' + guideColorLabel() + ')' : '') + (guide.adder ? '  +$'+guide.adder : '') + (tipUpgradeActive() ? '  · '+tipUpgradeLabel()+' +$'+tipUpgradeFee() : '')],
+    ['Colors',      colorSummary + (extraFee ? '  +$'+extraFee : '')],
+    ['Rod Wrap',    S.performanceOnly ? 'Performance — No decorative wrap' : (wrap.name + (wrap.adder ? '  +$'+wrap.adder : ''))],
+    ...(showSplitWrap && getSplitWrap() ? [['Split Wrap', getSplitWrap().name + (splitWrapAdder() ? '  +$' + splitWrapAdder() : '')]] : []),
+    ...(buttAllowed() ? [['Butt', buttDisplayName() + (buttAdder() ? '  +$' + buttAdder() : '')]] : []),
+    ['Accessories', accSummary],
+    ...(S.performanceOnly ? [['Performance Discount', '−$50']] : []),
+  ].map(([l,v]) => `<div class="summary-line"><span class="sl-label">${l}</span><span class="sl-val">${v}</span></div>`).join('');
+
+  document.getElementById('price-display').textContent = '$' + calcTotal().toLocaleString();
+
+  document.getElementById('about-length').textContent = variant.length;
+  document.getElementById('about-line').textContent   = variant.lineWt;
+  document.getElementById('about-lure').textContent   = variant.lureWt;
+  document.getElementById('about-weight').textContent = variant.blankWt;
+
+  // Main swatches + dynamic supporting rows
+  // Deferred: this rebuilds the entire color swatch grid (all groups,
+  // every node). Running it synchronously inside a click/touch handler
+  // — which updateAll() is often called from — was interfering with
+  // iOS Safari's tap gesture recognition (misfiring as zoom) and causing
+  // visible layout jumps, regardless of which element was actually tapped.
+  requestAnimationFrame(() => {
+    buildSwatches('main-swatches', WRAP_COLORS, S.mainIdx, i => { S.mainIdx = i; updateAll(); });
+    renderSupportingRows();
+  });
+
+  // Add-support hint
+  const extras = extraSupportCount();
+  const hint = document.getElementById('support-price-hint');
+  if (hint) {
+    hint.textContent = extras
+      ? '+$' + (extras * effectiveExtraColorFee()) + ' for ' + extras + ' extra color' + (extras>1?'s':'') + ' (beyond ' + effectiveSupportIncluded() + ' included)'
+      : (effectiveSupportIncluded() === 0 ? 'No supporting colors included' : effectiveSupportIncluded() === 1 ? 'First supporting color included' : 'First ' + effectiveSupportIncluded() + ' supporting colors included') + ' · each additional +$' + effectiveExtraColorFee();
+  }
+  const includedNote = document.getElementById('color-included-note');
+  if (includedNote) {
+    includedNote.textContent = (S.performanceOnly
+      ? 'One main color and 1 supporting color included (2 total).'
+      : 'One main color and 2 supporting colors included.')
+      + ' +$' + effectiveExtraColorFee() + ' for each additional color';
+  }
+
+  renderBuildStrip();
+}
+
+// Wire Add Supporting Color button
+document.getElementById('add-support-btn').addEventListener('click', addSupport);
+
+// ── ORDER ──
+function buildOrderItem() {
+  const blank = getBlank();
+  const v = getVariant();
+  const seatColorForOrder = selectedSeatColor();
+  const seatOrderLine = seatDisplayName()
+    + (seatColorForOrder ? ` (${seatColorForOrder.name})` : '')
+    + (seatTotal() ? '  +$' + seatTotal() : '');
+  const guideColorName = guideColorLabel();
+
+  const mainName   = WRAP_COLORS[S.mainIdx].name;
+  const supporting = S.supportIdxs.map(i => WRAP_COLORS[i].name);
+  const extras     = extraSupportCount();
+  const feeNote    = extras ? ` (+$${extras * effectiveExtraColorFee()} for ${extras} extra color${extras>1?'s':''})` : '';
+  const colorLine  = supporting.length
+    ? `Colors: ${mainName} main, supporting: ${supporting.join(' + ')}${feeNote}`
+    : `Colors: ${mainName} main (no supporting colors)`;
+
+  return {
+    rodType: 'Finesse',
+    buildStrip: [
+      {label:'Grips',     name: document.getElementById('build-grip-name').textContent,    img: document.getElementById('build-grip-img').src},
+      {label:'Reel Seat', name: document.getElementById('build-seat-name').textContent,    img: document.getElementById('build-seat-img').src},
+      {label:'Guides',    name: document.getElementById('build-guide-name').textContent,   img: document.getElementById('build-guide-img').src},
+      {label:'Rod Wrap',  name: document.getElementById('build-rodwrap-name').textContent, img: document.getElementById('build-rodwrap-img').src || null},
+      {label:'Colors',    name: document.getElementById('build-colors-name').textContent,  img: null,
+        colors: [{label:'Main', hex: WRAP_COLORS[S.mainIdx].hex, name: WRAP_COLORS[S.mainIdx].name}, ...(S.supportIdxs||[]).map((i,idx) => ({label: idx===0?'Supporting':'Supporting '+(idx+1), hex: WRAP_COLORS[i].hex, name: WRAP_COLORS[i].name}))]},
+    ],
+    specs: {length: v.length, lineWt: v.lineWt, lureWt: v.lureWt, blankWt: v.blankWt},
+    lureLabel: 'Lure Rating',
+    lines: [
+      {label:'Blank',       value: blank.name + ' — ' + variantLabel(v) + '  (Lure ' + v.lureWt + ', ' + v.blankWt + ')'},
+      {label:'Reel Seat',   value: seatOrderLine},
+      {label:'Grip',        value: gripDisplayName() + (getGrip().adder ? '  +$' + getGrip().adder : '')},
+      {label:'Guides',      value: guideDisplayName() + (guideColorName ? ' (' + guideColorName + ')' : '') + (getGuide().adder ? '  +$' + getGuide().adder : '') + (tipUpgradeActive() ? '  · ' + tipUpgradeLabel() + ' +$' + tipUpgradeFee() : '')},
+      {label:'Colors',      value: colorLine},
+      {label:'Rod Wrap',    value: S.performanceOnly ? 'Performance Build — No decorative wrap' : (getWrap().name + (getWrap().adder ? '  +$' + getWrap().adder : ''))},
+      ...(!S.performanceOnly && isSplitGrip() && getSplitWrap() ? [{label:'Split Wrap', value: getSplitWrap().name + (splitWrapAdder() ? '  +$' + splitWrapAdder() : '')}] : []),
+      ...(buttAllowed() ? [{label:'Butt', value: buttDisplayName() + (buttAdder() ? '  +$' + buttAdder() : '')}] : []),
+      {label:'Accessories', value: accessoriesSummaryText()},
+      ...(S.performanceOnly ? [{label:'Performance Discount', value: '−$50'}] : []),
+    ],
+    total: calcTotal()
+  };
+}
+
+document.getElementById('order-btn').addEventListener('click', () => {
+  const item = Object.assign(buildOrderItem(), { rawState: JSON.parse(JSON.stringify(S)), sourcePage: 'finesse.html' });
+  if (window.__editingCartId != null) {
+    const cart = getCart().map(i => i.id === window.__editingCartId ? Object.assign(item, { id: i.id }) : i);
+    localStorage.setItem('sfswCart', JSON.stringify(cart));
+  } else {
+    addToCart(item);
+  }
+  window.location.href = 'checkout.html';
+});
+
+document.getElementById('discuss-btn').addEventListener('click', () => {
+  localStorage.setItem('sfswDiscussBuild', JSON.stringify(buildOrderItem()));
+  window.location.href = 'discuss-build.html';
+});
+
+// ── INIT ──
+(function restoreFromEdit() {
+  const editId = new URLSearchParams(window.location.search).get('edit');
+  if (!editId) return;
+  const item = getCart().find(i => String(i.id) === String(editId));
+  if (item && item.rawState) {
+    Object.assign(S, item.rawState);
+    window.__editingCartId = item.id;
+    const btn = document.getElementById('order-btn');
+    if (btn) btn.textContent = 'Update Cart →';
+  }
+})();
+renderBlankCards();
+renderSeats();
+renderSeatPreview();
+renderGrips();
+renderGripPreview();
+renderGuides();
+renderGuidePreview();
+renderWraps();
+renderButt();
+renderAccessories();
+updateAll();
+</script>
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">×</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+<script>
+function openLightbox(src, alt) {
+  const lb = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img');
+  img.src = src;
+  img.alt = alt || '';
+  lb.classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
+</script>
+</body>
+</html>

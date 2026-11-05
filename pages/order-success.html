@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Order Confirmed — SFSW</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/favicon-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="../css/global.css">
+  <style>
+    .success-wrap {
+      max-width: 540px;
+      margin: 5rem auto;
+      padding: 0 2rem 4rem;
+      text-align: center;
+    }
+    .success-icon {
+      font-size: 52px;
+      margin-bottom: 1.25rem;
+      color: var(--c-gold);
+    }
+    .success-title {
+      font-family: var(--font-cond);
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--c-text);
+      margin-bottom: .75rem;
+    }
+    .success-sub {
+      color: var(--c-muted);
+      font-size: 15px;
+      line-height: 1.75;
+      margin-bottom: 2rem;
+    }
+    .success-sub strong { color: var(--c-text); }
+    .success-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+<div id="nav-mount"></div>
+
+<div class="page-hero">
+  <div class="page-hero-eyebrow">Payment Confirmed</div>
+  <h1 class="page-hero-title"><em>Order</em> Received</h1>
+</div>
+<hr class="divider">
+
+<section class="section">
+  <div class="success-wrap">
+    <div class="success-icon">✓</div>
+    <div class="success-title">You're all set!</div>
+    <p class="success-sub">
+      Your payment was confirmed and your custom rod order has been received.<br><br>
+      <strong>We'll reach out within 24 hours</strong> to confirm your build details.<br>
+      Lead time is approximately <strong>3–5 weeks</strong>.<br><br>
+      Questions? Text us at <a href="sms:+15618130004" style="color:var(--c-gold)">(561) 813-0004</a>
+    </p>
+    <div class="success-actions">
+      <a href="../index.html" class="btn btn-outline">Back to Home</a>
+      <a href="../pages/contact.html" class="btn btn-primary">Contact Us</a>
+    </div>
+  </div>
+</section>
+
+<div id="footer-mount"></div>
+<script src="../js/sfsw.js"></script>
+<script>
+  document.getElementById('nav-mount').innerHTML = buildNav('');
+  document.getElementById('footer-mount').innerHTML = buildFooter();
+  // Clear order from sessionStorage on success
+  sessionStorage.removeItem('sfswOrder');
+</script>
+</body>
+</html>

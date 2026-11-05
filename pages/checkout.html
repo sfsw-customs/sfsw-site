@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Cart — SFSW</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/favicon-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="../css/global.css">
+  <script src="https://js.stripe.com/v3/" defer></script>
+  <style>
+    .cart-outer { max-width: 960px; margin: 0 auto; padding: 0 2rem 4rem; }
+
+    /* ── Cart item card ── */
+    .cart-item {
+      background: var(--c-dark2);
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius-md);
+      margin-bottom: 1.25rem;
+      overflow: hidden;
+    }
+    .cart-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      background: #0d0f11;
+      padding: 12px;
+      border-bottom: 1px solid var(--c-border);
+    }
+    .cart-strip-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .cart-strip-slot img {
+      max-height: 70px; max-width: 100%; object-fit: contain;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,.6));
+    }
+    .cart-strip-caption { text-align: center; }
+    .cart-strip-label {
+      font-family: var(--font-cond); font-size: 9px; font-weight: 600;
+      letter-spacing: .18em; text-transform: uppercase; color: var(--c-gold);
+    }
+    .cart-strip-name { font-size: 11px; color: var(--c-muted); }
+
+    .cart-item-body { padding: 1rem 1.25rem; }
+    .cart-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .75rem; }
+    .cart-rod-type {
+      font-family: var(--font-cond); font-size: 15px; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase; color: var(--c-text);
+    }
+    .cart-remove-btn {
+      background: none; border: 1px solid var(--c-border); color: var(--c-muted);
+      font-size: 12px; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: all .15s;
+    }
+    .cart-remove-btn:hover { border-color: #f87171; color: #f87171; }
+    .cart-lines { margin-bottom: .75rem; }
+    .cart-line {
+      display: flex; justify-content: space-between; gap: 1rem;
+      padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.04); font-size: 12px;
+    }
+    .cart-line:last-child { border-bottom: none; }
+    .cart-line-label { color: var(--c-muted); flex-shrink: 0; }
+    .cart-line-value { color: var(--c-text); text-align: right; }
+    .cart-item-price {
+      font-family: var(--font-cond); font-size: 17px; font-weight: 700;
+      color: var(--c-gold); text-align: right;
+    }
+
+    /* ── Order summary breakdown ── */
+    .summary-card {
+      background: var(--c-dark2);
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: .55rem 0;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      font-size: 14px;
+      color: var(--c-muted);
+    }
+    .summary-line:last-child { border-bottom: none; }
+    .summary-line.total {
+      padding-top: .85rem;
+      margin-top: .25rem;
+      font-family: var(--font-cond);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--c-text);
+    }
+    .summary-line.total span:last-child { color: var(--c-gold); }
+
+    /* ── Checkout form card ── */
+    .co-card {
+      background: var(--c-dark2);
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius-md);
+      padding: 2rem;
+    }
+    .co-card-title {
+      font-family: var(--font-cond);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--c-gold);
+      margin-bottom: 1.5rem;
+    }
+    .co-form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .co-form-full { margin-bottom: 1.25rem; }
+    .co-form-field label {
+      display: block;
+      font-family: var(--font-cond);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--c-muted);
+      margin-bottom: .5rem;
+    }
+    .co-form-field input {
+      width: 100%;
+      padding: 13px 16px;
+      font-size: 15px;
+      background: #111417;
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius);
+      color: var(--c-text);
+      transition: border-color .15s;
+    }
+    .co-form-field input:focus {
+      outline: none;
+      border-color: var(--c-gold);
+    }
+    .co-form-field input::placeholder { color: #4a5058; }
+
+    /* ── Delivery options ── */
+    .co-section-label {
+      font-family: var(--font-cond);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--c-muted);
+      margin-bottom: .75rem;
+    }
+    .delivery-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .delivery-card {
+      border: 2px solid var(--c-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      background: #111417;
+    }
+    .delivery-card:hover { border-color: rgba(200,169,110,.4); }
+    .delivery-card.active {
+      border-color: var(--c-gold);
+      background: rgba(200,169,110,.06);
+    }
+    .delivery-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: .5rem;
+    }
+    .delivery-name {
+      font-family: var(--font-cond);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--c-text);
+    }
+    .delivery-price {
+      font-family: var(--font-cond);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--c-gold);
+    }
+    .delivery-detail {
+      font-size: 12px;
+      color: var(--c-muted);
+      line-height: 1.5;
+    }
+    .delivery-check {
+      display: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--c-gold);
+      color: #0d0f11;
+      font-size: 11px;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .delivery-card.active .delivery-check { display: flex; }
+
+    .co-divider { border: none; border-top: 1px solid var(--c-border); margin: 1.5rem 0; }
+
+    /* Payment Element */
+    #payment-element-wrap { display: none; }
+    #express-checkout-element { margin-bottom: .75rem; }
+    #payment-element { margin-bottom: 1.25rem; }
+
+    /* "or pay with card" divider */
+    .pay-or-divider {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin: 1rem 0 1.25rem;
+      font-size: 12px;
+      color: var(--c-muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .pay-or-line { flex: 1; height: 1px; background: var(--c-border); }
+
+    .co-pay-btn {
+      display: block; width: 100%; padding: 16px;
+      background: var(--c-gold); color: #0d0f11;
+      font-family: var(--font-cond); font-size: 16px; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      border: none; border-radius: var(--radius); cursor: pointer;
+      transition: opacity .18s;
+    }
+    .co-pay-btn:hover { opacity: .85; }
+    .co-pay-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    #pay-error { margin-top: .75rem; color: #f87171; font-size: 13px; display: none; }
+
+    #cart-empty {
+      max-width: 480px; margin: 4rem auto; text-align: center;
+      color: var(--c-muted); font-size: 14px; line-height: 1.7;
+    }
+
+    @media (max-width: 600px) {
+      .cart-strip { grid-template-columns: 1fr 1fr 1fr; gap: 4px; padding: 8px; }
+      .cart-strip-slot img { max-height: 50px; }
+      .co-form-row { grid-template-columns: 1fr; }
+      .delivery-options { grid-template-columns: 1fr; }
+      .co-card { padding: 1.25rem; }
+      .cart-outer { padding: 0 .5rem 3rem; }
+    }
+  </style>
+</head>
+<body>
+<div id="nav-mount"></div>
+
+<div class="page-hero">
+  <h1 class="page-hero-title"><em>Your</em> Order</h1>
+  <p class="page-hero-sub">Review your rods and complete payment below.</p>
+  <p class="page-hero-sub">Current lead time 3-5 weeks.</p>
+</div>
+<hr class="divider">
+
+<section class="section">
+  <div class="cart-outer">
+
+    <div id="cart-empty" style="display:none">
+      <p>Your cart is empty.<br><a href="../index.html" style="color:var(--c-gold)">Browse our rods →</a></p>
+    </div>
+
+    <div id="cart-items"></div>
+
+    <div id="cart-checkout" style="display:none">
+
+      <p style="font-size:14px;color:var(--c-muted);line-height:1.6;margin:0 0 1rem;">We accept Cash, Zelle, Venmo, or PayPal to avoid the processing fee. 50% deposit required at time of purchase, remainder due on delivery for these payment options. Please Contact Us.</p>
+
+      <!-- Order summary breakdown -->
+      <div class="summary-card">
+        <div class="summary-line">
+          <span>Rods</span>
+          <span id="summary-rods">—</span>
+        </div>
+        <div class="summary-line" id="summary-shipping-row" style="display:none">
+          <span>Shipping</span>
+          <span id="summary-shipping">—</span>
+        </div>
+        <div class="summary-line" id="summary-discount-row" style="display:none">
+          <span><span id="summary-discount-label">Discount</span> <span id="summary-promo-code" style="color:var(--c-muted);font-size:11px"></span></span>
+          <span id="summary-discount" style="color:#4ade80">—</span>
+        </div>
+        <div class="summary-line">
+          <span>Processing fee (2.9% + $0.30)</span>
+          <span id="summary-fee">—</span>
+        </div>
+        <div class="summary-line total">
+          <span>Total</span>
+          <span id="cart-grand-total">—</span>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,.05)">
+          <input type="text" id="promo-input" placeholder="Promo code" autocapitalize="characters"
+            style="flex:1;padding:10px 14px;font-size:14px;background:#111417;border:1px solid var(--c-border);border-radius:var(--radius);color:var(--c-text);text-transform:uppercase"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();applyPromo();}">
+          <button type="button" id="promo-apply-btn" onclick="applyPromo()"
+            style="padding:10px 18px;background:none;border:1px solid var(--c-gold);color:var(--c-gold);border-radius:var(--radius);font-family:var(--font-cond);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;white-space:nowrap">Apply</button>
+        </div>
+        <div id="promo-msg" style="font-size:12px;margin-top:.5rem;display:none"></div>
+      </div>
+
+      <div style="margin-bottom:1.5rem"></div>
+
+      <div class="co-card">
+
+        <!-- Step 1: Contact + delivery -->
+        <div id="co-contact">
+          <div class="co-card-title">Your Information</div>
+
+          <div class="co-form-full co-form-field">
+            <label for="co-name">Full Name</label>
+            <input type="text" id="co-name" placeholder="Your full name" autocomplete="name">
+          </div>
+
+          <div class="co-form-row">
+            <div class="co-form-field">
+              <label for="co-email">Email</label>
+              <input type="email" id="co-email" placeholder="you@email.com" autocomplete="email">
+            </div>
+            <div class="co-form-field">
+              <label for="co-phone">Phone</label>
+              <input type="tel" id="co-phone" placeholder="(561) 000-0000" autocomplete="tel" oninput="formatPhone(this)" maxlength="14">
+            </div>
+          </div>
+
+          <div class="co-form-full co-form-field">
+            <label for="co-address">Address</label>
+            <input type="text" id="co-address" placeholder="Street address, city, state, ZIP" autocomplete="street-address">
+          </div>
+
+          <hr class="co-divider">
+
+          <div class="co-section-label">Delivery Method</div>
+          <div class="delivery-options">
+            <div class="delivery-card active" id="opt-pickup" onclick="selectDelivery('pickup')">
+              <div class="delivery-card-top">
+                <div class="delivery-name">Pick Up / Local Delivery</div>
+                <div class="delivery-check">✓</div>
+              </div>
+              <div class="delivery-price">Free</div>
+              <div class="delivery-detail" style="margin-top:.4rem">
+                Boca Raton, FL 33432<br>
+                Free delivery within 15 miles
+              </div>
+            </div>
+            <div class="delivery-card" id="opt-shipping" onclick="selectDelivery('shipping')">
+              <div class="delivery-card-top">
+                <div class="delivery-name">Shipping</div>
+                <div class="delivery-check">✓</div>
+              </div>
+              <div class="delivery-price" id="shipping-price-label">+$55</div>
+              <div class="delivery-detail" style="margin-top:.4rem">
+                Orders ship in a thick secure PVC tube. Ground shipping available which  takes 2 to 5 business days to deliver
+              </div>
+              <div id="shipping-oversize-warning" style="display:none;margin-top:.75rem;padding:.6rem .75rem;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);border-radius:6px;font-size:12px;color:#f87171;line-height:1.5;">
+                Your cart contains a rod over 8'. Shipping cost must be confirmed before purchase — please contact us first.
+              </div>
+            </div>
+          </div>
+
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:1.25rem;cursor:pointer;font-size:13px;color:var(--c-muted);line-height:1.5">
+            <input type="checkbox" id="terms-checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--c-gold);width:15px;height:15px;cursor:pointer">
+            I have read and agree to the <a href="terms.html" target="_blank" style="color:var(--c-gold);text-decoration:underline;margin:0 3px">Terms &amp; Conditions</a>, including the cancellation, refund, and shipping policies.
+          </label>
+
+          <button class="co-pay-btn" id="stripe-pay-btn" onclick="loadPaymentForm()">Continue to Payment →</button>
+        </div>
+
+        <!-- Step 2: Payment Element -->
+        <div id="payment-element-wrap">
+          <!-- Contact summary -->
+          <div id="contact-summary" style="margin-bottom:1.5rem;padding:1rem 1.25rem;background:#111417;border:1px solid var(--c-border);border-radius:var(--radius);font-size:13px;line-height:1.8;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+              <span style="font-family:var(--font-cond);font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--c-gold)">Contact</span>
+              <button onclick="editContact()" style="background:none;border:none;color:var(--c-muted);font-size:12px;cursor:pointer;text-decoration:underline;padding:0;">Edit</button>
+            </div>
+            <div id="summary-name" style="color:var(--c-text);font-weight:600;"></div>
+            <div id="summary-email" style="color:var(--c-muted);"></div>
+            <div id="summary-phone" style="color:var(--c-muted);"></div>
+            <div id="summary-address" style="color:var(--c-muted);"></div>
+          </div>
+          <div class="co-card-title">Payment</div>
+          <!-- Express checkout: Apple Pay / Google Pay -->
+          <div id="express-checkout-element"></div>
+          <div class="pay-or-divider" id="pay-or-divider" style="display:none">
+            <div class="pay-or-line"></div>
+            <span>or pay with card</span>
+            <div class="pay-or-line"></div>
+          </div>
+          <!-- Card fields -->
+          <div id="payment-element"></div>
+          <button class="co-pay-btn" id="complete-pay-btn" onclick="completePayment()">Complete Order →</button>
+        </div>
+
+        <div id="pay-error"></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div id="footer-mount"></div>
+<script src="../js/sfsw.js"></script>
+<script>
+  document.getElementById('nav-mount').innerHTML = buildNav('');
+  document.getElementById('footer-mount').innerHTML = buildFooter();
+
+  function formatPhone(input) {
+    let v = input.value.replace(/\D/g, '');
+    if (v.length === 11 && v.startsWith('1')) v = v.slice(1);
+    v = v.slice(0, 10);
+    if (v.length >= 7)      v = '(' + v.slice(0,3) + ') ' + v.slice(3,6) + '-' + v.slice(6);
+    else if (v.length >= 4) v = '(' + v.slice(0,3) + ') ' + v.slice(3);
+    else if (v.length > 0)  v = '(' + v;
+    input.value = v;
+  }
+
+  let stripeInstance = null;
+  let stripeElements = null;
+  let selectedDelivery = 'pickup';
+
+  const SHIPPING_COST = 55;
+  let pendingOrderData = null;
+
+  // ── Promo codes ──
+  // Add/edit codes here.
+  //   type: 'percent' | 'flat' (value = % or $ off) | 'shipping' (waives shipping cost)
+  //   target: omit for "$ off rods" · 'rodwrap' / 'splitwrap' to discount just that upgrade
+  //           (only applies if that upgrade was selected — i.e. its adder is > $0)
+  //   minItems: minimum number of rods required in cart to apply
+  //   perItem: true — value = $ off EACH rod in cart (requires minItems)
+  //   extraPerItem: value = $ off total, PLUS this many $ off each rod beyond minItems
+  // Keep this in sync with PROMO_CODES in netlify/functions/create-checkout.js.
+  const PROMO_CODES = {
+    'SFRW50':    { type: 'flat',    value: 50,  target: 'rodwrap' },
+    'SFSWLC':    { type: 'wrapPlusTier',
+                   tiers: { 'Finesse': 25, 'Inshore Spinning': 25 },
+                   tierDefault: 50 },
+    'SFSW2100':  { type: 'flat',    value: 100, minItems: 2 },
+    'SFLD50':    { type: 'flat',    value: 50,  target: 'rodwrap', expires: '2026-10-01' }
+  };
+  let appliedPromo = null; // { code, type, value, minItems?, target?, perItem?, extraPerItem? }
+
+  // Sums the "+$NN" adder parsed out of a cart-item line's value text (e.g. "Diamond Wrap  +$50").
+  // Abalone Wrap is excluded from every wrap-related promo discount.
+  function sumLineAdder(cart, label) {
+    let total = 0;
+    cart.forEach(item => {
+      (item.lines || []).forEach(l => {
+        if (l.label === label && !String(l.value).includes('Abalone')) {
+          const m = String(l.value).match(/\+\$([\d.]+)/);
+          if (m) total += parseFloat(m[1]);
+        }
+      });
+    });
+    return total;
+  }
+
+  function wrapTargetLabel(target) { return target === 'splitwrap' ? 'Split Wrap' : 'Rod Wrap'; }
+
+  // Returns { discount, freeShipping, ineligible } for the currently applied promo
+  // Performance-only builds carry a "Performance Discount" line.
+  function isPerformanceItem(item) {
+    return (item.lines || []).some(l => l.label === 'Performance Discount');
+  }
+
+  function getPromoEffect(promo, cart, rodSubtotal) {
+    if (!promo) return { discount: 0, freeShipping: false };
+    if (promo.type === 'shipping') return { discount: 0, freeShipping: true };
+    if (promo.type === 'wrapPlusTier') {
+      const eligible = (cart || []).filter(it => !isPerformanceItem(it));
+      if (!eligible.length) return { discount: 0, freeShipping: false, ineligible: true };
+      const wrapCost = sumLineAdder(eligible, 'Rod Wrap');
+      const tier = Math.max(...eligible.map(it =>
+        Object.prototype.hasOwnProperty.call(promo.tiers || {}, it.rodType)
+          ? promo.tiers[it.rodType]
+          : promo.tierDefault));
+      return { discount: Math.min(wrapCost + tier, rodSubtotal), freeShipping: false };
+    }
+    if (promo.target) {
+      const wrapCost = sumLineAdder(cart, wrapTargetLabel(promo.target));
+      if (wrapCost <= 0) return { discount: 0, freeShipping: false, ineligible: true };
+      const raw = promo.type === 'percent' ? wrapCost * promo.value / 100 : promo.value;
+      return { discount: Math.min(raw, wrapCost), freeShipping: false };
+    }
+    if (promo.perItem) {
+      return { discount: Math.min(promo.value * cart.length, rodSubtotal), freeShipping: false };
+    }
+    if (promo.extraPerItem) {
+      const extra = promo.extraPerItem * Math.max(0, cart.length - promo.minItems);
+      return { discount: Math.min(promo.value + extra, rodSubtotal), freeShipping: false };
+    }
+    const raw = promo.type === 'percent' ? rodSubtotal * promo.value / 100 : promo.value;
+    return { discount: Math.min(raw, rodSubtotal), freeShipping: false };
+  }
+
+  function calcDiscount(rodSubtotal) {
+    return getPromoEffect(appliedPromo, getCart(), rodSubtotal).discount;
+  }
+
+  function clearPromo(message) {
+    appliedPromo = null;
+    const input = document.getElementById('promo-input');
+    const btn   = document.getElementById('promo-apply-btn');
+    const msg   = document.getElementById('promo-msg');
+    input.value = '';
+    input.disabled = false;
+    btn.textContent = 'Apply';
+    if (message) {
+      msg.textContent = message;
+      msg.style.color = '#f87171';
+      msg.style.display = 'block';
+    } else {
+      msg.style.display = 'none';
+    }
+  }
+
+  function applyPromo() {
+    const input = document.getElementById('promo-input');
+    const btn   = document.getElementById('promo-apply-btn');
+    const msg   = document.getElementById('promo-msg');
+
+    if (appliedPromo) { clearPromo(); updateSummary(); return; }
+
+    const code = input.value.trim().toUpperCase();
+    if (!code) return;
+    const promo = PROMO_CODES[code];
+    if (!promo) {
+      msg.textContent = 'Invalid promo code.';
+      msg.style.color = '#f87171';
+      msg.style.display = 'block';
+      return;
+    }
+    if (promo.expires && new Date() > new Date(promo.expires + 'T23:59:59')) {
+      msg.textContent = 'This promo code has expired.';
+      msg.style.color = '#f87171';
+      msg.style.display = 'block';
+      return;
+    }
+
+    const cart = getCart();
+    if (promo.minItems && cart.length < promo.minItems) {
+      msg.textContent = 'This code requires at least ' + promo.minItems + ' rods in your cart.';
+      msg.style.color = '#f87171';
+      msg.style.display = 'block';
+      return;
+    }
+    if (promo.type === 'wrapPlusTier' && cart.every(isPerformanceItem)) {
+      msg.textContent = 'This code does not apply to Performance Only builds.';
+      msg.style.color = '#f87171';
+      msg.style.display = 'block';
+      return;
+    }
+    if (promo.target && sumLineAdder(cart, wrapTargetLabel(promo.target)) <= 0) {
+      msg.textContent = 'This code requires an upgraded ' + wrapTargetLabel(promo.target) + ' on your order.';
+      msg.style.color = '#f87171';
+      msg.style.display = 'block';
+      return;
+    }
+
+    appliedPromo = Object.assign({ code }, promo);
+    input.disabled = true;
+    btn.textContent = 'Remove';
+    msg.textContent = 'Code "' + code + '" applied — ' +
+      (promo.type === 'wrapPlusTier' ? 'free Rod Wrap upgrade, plus up to $' + promo.tierDefault + ' off your build.' :
+       promo.type === 'shipping' ? 'free shipping.' :
+       promo.perItem      ? '$' + promo.value + ' off each rod.' :
+       promo.extraPerItem ? '$' + promo.value + ' off, plus $' + promo.extraPerItem + ' off each additional rod.' :
+       promo.type === 'percent' ? promo.value + '% off' + (promo.target ? ' ' + wrapTargetLabel(promo.target) : '') + '.' :
+       '$' + promo.value + ' off' + (promo.target ? ' ' + wrapTargetLabel(promo.target) : '') + '.');
+    msg.style.color = '#4ade80';
+    msg.style.display = 'block';
+    updateSummary();
+  }
+
+  function calcTotals(rodSubtotal, shipping, discount) {
+    discount = discount || 0;
+    const subtotal = Math.max(0, rodSubtotal - discount) + shipping;
+    const subtotalCents = Math.round(subtotal * 100);
+    // Find minimum charge so Brett receives full subtotalCents after Stripe's 2.9% + $0.30
+    let totalCents = Math.ceil((subtotalCents + 30) / (1 - 0.029));
+    if (totalCents - Math.round(totalCents * 0.029 + 30) < subtotalCents) totalCents++;
+    const total = totalCents / 100;
+    const fee = (totalCents - subtotalCents) / 100;
+    return { subtotal, fee, total };
+  }
+
+  function fmt(n) { return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+  // Parse a length string like "8'6" or "9'0" into total inches
+  function parseLengthInches(str) {
+    const m = (str || '').match(/^(\d+)'(\d*)/);
+    if (!m) return 0;
+    return parseInt(m[1]) * 12 + (m[2] ? parseInt(m[2]) : 0);
+  }
+
+  // Returns true if any cart item has a length over 8'0" (96 inches)
+  function cartHasOversizedRod() {
+    return getCart().some(item => parseLengthInches(item.specs && item.specs.length) > 96);
+  }
+
+  // Returns true if any cart item is ineligible for shipping (Pier Spinning 8'6-9'0" rods,
+  // or Pier Conventional rods with the Extend Rod Length accessory selected)
+  function cartHasNoShipRod() {
+    return getCart().some(item => item.noShip);
+  }
+
+  function shippingBlocked() {
+    return cartHasOversizedRod() || cartHasNoShipRod();
+  }
+
+  function shippingBlockedMessage() {
+    if (cartHasNoShipRod()) {
+      return 'One or more rods in your cart aren\'t eligible for shipping (Pier Spinning - 8\'8 - 9\'0" rods, or Pier Conventional rods with the Extend Rod Length accessory). Please contact us at (561) 813-0004 to arrange pickup or local delivery.';
+    }
+    return 'One or more rods in your cart exceed 8\'. Please contact us at (561) 813-0004 to arrange shipping before purchasing.';
+  }
+
+  function updateShippingCard() {
+    const noShip   = cartHasNoShipRod();
+    const oversize = cartHasOversizedRod();
+    const warningEl = document.getElementById('shipping-oversize-warning');
+    if (noShip) {
+      warningEl.textContent = 'One or more rods in your cart aren\'t eligible for shipping. Please contact us to arrange pickup or local delivery.';
+      warningEl.style.display = 'block';
+    } else if (oversize) {
+      warningEl.textContent = 'Your cart contains a rod over 8\'. Shipping cost must be confirmed before purchase — please contact us first.';
+      warningEl.style.display = 'block';
+    } else {
+      warningEl.style.display = 'none';
+    }
+    document.getElementById('shipping-price-label').textContent = noShip ? 'Not Available' : (oversize ? 'Quote Required' : '+$55');
+  }
+
+  function selectDelivery(type) {
+    if (type === 'shipping' && shippingBlocked()) {
+      // Block flat-rate shipping — keep pickup selected and show error
+      showError(shippingBlockedMessage());
+      return;
+    }
+    hideError();
+    selectedDelivery = type;
+    document.getElementById('opt-pickup').classList.toggle('active', type === 'pickup');
+    document.getElementById('opt-shipping').classList.toggle('active', type === 'shipping');
+    updateSummary();
+  }
+
+  function updateSummary() {
+    const cart = getCart();
+    if (cart.length === 0) return;
+
+    // Drop a promo the cart no longer qualifies for (quantity dropped, wrap removed, etc.)
+    if (appliedPromo && appliedPromo.minItems && cart.length < appliedPromo.minItems) {
+      clearPromo('Promo removed — cart no longer meets the minimum rod quantity.');
+    } else if (appliedPromo && appliedPromo.target && sumLineAdder(cart, wrapTargetLabel(appliedPromo.target)) <= 0) {
+      clearPromo('Promo removed — ' + wrapTargetLabel(appliedPromo.target) + ' upgrade no longer in cart.');
+    }
+
+    const rodSubtotal = cart.reduce((s, i) => s + i.total, 0);
+    const rawShipping = selectedDelivery === 'shipping' ? SHIPPING_COST : 0;
+    const effect = getPromoEffect(appliedPromo, cart, rodSubtotal);
+    const shipping = effect.freeShipping ? 0 : rawShipping;
+    const discount = effect.discount;
+    const { fee, total } = calcTotals(rodSubtotal, shipping, discount);
+
+    document.getElementById('summary-rods').textContent = fmt(rodSubtotal);
+    document.getElementById('summary-fee').textContent = fmt(fee);
+    document.getElementById('cart-grand-total').textContent = fmt(total);
+
+    const shippingRow = document.getElementById('summary-shipping-row');
+    if (rawShipping > 0) {
+      shippingRow.style.display = 'flex';
+      document.getElementById('summary-shipping').textContent = effect.freeShipping ? 'FREE' : fmt(rawShipping);
+    } else {
+      shippingRow.style.display = 'none';
+    }
+
+    const discountRow = document.getElementById('summary-discount-row');
+    if (discount > 0) {
+      discountRow.style.display = 'flex';
+      document.getElementById('summary-discount-label').textContent =
+        appliedPromo.target ? wrapTargetLabel(appliedPromo.target) + ' discount' : 'Discount';
+      document.getElementById('summary-discount').textContent = '-' + fmt(discount);
+      document.getElementById('summary-promo-code').textContent = '(' + appliedPromo.code + ')';
+    } else {
+      discountRow.style.display = 'none';
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('pay-error');
+    el.textContent = msg; el.style.display = 'block';
+  }
+  function hideError() { document.getElementById('pay-error').style.display = 'none'; }
+
+  function renderCart() {
+    const cart = getCart();
+    const itemsEl = document.getElementById('cart-items');
+    const emptyEl = document.getElementById('cart-empty');
+    const checkoutEl = document.getElementById('cart-checkout');
+
+    if (cart.length === 0) {
+      emptyEl.style.display = 'block';
+      itemsEl.innerHTML = '';
+      checkoutEl.style.display = 'none';
+      return;
+    }
+
+    emptyEl.style.display = 'none';
+    checkoutEl.style.display = 'block';
+
+    itemsEl.innerHTML = cart.map(item => `
+      <div class="cart-item">
+        <div class="cart-strip">
+          ${(item.buildStrip || []).map(s => `
+            <div class="cart-strip-slot">
+              ${s.img
+                ? `<img src="${s.img}" alt="${s.label}" onerror="this.style.display='none'">`
+                : s.colors
+                  ? `<div style="display:flex;flex-direction:column;gap:5px;width:100%;padding:2px 4px;justify-content:center;align-items:center">${s.colors.map(c => `
+                      <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+                        <div style="width:14px;height:14px;border-radius:50%;background:${c.hex};border:1px solid rgba(255,255,255,.25);flex-shrink:0"></div>
+                        <div style="text-align:center">
+                          <div style="font-family:var(--font-cond);font-size:8px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--c-gold);line-height:1.2">${c.label}</div>
+                          <div style="font-size:10px;color:var(--c-text);line-height:1.3">${c.name}</div>
+                        </div>
+                      </div>`).join('')}</div>`
+                  : ''}
+              <div class="cart-strip-caption">
+                <div class="cart-strip-label">${s.label}</div>
+                <div class="cart-strip-name">${s.name}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="cart-item-body">
+          <div class="cart-item-header">
+            <div class="cart-rod-type">${item.rodType}</div>
+            <div style="display:flex;gap:8px">
+              ${item.sourcePage ? `<button class="cart-remove-btn" onclick="editItem(${item.id})">Edit</button>` : ''}
+              <button class="cart-remove-btn" onclick="removeItem(${item.id})">Remove</button>
+            </div>
+          </div>
+          <div class="cart-lines">
+            ${(item.lines || []).map(l => `
+              <div class="cart-line">
+                <span class="cart-line-label">${l.label}</span>
+                <span class="cart-line-value">${l.value}</span>
+              </div>
+            `).join('')}
+          </div>
+          <div class="cart-item-price">$${item.total.toLocaleString()}</div>
+        </div>
+      </div>
+    `).join('');
+
+    updateSummary();
+    updateShippingCard();
+    updateCartBadge();
+  }
+
+  function editContact() {
+    document.getElementById('payment-element-wrap').style.display = 'none';
+    document.getElementById('co-contact').style.display = 'block';
+    const btn = document.getElementById('stripe-pay-btn');
+    btn.disabled = false;
+    btn.textContent = 'Continue to Payment →';
+    hideError();
+  }
+
+  function removeItem(id) {
+    removeFromCart(id);
+    renderCart();
+  }
+
+  function editItem(id) {
+    const item = getCart().find(i => i.id === id);
+    if (!item || !item.sourcePage) return;
+    window.location.href = item.sourcePage + '?edit=' + id;
+  }
+
+  async function loadPaymentForm() {
+    hideError();
+    const name    = document.getElementById('co-name').value.trim();
+    const email   = document.getElementById('co-email').value.trim();
+    const phone   = document.getElementById('co-phone').value.trim();
+    const address = document.getElementById('co-address').value.trim();
+    if (!document.getElementById('terms-checkbox').checked) { showError('Please agree to the Terms & Conditions before continuing.'); return; }
+    if (!name)    { showError('Please enter your name.'); return; }
+    if (!email)   { showError('Please enter your email.'); return; }
+    if (!phone)   { showError('Please enter your phone number.'); return; }
+    if (!address) { showError('Please enter your address.'); return; }
+    if (selectedDelivery === 'shipping' && shippingBlocked()) {
+      showError(shippingBlockedMessage());
+      return;
+    }
+
+    const btn = document.getElementById('stripe-pay-btn');
+    btn.disabled = true;
+    btn.textContent = 'Loading…';
+
+    const cart = getCart();
+    const rodSubtotal = cart.reduce((s, i) => s + i.total, 0);
+    const rawShipping = selectedDelivery === 'shipping' ? SHIPPING_COST : 0;
+    const effect = getPromoEffect(appliedPromo, cart, rodSubtotal);
+    const shipping = effect.freeShipping ? 0 : rawShipping;
+    const discount = effect.discount;
+    const { total } = calcTotals(rodSubtotal, shipping, discount);
+
+    const orderSummary = cart.map(item =>
+      item.rodType + ': ' + item.lines.map(l => l.label + ' ' + l.value).join(', ')
+    ).join(' | ') + (appliedPromo ? ' | Promo: ' + appliedPromo.code : '');
+
+    try {
+      // Store order data — PaymentIntent is NOT created yet (deferred intent pattern)
+      pendingOrderData = {
+        items: cart.map(item => ({ rodType: item.rodType, total: item.total, lines: item.lines })),
+        customerName: name,
+        customerEmail: email,
+        customerPhone: phone,
+        customerAddress: address,
+        shippingMethod: selectedDelivery,
+        shippingCost: shipping,
+        promoCode: appliedPromo ? appliedPromo.code : '',
+        chargeTotal: total,
+        orderSummary
+      };
+
+      stripeInstance = Stripe('pk_live_51TlgVz9x3PTOIv7ubfcBDK7h4NxxkhItXsAj7oyk0nwFydw2sFYxUpAcxUcro3o8TzlOAeD8uYkBTWQxMoaRbeTx00HWgkpmM4');
+      const appearance = {
+        theme: 'night',
+        variables: {
+          colorPrimary: '#c8a96e', colorBackground: '#161a1d',
+          colorText: '#e8e0d4', colorTextSecondary: '#9a9088',
+          borderRadius: '6px', fontFamily: 'inherit',
+        }
+      };
+      const totalCents = Math.round(total * 100);
+      stripeElements = stripeInstance.elements({ mode: 'payment', amount: totalCents, currency: 'usd', appearance });
+
+      // Express Checkout (Apple Pay / Google Pay)
+      const expressEl = stripeElements.create('expressCheckout', {
+        buttonHeight: 48,
+        buttonType: { applePay: 'buy', googlePay: 'buy' },
+      });
+      expressEl.mount('#express-checkout-element');
+
+      expressEl.on('ready', ({ availablePaymentMethods }) => {
+        if (availablePaymentMethods) {
+          document.getElementById('pay-or-divider').style.display = 'flex';
+        }
+      });
+
+      expressEl.on('confirm', async () => {
+        try {
+          const res = await fetch('/.netlify/functions/create-checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(pendingOrderData)
+          });
+          const data = await res.json();
+          if (!data.clientSecret) throw new Error(data.error || 'Unknown error');
+          const { error } = await stripeInstance.confirmPayment({
+            elements: stripeElements,
+            clientSecret: data.clientSecret,
+            confirmParams: { return_url: window.location.origin + '/pages/order-success.html' }
+          });
+          if (error) showError(error.message);
+        } catch (e) {
+          showError('Something went wrong. Please try again or text us at (561) 813-0004.');
+        }
+      });
+
+      // Card Payment Element (suppress billing fields — we already collected them)
+      const paymentEl = stripeElements.create('payment', {
+        fields: {
+          billingDetails: { name: 'never', email: 'never', phone: 'never', address: 'never' }
+        }
+      });
+
+      // Populate contact summary
+      document.getElementById('summary-name').textContent = name;
+      document.getElementById('summary-email').textContent = email;
+      document.getElementById('summary-phone').textContent = phone;
+      document.getElementById('summary-address').textContent = address;
+
+      document.getElementById('co-contact').style.display = 'none';
+      document.getElementById('payment-element-wrap').style.display = 'block';
+      document.getElementById('complete-pay-btn').textContent = 'Pay ' + fmt(total) + ' →';
+      paymentEl.mount('#payment-element');
+
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = 'Continue to Payment →';
+      showError('Something went wrong. Please try again or text us at (561) 813-0004.');
+    }
+  }
+
+  async function completePayment() {
+    hideError();
+    const btn = document.getElementById('complete-pay-btn');
+    btn.disabled = true;
+    btn.textContent = 'Processing…';
+
+    try {
+      // Step 1: Validate card fields before hitting server
+      const { error: submitError } = await stripeElements.submit();
+      if (submitError) {
+        btn.disabled = false;
+        btn.textContent = 'Complete Order →';
+        showError(submitError.message);
+        return;
+      }
+
+      // Step 2: Create PaymentIntent now (only on actual payment attempt)
+      const res = await fetch('/.netlify/functions/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pendingOrderData)
+      });
+      const data = await res.json();
+      if (!data.clientSecret) throw new Error(data.error || 'Unknown error');
+
+      // Step 3: Confirm payment
+      const { error } = await stripeInstance.confirmPayment({
+        elements: stripeElements,
+        clientSecret: data.clientSecret,
+        confirmParams: {
+          return_url: window.location.origin + '/pages/order-success.html',
+          payment_method_data: {
+            billing_details: {
+              name:  document.getElementById('co-name').value.trim(),
+              email: document.getElementById('co-email').value.trim(),
+              phone: document.getElementById('co-phone').value.trim(),
+              address: { line1: document.getElementById('co-address').value.trim(), country: 'US' }
+            }
+          }
+        }
+      });
+
+      if (error) {
+        btn.disabled = false;
+        btn.textContent = 'Complete Order →';
+        showError(error.message);
+      }
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = 'Complete Order →';
+      showError('Something went wrong. Please try again or text us at (561) 813-0004.');
+    }
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('payment_intent') && urlParams.get('redirect_status') === 'succeeded') {
+    localStorage.removeItem('sfswCart');
+  }
+
+  renderCart();
+</script>
+</body>
+</html>

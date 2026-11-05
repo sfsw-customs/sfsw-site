@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Discuss Your Build — SFSW</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/favicon-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="../css/global.css">
+  <style>
+    textarea { resize: vertical; min-height: 120px; }
+    .build-recap {
+      background: var(--c-dark2);
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .build-recap-title {
+      font-family: var(--font-cond);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--c-gold);
+      margin-bottom: 1rem;
+    }
+    .build-recap-rodtype {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      color: var(--c-text);
+      margin-bottom: .75rem;
+    }
+    .build-recap-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      font-size: 13px;
+      padding: .35rem 0;
+      border-top: 1px solid var(--c-border);
+    }
+    .build-recap-line:first-of-type { border-top: none; }
+    .build-recap-label { color: var(--c-muted); flex-shrink: 0; }
+    .build-recap-value { color: var(--c-text); text-align: right; }
+    .build-recap-total {
+      display: flex;
+      justify-content: space-between;
+      margin-top: .75rem;
+      padding-top: .75rem;
+      border-top: 1px solid var(--c-border);
+      font-family: var(--font-cond);
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .build-recap-total .build-recap-value { color: var(--c-gold); }
+    .no-build-card {
+      max-width: 480px;
+      margin: 0 auto;
+      text-align: center;
+      padding: 3rem 2rem;
+    }
+  </style>
+</head>
+<body>
+<div id="nav-mount"></div>
+
+<div class="page-hero">
+  <div class="page-hero-eyebrow">Custom Build</div>
+  <h1 class="page-hero-title">Discuss Your <em>Build</em></h1>
+  <p class="page-hero-sub">Send us the build you configured along with any notes, and we'll follow up to talk through the details.</p>
+</div>
+<hr class="divider">
+
+<section class="section">
+  <div class="section-inner" style="max-width:640px">
+
+    <div id="no-build-state" style="display:none">
+      <div class="card no-build-card">
+        <p style="color:var(--c-muted);font-size:14px;line-height:1.7;margin-bottom:1.5rem">We couldn't find a build to discuss. Head back to a rod page, configure your build, then click "Discuss Build."</p>
+        <a href="../index.html" class="btn btn-primary">Browse Rods →</a>
+      </div>
+    </div>
+
+    <div id="build-state">
+      <div class="build-recap" id="build-recap"></div>
+
+      <form id="discuss-form" onsubmit="handleSubmit(event)">
+        <h3 style="margin-bottom:1.25rem">Your Details</h3>
+        <div class="form-field">
+          <label>Name</label>
+          <input type="text" id="df-name" placeholder="Your full name" autocomplete="name" required>
+        </div>
+        <div class="form-field">
+          <label>Phone</label>
+          <input type="tel" id="df-phone" placeholder="(561) 000-0000" autocomplete="tel" oninput="formatPhone(this)" maxlength="14" required>
+        </div>
+        <div class="form-field">
+          <label>Notes</label>
+          <textarea id="df-notes" placeholder="Anything you'd like to change, questions about the build, timeline, etc."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;font-size:15px;padding:14px;" id="df-submit-btn">
+          Send Build to Us →
+        </button>
+      </form>
+      <div id="df-success" style="display:none;text-align:center;padding:2rem 1rem;color:var(--c-teal-light);font-size:15px;line-height:1.6">
+        ✓ Sent! We'll follow up about your build within 24 hours.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div id="footer-mount"></div>
+<script src="../js/sfsw.js"></script>
+<script>
+  document.getElementById('nav-mount').innerHTML = buildNav('');
+  document.getElementById('footer-mount').innerHTML = buildFooter();
+
+  const build = JSON.parse(localStorage.getItem('sfswDiscussBuild') || 'null');
+
+  if (!build) {
+    document.getElementById('no-build-state').style.display = 'block';
+    document.getElementById('build-state').style.display = 'none';
+  } else {
+    const lines = (build.lines || []).map(l =>
+      `<div class="build-recap-line"><span class="build-recap-label">${l.label}</span><span class="build-recap-value">${l.value}</span></div>`
+    ).join('');
+    document.getElementById('build-recap').innerHTML = `
+      <div class="build-recap-title">Your Configured Build</div>
+      <div class="build-recap-rodtype">${build.rodType || 'Custom Rod'}</div>
+      ${lines}
+      <div class="build-recap-total">
+        <span>Total</span>
+        <span class="build-recap-value">$${Number(build.total || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</span>
+      </div>
+    `;
+  }
+
+  function formatPhone(input) {
+    let v = input.value.replace(/\D/g, '');
+    if (v.length === 11 && v.startsWith('1')) v = v.slice(1);
+    v = v.slice(0, 10);
+    if (v.length >= 7)      v = '(' + v.slice(0,3) + ') ' + v.slice(3,6) + '-' + v.slice(6);
+    else if (v.length >= 4) v = '(' + v.slice(0,3) + ') ' + v.slice(3);
+    else if (v.length >= 1) v = '(' + v;
+    input.value = v;
+  }
+
+  function buildSummaryText() {
+    const lines = (build.lines || []).map(l => `${l.label}: ${l.value}`).join('\n');
+    const total = '$' + Number(build.total || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+    return `Build: ${build.rodType || 'Custom Rod'}\n${lines}\nTotal: ${total}`;
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('df-submit-btn');
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+
+    const notes = document.getElementById('df-notes').value;
+    const message = buildSummaryText() + (notes ? `\n\nCustomer Notes:\n${notes}` : '\n\nCustomer Notes:\n(none)');
+
+    const data = {
+      type:    'discuss-build',
+      name:    document.getElementById('df-name').value,
+      phone:   document.getElementById('df-phone').value,
+      rod:     build.rodType || '',
+      message: message,
+    };
+
+    fetch('/.netlify/functions/save-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(res => {
+      if (res.ok) {
+        localStorage.removeItem('sfswDiscussBuild');
+        document.getElementById('discuss-form').style.display = 'none';
+        document.getElementById('df-success').style.display = 'block';
+      } else {
+        btn.textContent = 'Send Build to Us →';
+        btn.disabled = false;
+        alert('Something went wrong. Please try again or text us directly at (561) 813-0004.');
+      }
+    })
+    .catch(() => {
+      btn.textContent = 'Send Build to Us →';
+      btn.disabled = false;
+      alert('Something went wrong. Please try again or text us directly at (561) 813-0004.');
+    });
+  }
+</script>
+</body>
+</html>

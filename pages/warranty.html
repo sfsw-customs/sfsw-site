@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Warranty — SFSW</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/favicon-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="../css/global.css">
+  <style>
+    textarea { resize: vertical; min-height: 120px; }
+
+    .warranty-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: start;
+    }
+    @media (max-width: 800px) {
+      .warranty-layout { grid-template-columns: 1fr; }
+    }
+
+    .warranty-policy h3 {
+      font-family: var(--font-cond);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--c-gold);
+      margin: 0 0 1.5rem;
+    }
+
+    .warranty-section {
+      margin-bottom: 2rem;
+    }
+
+    .warranty-section-title {
+      font-family: var(--font-cond);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--c-text);
+      margin-bottom: 0.6rem;
+    }
+
+    .warranty-section p {
+      font-size: 14px;
+      color: var(--c-muted);
+      line-height: 1.7;
+      margin: 0 0 0.6rem;
+    }
+
+    .warranty-section ul {
+      list-style: none;
+      padding: 0;
+      margin: 0.5rem 0 0.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .warranty-section ul li {
+      font-size: 14px;
+      color: var(--c-muted);
+      line-height: 1.6;
+      padding-left: 1.2rem;
+      position: relative;
+    }
+
+    .warranty-section ul li::before {
+      content: '*';
+      position: absolute;
+      left: 0;
+      color: var(--c-gold);
+      font-weight: 700;
+    }
+
+    .warranty-note {
+      font-size: 12px;
+      color: var(--c-muted);
+      line-height: 1.65;
+      margin-top: 0.4rem;
+      opacity: 0.75;
+    }
+
+    .warranty-divider {
+      border: none;
+      border-top: 1px solid var(--c-border);
+      margin: 1.5rem 0;
+    }
+  </style>
+</head>
+<body>
+<div id="nav-mount"></div>
+
+<div class="page-hero">
+  <div class="page-hero-eyebrow">We Stand Behind Our Work</div>
+  <h1 class="page-hero-title">Warranty <em>Claim</em></h1>
+  <p class="page-hero-sub">Fill out the form below and we'll get back to you within 24 hours.</p>
+</div>
+<hr class="divider">
+
+<section class="section">
+  <div class="section-inner">
+    <div class="warranty-layout">
+
+      <!-- FORM -->
+      <div>
+        <form class="contact-form" id="warranty-form" onsubmit="handleSubmit(event)">
+          <h3>Submit a Claim</h3>
+          <div class="form-field">
+            <label>Name</label>
+            <input type="text" id="wf-name" placeholder="Your full name" autocomplete="name" required>
+          </div>
+          <div class="form-field">
+            <label>Phone</label>
+            <input type="tel" id="wf-phone" placeholder="(561) 000-0000" autocomplete="tel" oninput="formatPhone(this)" maxlength="14">
+          </div>
+          <div class="form-field">
+            <label>Email</label>
+            <input type="email" id="wf-email" placeholder="you@email.com" autocomplete="email" required>
+          </div>
+          <div class="form-field">
+            <label>Details</label>
+            <textarea id="wf-details" placeholder="Describe the issue — what happened, which rod, how long you've had it, etc."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;font-size:15px;padding:14px;" id="submit-btn">
+            Submit Claim →
+          </button>
+        </form>
+        <div id="form-success" style="display:none;text-align:center;padding:2rem 1rem;color:var(--c-teal-light);font-size:15px;line-height:1.6">
+          ✓ Claim received. We'll follow up within 24 hours.
+        </div>
+      </div>
+
+      <!-- WARRANTY DETAILS -->
+      <div class="warranty-policy">
+        <h3>Warranty Details</h3>
+
+        <div class="warranty-section">
+          <div class="warranty-section-title">Guides</div>
+          <p>Shit happens, but we stand behind our craftsmanship for life. We cover the labor on all guide repairs for the lifetime of the rod. Should a guide become physically damaged or broken, the replacement component will simply be billed at its current material cost.</p>
+        </div>
+
+        <hr class="warranty-divider">
+
+        <div class="warranty-section">
+          <div class="warranty-section-title">Blanks</div>
+          <p>First off — our labor is free for life. If a blank breaks, we will never charge you a dime in custom labor to build the replacement rod. We will strip what we can, prep the new stick, and completely re-wrap and epoxy your setup on us.</p>
+          <p>Custom rod blanks carry individual warranties determined entirely by their manufacturer (like Rainshadow, Calstar, or United Composites).</p>
+          <ul>
+            <li><strong>Factory Defects:</strong> If the manufacturer deems the break a true material defect, they replace the raw blank for free.</li>
+            <li><strong>Accidents &amp; Abuse:</strong> If you stepped on it, slammed it, or high-sticked it, most premium manufacturers offer a "No-Fault" replacement program.</li>
+          </ul>
+          <p>In either scenario, you are only responsible for the direct manufacturer processing fees, the raw cost of any components that couldn't be salvaged (like a destroyed guide or reel seat), and any necessary shipping costs to get the new blank to our bench.</p>
+        </div>
+
+        <hr class="warranty-divider">
+
+        <p class="warranty-note">** Components permanently epoxied to the broken blank — such as custom foam/cork grips, reel seats, and the thread art under-wraps — cannot be salvaged and will need to be replaced at current component costs.</p>
+        <p class="warranty-note">** This warranty is non-transferable and applies strictly to the original owner with proof of purchase from our shop.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div id="footer-mount"></div>
+<script src="../js/sfsw.js"></script>
+<script>
+  document.getElementById('nav-mount').innerHTML = buildNav('');
+  document.getElementById('footer-mount').innerHTML = buildFooter();
+
+  function formatPhone(input) {
+    let v = input.value.replace(/\D/g, '');
+    if (v.length === 11 && v.startsWith('1')) v = v.slice(1);
+    v = v.slice(0, 10);
+    if (v.length >= 7)      v = '(' + v.slice(0,3) + ') ' + v.slice(3,6) + '-' + v.slice(6);
+    else if (v.length >= 4) v = '(' + v.slice(0,3) + ') ' + v.slice(3);
+    else if (v.length >= 1) v = '(' + v;
+    input.value = v;
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+
+    const data = {
+      type:    'warranty',
+      name:    document.getElementById('wf-name').value,
+      phone:   document.getElementById('wf-phone').value,
+      email:   document.getElementById('wf-email').value,
+      message: document.getElementById('wf-details').value,
+    };
+
+    fetch('/.netlify/functions/save-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(res => {
+      if (res.ok) {
+        document.getElementById('warranty-form').style.display = 'none';
+        document.getElementById('form-success').style.display = 'block';
+      } else {
+        btn.textContent = 'Submit Claim →';
+        btn.disabled = false;
+        alert('Something went wrong. Please try again or text us at (561) 813-0004.');
+      }
+    })
+    .catch(() => {
+      btn.textContent = 'Submit Claim →';
+      btn.disabled = false;
+      alert('Something went wrong. Please try again or text us at (561) 813-0004.');
+    });
+  }
+</script>
+</body>
+</html>

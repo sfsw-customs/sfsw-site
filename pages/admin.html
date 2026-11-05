@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Admin — SFSW Orders</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/favicon-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="../css/global.css">
+
+  <!-- Home screen / standalone app support (required for iOS web push) -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SFSW Admin">
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <!-- OneSignal push notifications (order / message / claim alerts) -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    let oneSignalInstance = null;
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "4d0c98a3-2bb3-4538-9ea1-75e81233478b",
+      });
+      oneSignalInstance = OneSignal;
+    });
+  </script>
+
+  <style>
+    body { min-height: 100vh; }
+
+    /* ── Login screen ── */
+    #login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .login-card {
+      background: var(--c-dark2);
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius-md);
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 380px;
+    }
+    .login-logo {
+      font-family: var(--font-cond);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--c-gold);
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .login-title {
+      font-family: var(--font-cond);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--c-text);
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .login-field { margin-bottom: 1rem; }
+    .login-field label {
+      display: block;
+      font-family: var(--font-cond);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--c-muted);
+      margin-bottom: .4rem;
+    }
+    .login-field input { width: 100%; }
+    .login-btn {
+      display: block;
+      width: 100%;
+      margin-top: 1.25rem;
+      padding: 13px;
+      background: var(--c-gold);
+      color: #0d0f11;
+      font-family: var(--font-cond);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: opacity .18s;
+    }
+    .login-btn:hover { opacity: .85; }
+    .login-btn:disabled { opacity: .5; cursor: not-allowed; }
+    #login-error { margin-top: .75rem; color: #f87171; font-size: 13px; text-align: center; min-height: 1.2em; }
+
+    /* ── Admin dashboard ── */
+    #admin-screen { display: none; }
+    .admin-header {
+      background: var(--c-dark2);
+      border-bottom: 1px solid var(--c-border);
+      padding: .9rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .admin-header-brand {
+      font-family: var(--font-cond);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--c-gold);
+    }
+    .admin-header-right { display: flex; align-items: center; gap: 1rem; }
+    .admin-header-user { font-size: 12px; color: var(--c-muted); }
+    .logout-btn {
+      background: none;
+      border: 1px solid var(--c-border);
+      color: var(--c-muted);
+      font-size: 12px;
+      font-family: var(--font-cond);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .logout-btn:hover { border-color: var(--c-text); color: var(--c-text); }
+
+    .admin-body { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+
+    /* Stats row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--c-dark2);
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+    }
+    .stat-label {
+      font-family: var(--font-cond);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--c-muted);
+      margin-bottom: .4rem;
+    }
+    .stat-value {
+      font-family: var(--font-cond);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--c-gold);
+    }
+
+    /* ── Tabs ── */
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--c-border);
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--c-muted);
+      font-family: var(--font-cond);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      padding: .75rem 1.25rem;
+      cursor: pointer;
+      transition: all .15s;
+      margin-bottom: -1px;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--c-text); }
+    .tab-btn.active { color: var(--c-gold); border-bottom-color: var(--c-gold); }
+    .tab-badge {
+      display: inline-block;
+      background: rgba(251,191,36,.15);
+      color: var(--c-gold);
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 1px 7px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Order cards */
+    .order-card {
+      background: var(--c-dark2);
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius-md);
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    .order-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      user-select: none;
+      gap: 1rem;
+    }
+    .order-header:hover { background: rgba(255,255,255,.02); }
+    .order-header-left { display: flex; flex-direction: column; gap: .3rem; }
+    .order-customer-name {
+      font-family: var(--font-cond);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--c-text);
+    }
+    .order-contact { font-size: 12px; color: var(--c-muted); display: flex; gap: 1rem; flex-wrap: wrap; }
+    .order-header-right { display: flex; align-items: center; gap: 1rem; flex-shrink: 0; }
+    .order-total {
+      font-family: var(--font-cond);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--c-gold);
+    }
+    .order-date { font-size: 11px; color: var(--c-muted); }
+
+    .status-badge {
+      font-family: var(--font-cond);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+    .status-paid { background: rgba(52,211,153,.15); color: #34d399; border: 1px solid rgba(52,211,153,.3); }
+    .status-pending { background: rgba(251,191,36,.12); color: #fbbf24; border: 1px solid rgba(251,191,36,.25); }
+
+    .order-chevron {
+      color: var(--c-muted);
+      font-size: 16px;
+      transition: transform .2s;
+    }
+    .order-card.open .order-chevron { transform: rotate(180deg); }
+
+    /* Order detail body */
+    .order-body { display: none; border-top: 1px solid var(--c-border); padding: 1.25rem; }
+    .order-card.open .order-body { display: block; }
+
+    .order-pi {
+      font-size: 11px;
+      color: var(--c-muted);
+      margin-bottom: 1rem;
+      font-family: monospace;
+    }
+
+    .rod-block {
+      background: #0d0f11;
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-bottom: .75rem;
+    }
+    .rod-block:last-child { margin-bottom: 0; }
+    .rod-block-title {
+      font-family: var(--font-cond);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--c-text);
+      margin-bottom: .75rem;
+      display: flex;
+      justify-content: space-between;
+    }
+    .rod-block-price { color: var(--c-gold); }
+    .spec-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: .4rem;
+    }
+    .spec-row { font-size: 12px; display: flex; gap: .5rem; }
+    .spec-label { color: var(--c-muted); flex-shrink: 0; }
+    .spec-value { color: var(--c-text); }
+
+    /* Price breakdown (completed orders) */
+    .price-breakdown {
+      background: #0d0f11;
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .price-breakdown-title {
+      font-family: var(--font-cond);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--c-muted);
+      margin-bottom: .75rem;
+    }
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      padding: .3rem 0;
+    }
+    /* ── Revenue tab ── */
+    .rev-scope { display: flex; gap: .5rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .rev-scope-btn {
+      background: var(--c-dark2); border: 1px solid var(--c-border); color: var(--c-muted);
+      font-family: var(--font-cond); font-size: 11px; font-weight: 600; letter-spacing: .12em;
+      text-transform: uppercase; padding: .55rem 1.1rem; border-radius: var(--radius);
+      cursor: pointer; transition: border-color .15s, color .15s, background .15s;
+    }
+    .rev-scope-btn:hover { border-color: rgba(201,148,26,.45); color: var(--c-text); }
+    .rev-scope-btn.active { border-color: var(--c-gold); color: var(--c-gold); background: rgba(201,148,26,.07); }
+    .rev-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .75rem; margin-bottom: 1.5rem; }
+    .rev-card { background: var(--c-dark2); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: 1rem 1.1rem; min-width: 0; }
+    .rev-card-label { font-family: var(--font-cond); font-size: 10px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--c-muted); margin-bottom: .4rem; }
+    .rev-card-value { font-family: var(--font-cond); font-size: 1.45rem; font-weight: 700; color: var(--c-text); letter-spacing: .01em; }
+    .rev-card.accent .rev-card-value { color: var(--c-gold); }
+    .rev-card.muted  .rev-card-value { color: #f87171; }
+    .rev-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--c-border); border-radius: var(--radius-md); background: var(--c-dark2); }
+    .rev-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 640px; }
+    .rev-table th {
+      font-family: var(--font-cond); font-size: 10px; font-weight: 600; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--c-muted); text-align: right;
+      padding: .8rem .9rem; border-bottom: 1px solid var(--c-border); white-space: nowrap;
+    }
+    .rev-table th:first-child, .rev-table td:first-child { text-align: left; }
+    .rev-table td { padding: .75rem .9rem; text-align: right; color: var(--c-text); border-bottom: 1px solid rgba(255,255,255,.04); white-space: nowrap; font-family: var(--font-cond); font-weight: 600; }
+    .rev-table tbody tr:last-child td { border-bottom: none; }
+    .rev-table tbody tr:hover { background: rgba(255,255,255,.02); }
+    .rev-period { color: var(--c-text); font-family: var(--font-cond); font-weight: 700; letter-spacing: .03em; }
+    .rev-fee { color: #f87171; }
+    .rev-net { color: var(--c-gold); }
+    .rev-discount { color: #34d399; }
+    .rev-table tfoot td { border-top: 1px solid var(--c-border); font-weight: 700; color: var(--c-text); background: rgba(255,255,255,.02); }
+    .rev-note { margin-top: .9rem; font-size: 11.5px; color: var(--c-muted); font-style: italic; line-height: 1.6; }
+    .price-row-label { color: var(--c-muted); }
+    .price-row-value { color: var(--c-text); font-family: var(--font-cond); font-weight: 600; }
+    .price-row.total-row {
+      border-top: 1px solid var(--c-border);
+      margin-top: .4rem;
+      padding-top: .7rem;
+    }
+    .price-row.total-row .price-row-label {
+      color: var(--c-text);
+      font-family: var(--font-cond);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .price-row.total-row .price-row-value { color: var(--c-gold); font-size: 15px; }
+
+    /* Message cards */
+    .msg-card {
+      background: var(--c-dark2);
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius-md);
+      margin-bottom: .75rem;
+      overflow: hidden;
+    }
+    .msg-card.unread { border-left: 3px solid var(--c-gold); }
+    .msg-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      gap: 1rem;
+    }
+    .msg-header:hover { background: rgba(255,255,255,.02); }
+    .msg-name {
+      font-family: var(--font-cond);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--c-text);
+    }
+    .msg-meta { font-size: 12px; color: var(--c-muted); display: flex; gap: 1rem; flex-wrap: wrap; margin-top: .2rem; }
+    .msg-badge {
+      font-family: var(--font-cond);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+    .msg-badge-contact  { background: rgba(56,189,248,.12); color: #38bdf8; border: 1px solid rgba(56,189,248,.25); }
+    .msg-badge-warranty { background: rgba(251,146,60,.12); color: #fb923c; border: 1px solid rgba(251,146,60,.25); }
+    .msg-badge-build    { background: rgba(52,211,153,.12); color: #34d399; border: 1px solid rgba(52,211,153,.25); }
+    .msg-body { display: none; border-top: 1px solid var(--c-border); padding: 1.25rem; }
+    .msg-card.open .msg-body { display: block; }
+    .msg-card.open .msg-chevron { transform: rotate(180deg); }
+    .msg-chevron { color: var(--c-muted); font-size: 16px; transition: transform .2s; }
+    .msg-text { font-size: 13px; color: var(--c-text); line-height: 1.7; white-space: pre-wrap; }
+
+    /* Loading / empty */
+    .admin-loading { text-align: center; padding: 3rem; color: var(--c-muted); font-size: 14px; }
+    .admin-empty { text-align: center; padding: 3rem; color: var(--c-muted); font-size: 14px; }
+
+
+    /* ── Analytics tab ── */
+    .tab-live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #34d399; margin-right: 6px; vertical-align: 1px; box-shadow: 0 0 0 0 rgba(52,211,153,.6); animation: anPulse 2s infinite; }
+    @keyframes anPulse { 0% { box-shadow: 0 0 0 0 rgba(52,211,153,.55); } 70% { box-shadow: 0 0 0 7px rgba(52,211,153,0); } 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); } }
+    .an-live { background: var(--c-dark2); border: 1px solid rgba(52,211,153,.25); border-radius: var(--radius-md); padding: 1.25rem 1.25rem 1rem; margin-bottom: 1.5rem; }
+    .an-live-head { display: flex; align-items: baseline; gap: .75rem; flex-wrap: wrap; margin-bottom: .75rem; }
+    .an-live-num { font-family: var(--font-cond); font-size: 2.6rem; font-weight: 700; color: var(--c-text); line-height: 1; font-variant-numeric: tabular-nums; }
+    .an-live-label { font-family: var(--font-cond); font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #34d399; }
+    .an-live-label .tab-live-dot { margin-right: 8px; }
+    .an-live-sub { font-size: 12px; color: var(--c-muted); margin-left: auto; }
+    .an-live-row { display: grid; grid-template-columns: 1fr auto auto auto; gap: .9rem; align-items: center; padding: .55rem 0; border-top: 1px solid rgba(255,255,255,.04); font-size: 13px; }
+    .an-live-row .pg { color: var(--c-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    .an-live-row .meta { color: var(--c-muted); font-size: 12px; white-space: nowrap; }
+    .an-live-empty { color: var(--c-muted); font-size: 13px; padding: .4rem 0 .2rem; }
+    .an-toolbar { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.25rem; }
+    .an-toolbar .spacer { flex: 1; }
+    .an-refresh { background: none; border: none; color: var(--c-muted); font-size: 12px; cursor: pointer; font-family: var(--font-cond); letter-spacing: .08em; text-transform: uppercase; }
+    .an-refresh:hover { color: var(--c-gold); }
+    .an-section { background: var(--c-dark2); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: 1.1rem 1.2rem 1.2rem; margin-bottom: 1rem; min-width: 0; }
+    .an-section h3 { font-family: var(--font-cond); font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--c-muted); margin: 0 0 .9rem; display: flex; justify-content: space-between; gap: 1rem; }
+    .an-section h3 span { letter-spacing: .06em; text-transform: none; font-weight: 500; }
+    .an-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .an-chart { position: relative; }
+    .an-chart svg { display: block; width: 100%; overflow: visible; }
+    .an-chart .bar { fill: var(--c-gold); }
+    .an-chart .bar-hit { fill: transparent; cursor: default; }
+    .an-chart .bar-hit:hover + .bar, .an-chart .bar.hl { fill: var(--c-gold-light); }
+    .an-chart .grid { stroke: rgba(255,255,255,.06); stroke-width: 1; }
+    .an-chart .axis { fill: var(--c-dim); font-size: 10px; font-family: var(--font-body); }
+    .an-tip { position: absolute; pointer-events: none; background: var(--c-dark3); border: 1px solid var(--c-border2); border-radius: var(--radius); padding: .45rem .65rem; font-size: 12px; color: var(--c-text); white-space: nowrap; transform: translate(-50%, calc(-100% - 8px)); opacity: 0; transition: opacity .1s; z-index: 2; }
+    .an-tip b { font-family: var(--font-cond); font-size: 15px; }
+    .an-tip .m { color: var(--c-muted); }
+    .an-rows { display: flex; flex-direction: column; gap: .55rem; }
+    .an-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: .25rem .75rem; font-size: 13px; }
+    .an-row .lbl { color: var(--c-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .an-row .val { color: var(--c-text); font-family: var(--font-cond); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+    .an-row .val .m { color: var(--c-muted); font-weight: 500; margin-left: .4rem; }
+    .an-row .track { grid-column: 1 / -1; height: 4px; background: rgba(255,255,255,.04); border-radius: 2px; overflow: hidden; }
+    .an-row .fill { height: 100%; background: var(--c-gold); border-radius: 2px; opacity: .85; }
+    .an-feed-row { display: grid; grid-template-columns: 96px minmax(0,1fr) auto; gap: .75rem; padding: .5rem 0; border-top: 1px solid rgba(255,255,255,.04); font-size: 13px; align-items: baseline; }
+    .an-feed-row:first-child { border-top: none; }
+    .an-feed-row .t { color: var(--c-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+    .an-feed-row .w { color: var(--c-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .an-feed-row .s { color: var(--c-muted); font-size: 12px; white-space: nowrap; }
+    .an-ev { display: inline-block; font-family: var(--font-cond); font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; margin-right: .4rem; border: 1px solid var(--c-border2); color: var(--c-muted); }
+    .an-ev.purchase { color: #34d399; border-color: rgba(52,211,153,.35); }
+    .an-ev.cart { color: var(--c-gold); border-color: rgba(201,148,26,.35); }
+    .an-ev.pay { color: var(--c-gold-light); border-color: rgba(232,184,75,.35); }
+    .an-ev.form { color: #60a5fa; border-color: rgba(96,165,250,.35); }
+    .an-foot { display: flex; align-items: center; gap: .6rem; font-size: 12px; color: var(--c-muted); margin-top: 1.25rem; flex-wrap: wrap; }
+    .an-foot label { display: flex; align-items: center; gap: .5rem; cursor: pointer; }
+    .an-foot input { accent-color: var(--c-gold); }
+    .an-note { font-size: 12px; color: var(--c-muted); margin-top: .75rem; line-height: 1.5; }
+    .an-err { color: #f87171; font-size: 13px; line-height: 1.6; padding: 1rem 0; }
+    @media (max-width: 760px) {
+      .an-grid2 { grid-template-columns: 1fr; }
+      .an-live-row { grid-template-columns: 1fr auto; }
+      .an-live-row .meta.src, .an-live-row .meta.dev { display: none; }
+      .an-live-sub { margin-left: 0; width: 100%; }
+      .an-feed-row { grid-template-columns: 88px minmax(0,1fr); }
+      .an-feed-row .s { display: none; }
+    }
+
+    @media (max-width: 640px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .admin-body { padding: 1rem; }
+      .order-header { flex-wrap: wrap; }
+      .order-header-right { width: 100%; justify-content: space-between; }
+      .tab-btn { padding: .65rem .75rem; font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Login Screen ── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">South Florida Saltwater</div>
+    <div class="login-title">Owner Login</div>
+    <p style="font-size:13px;color:var(--c-muted);text-align:center;margin-bottom:1.5rem;">Owner access only</p>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Sign in with Google →</button>
+
+    <div style="display:flex;align-items:center;gap:.6rem;margin:1rem 0;">
+      <div style="flex:1;height:1px;background:rgba(255,255,255,.12)"></div>
+      <span style="font-size:11px;color:var(--c-muted);text-transform:uppercase;letter-spacing:.05em">or</span>
+      <div style="flex:1;height:1px;background:rgba(255,255,255,.12)"></div>
+    </div>
+
+    <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="pin-input" placeholder="6-digit access code"
+      style="width:100%;padding:.75rem 1rem;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04);color:#fff;font-size:15px;text-align:center;letter-spacing:.2em;box-sizing:border-box;">
+    <button class="login-btn" id="pin-btn" onclick="doPinLogin()" style="margin-top:.6rem;">Enter Code →</button>
+
+    <button class="login-btn" id="notif-btn" onclick="enableNotifications()" style="margin-top:1rem;background:transparent;border:1px solid var(--c-gold);color:var(--c-gold);">Enable Notifications</button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<!-- ── Admin Dashboard ── -->
+<div id="admin-screen">
+  <div class="admin-header">
+    <div class="admin-header-brand">SFSW — Admin</div>
+    <div class="admin-header-right">
+      <span class="admin-header-user" id="admin-user-email"></span>
+      <button class="logout-btn" onclick="showSetCode()">Set Access Code</button>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div id="set-code-panel" style="display:none;padding:1rem 1.5rem;background:rgba(200,169,110,.08);border-bottom:1px solid rgba(200,169,110,.2);">
+    <p style="font-size:13px;color:var(--c-muted);margin:0 0 .6rem;">Set a 6-digit code you can use to sign in from your Home Screen app (where Google sign-in doesn't work reliably).</p>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;">
+      <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="set-code-input" placeholder="6-digit code"
+        style="padding:.6rem .9rem;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04);color:#fff;font-size:15px;letter-spacing:.2em;">
+      <button class="logout-btn" id="set-code-btn" onclick="setAccessCode()">Save Code</button>
+      <span id="set-code-status" style="font-size:13px;color:var(--c-muted);"></span>
+    </div>
+  </div>
+
+  <div class="admin-body">
+    <!-- Stats -->
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Completed Orders</div>
+        <div class="stat-value" id="stat-total">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Revenue</div>
+        <div class="stat-value" id="stat-revenue">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pending Orders</div>
+        <div class="stat-value" id="stat-pending">—</div>
+      </div>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-btn-pending" onclick="switchTab('pending')">
+        Pending Orders <span class="tab-badge" id="badge-pending">0</span>
+      </button>
+      <button class="tab-btn" id="tab-btn-completed" onclick="switchTab('completed')">
+        Completed Orders <span class="tab-badge" id="badge-completed">0</span>
+      </button>
+      <button class="tab-btn" id="tab-btn-inworks" onclick="switchTab('inworks')">
+        In The Works <span class="tab-badge" id="badge-inworks">0</span>
+      </button>
+      <button class="tab-btn" id="tab-btn-builds" onclick="switchTab('builds')">
+        Completed Builds <span class="tab-badge" id="badge-builds">0</span>
+      </button>
+      <button class="tab-btn" id="tab-btn-messages" onclick="switchTab('messages')">
+        Messages &amp; Warranty <span class="tab-badge" id="badge-messages">0</span>
+      </button>
+      <button class="tab-btn" id="tab-btn-revenue" onclick="switchTab('revenue')">
+        Revenue
+      </button>
+      <button class="tab-btn" id="tab-btn-analytics" onclick="switchTab('analytics')">
+        <span class="tab-live-dot"></span>Analytics <span class="tab-badge" id="badge-live">0</span>
+      </button>
+    </div>
+
+    <!-- Tab panels -->
+    <div class="tab-panel active" id="tab-panel-pending">
+      <div id="pending-list"><div class="admin-loading">Loading…</div></div>
+    </div>
+
+    <div class="tab-panel" id="tab-panel-completed">
+      <div id="completed-list"><div class="admin-loading">Loading…</div></div>
+    </div>
+
+    <div class="tab-panel" id="tab-panel-inworks">
+      <div id="inworks-list"><div class="admin-loading">Loading…</div></div>
+    </div>
+
+    <div class="tab-panel" id="tab-panel-builds">
+      <div id="builds-list"><div class="admin-loading">Loading…</div></div>
+    </div>
+
+    <div class="tab-panel" id="tab-panel-messages">
+      <div id="messages-list"><div class="admin-loading">Loading…</div></div>
+    </div>
+
+    <div class="tab-panel" id="tab-panel-revenue">
+      <div class="rev-scope">
+        <button class="rev-scope-btn active" id="rev-scope-monthly" onclick="setRevenueScope('monthly')">Monthly</button>
+        <button class="rev-scope-btn" id="rev-scope-annual"  onclick="setRevenueScope('annual')">Annual</button>
+        <button class="rev-scope-btn" id="rev-scope-total"   onclick="setRevenueScope('total')">All Time</button>
+      </div>
+      <div id="revenue-body"><div class="admin-loading">Loading…</div></div>
+    </div>
+
+    <div class="tab-panel" id="tab-panel-analytics">
+      <div class="an-live">
+        <div class="an-live-head">
+          <span class="an-live-num" id="an-live-num">0</span>
+          <span class="an-live-label"><span class="tab-live-dot"></span>On the site right now</span>
+          <span class="an-live-sub" id="an-live-sub">Updates live</span>
+        </div>
+        <div id="an-live-list"><div class="an-live-empty">Connecting…</div></div>
+      </div>
+
+      <div class="an-toolbar">
+        <button class="rev-scope-btn" id="an-range-today" onclick="setAnalyticsRange('today')">Today</button>
+        <button class="rev-scope-btn active" id="an-range-7"  onclick="setAnalyticsRange('7')">7 Days</button>
+        <button class="rev-scope-btn" id="an-range-30" onclick="setAnalyticsRange('30')">30 Days</button>
+        <button class="rev-scope-btn" id="an-range-90" onclick="setAnalyticsRange('90')">90 Days</button>
+        <span class="spacer"></span>
+        <button class="an-refresh" onclick="loadAnalytics(true)" id="an-refresh">↻ Refresh</button>
+      </div>
+
+      <div id="analytics-body"><div class="admin-loading">Loading…</div></div>
+
+      <div class="an-foot">
+        <label><input type="checkbox" id="an-notrack" onchange="setNoTrack(this.checked)"> Don't count my own visits from this device</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Firebase init ──
+  const firebaseConfig = {
+    apiKey: "AIzaSyD2VAX4MyQQ5nEptG7HOf0f2RQU2jUqGd8",
+    authDomain: "sfsw-2d5c8.firebaseapp.com",
+    projectId: "sfsw-2d5c8",
+    storageBucket: "sfsw-2d5c8.firebasestorage.app",
+    messagingSenderId: "272421744127",
+    appId: "1:272421744127:web:88b8cf2b647817e444cbca"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+
+  let unsubOrders = null;
+  let unsubMessages = null;
+  let latestOrders = [];
+  let latestMessages = [];
+
+  // ── Tab switching ──
+  function switchTab(name) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-btn-' + name).classList.add('active');
+    document.getElementById('tab-panel-' + name).classList.add('active');
+    if (name === 'analytics') loadAnalytics(false);
+  }
+
+  // ── Auth state ──
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-screen').style.display = 'block';
+      document.getElementById('admin-user-email').textContent = user.email;
+      loadOrders();
+      initNoTrack();
+      startLiveVisitors();
+    } else {
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('admin-screen').style.display = 'none';
+    }
+  });
+
+  // Catch the result of a redirect-based sign-in (needed for iOS
+  // home-screen/standalone apps, where popups don't work).
+  auth.getRedirectResult().then(result => {
+    if (result && result.user && result.user.email !== 'sfloridasw@gmail.com') {
+      auth.signOut();
+      document.getElementById('login-error').textContent = 'Access denied.';
+    }
+  }).catch(e => {
+    const errEl = document.getElementById('login-error');
+    if (errEl) errEl.textContent = e.message || 'Sign-in failed.';
+  });
+
+  // ── Enable push notifications (must be a real user tap on iOS) ──
+  async function enableNotifications() {
+    const btn = document.getElementById('notif-btn');
+    const errEl = document.getElementById('login-error');
+    btn.disabled = true;
+    btn.textContent = 'Requesting…';
+    try {
+      if (!oneSignalInstance) {
+        await new Promise((resolve, reject) => {
+          window.OneSignalDeferred = window.OneSignalDeferred || [];
+          window.OneSignalDeferred.push(function() { resolve(); });
+          setTimeout(() => reject(new Error('OneSignal SDK failed to load (timed out).')), 8000);
+        });
+      }
+      if (!oneSignalInstance) throw new Error('OneSignal SDK not ready.');
+      if (!oneSignalInstance.Notifications.isPushSupported()) {
+        throw new Error('Push not supported here. Make sure you opened this from the Home Screen icon, not Safari directly.');
+      }
+
+      const permissionPromise = oneSignalInstance.Notifications.requestPermission();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('No response after 15s — the permission prompt may not have appeared. Try closing and reopening the app from the Home Screen icon.')), 15000)
+      );
+      await Promise.race([permissionPromise, timeoutPromise]);
+
+      const granted = oneSignalInstance.Notifications.permission;
+      btn.textContent = granted ? 'Notifications Enabled ✓' : 'Enable Notifications';
+      btn.disabled = !!granted;
+      if (!granted) errEl.textContent = 'Permission was not granted.';
+    } catch (e) {
+      errEl.textContent = e.message || 'Could not enable notifications.';
+      btn.disabled = false;
+      btn.textContent = 'Enable Notifications';
+    }
+  }
+
+  // ── Link a 6-digit access code to the currently signed-in Google account ──
+  function showSetCode() {
+    const panel = document.getElementById('set-code-panel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  }
+
+  async function setAccessCode() {
+    const input = document.getElementById('set-code-input');
+    const btn = document.getElementById('set-code-btn');
+    const statusEl = document.getElementById('set-code-status');
+    const code = input.value.trim();
+    if (!/^\d{6}$/.test(code)) {
+      statusEl.textContent = 'Enter a 6-digit code.';
+      return;
+    }
+    btn.disabled = true;
+    statusEl.textContent = 'Saving…';
+    try {
+      const user = auth.currentUser;
+      const credential = firebase.auth.EmailAuthProvider.credential(user.email, code);
+      // If a code was already linked, unlink first so re-linking with a new code works.
+      const hasPasswordProvider = user.providerData.some(p => p.providerId === 'password');
+      if (hasPasswordProvider) {
+        await user.unlink('password');
+      }
+      await user.linkWithCredential(credential);
+      statusEl.textContent = 'Saved ✓';
+      input.value = '';
+    } catch (e) {
+      statusEl.textContent = e.message || 'Could not save code.';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ── Login with 6-digit code (backup for standalone iOS app, where
+  //    Google's redirect sign-in is unreliable) ──
+  async function doPinLogin() {
+    const input = document.getElementById('pin-input');
+    const btn = document.getElementById('pin-btn');
+    const errEl = document.getElementById('login-error');
+    errEl.textContent = '';
+    const code = input.value.trim();
+    if (!/^\d{6}$/.test(code)) {
+      errEl.textContent = 'Enter the 6-digit code.';
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
+    try {
+      await auth.signInWithEmailAndPassword('sfloridasw@gmail.com', code);
+    } catch (e) {
+      errEl.textContent = 'Incorrect code.';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Enter Code →';
+    }
+  }
+
+  // ── Login with Google ──
+  // Standalone/home-screen apps on iOS can't use popups, so use
+  // signInWithPopup on regular browser tabs and fall back to
+  // signInWithRedirect when running as an installed PWA.
+  function isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }
+
+  async function doLogin() {
+    const btn = document.getElementById('login-btn');
+    const errEl = document.getElementById('login-error');
+    errEl.textContent = '';
+    const provider = new firebase.auth.GoogleAuthProvider();
+
+    if (isStandalone()) {
+      btn.disabled = true;
+      btn.textContent = 'Redirecting to Google…';
+      await auth.signInWithRedirect(provider);
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Opening Google…';
+    try {
+      const result = await auth.signInWithPopup(provider);
+      if (result.user.email !== 'sfloridasw@gmail.com') {
+        await auth.signOut();
+        throw new Error('Access denied.');
+      }
+    } catch (e) {
+      errEl.textContent = e.message || 'Sign-in failed.';
+      btn.disabled = false;
+      btn.textContent = 'Sign in with Google →';
+    }
+  }
+
+  function doLogout() {
+    if (unsubOrders) { unsubOrders(); unsubOrders = null; }
+    if (unsubMessages) { unsubMessages(); unsubMessages = null; }
+    stopLiveVisitors();
+    auth.signOut();
+  }
+
+  // ── Load orders + messages (live-updating) ──
+  function loadOrders() {
+    const pendingEl   = document.getElementById('pending-list');
+    const completedEl = document.getElementById('completed-list');
+
+    if (unsubOrders) unsubOrders();
+    unsubOrders = db.collection('orders').orderBy('createdAt', 'desc').onSnapshot(snap => {
+      const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      latestOrders = orders;
+
+      const pending   = orders.filter(o => o.status !== 'paid');
+      const completed = orders.filter(o => o.status === 'paid' && !o.buildStage);
+
+      // Stats
+      const paidOrders = orders.filter(o => o.status === 'paid');
+      // Headline figure is NET — what actually reaches your account after Stripe's
+      // cut — not the gross charge, which includes the fee the customer covered.
+      const netRevenue = paidOrders.reduce((s, o) => s + orderBreakdown(o).net, 0);
+      document.getElementById('stat-total').textContent   = paidOrders.length;
+      document.getElementById('stat-revenue').textContent =
+        '$' + netRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 });
+      document.getElementById('stat-pending').textContent = pending.length;
+
+      // Feed the Revenue tab
+      ALL_ORDERS = orders;
+      renderRevenue();
+
+      // Tab badges
+      document.getElementById('badge-pending').textContent   = pending.length;
+      document.getElementById('badge-completed').textContent = completed.length;
+
+      pendingEl.innerHTML = pending.length
+        ? pending.map((o, i) => renderOrderCard(o, 'p' + i, false)).join('')
+        : '<div class="admin-empty">No pending orders.</div>';
+
+      completedEl.innerHTML = completed.length
+        ? completed.map((o, i) => renderOrderCard(o, 'c' + i, true,
+            `<button onclick="moveOrderStage('${o.id}','in_works')" style="background:none;border:1px solid var(--c-gold);color:var(--c-gold);font-size:11px;font-family:var(--font-cond);letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:4px;cursor:pointer;margin-right:.5rem;">Add to In The Works</button>`
+          )).join('')
+        : '<div class="admin-empty">No completed orders yet.</div>';
+
+      renderWorkStages();
+    }, e => {
+      pendingEl.innerHTML = '<div class="admin-empty">Error: ' + e.message + '</div>';
+    });
+
+    loadMessages();
+  }
+
+  function loadMessages() {
+    const listEl = document.getElementById('messages-list');
+
+    if (unsubMessages) unsubMessages();
+    unsubMessages = db.collection('messages').orderBy('createdAt', 'desc').onSnapshot(snap => {
+      const allMsgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      latestMessages = allMsgs;
+
+      const msgs = allMsgs.filter(m => !m.buildStage);
+
+      if (!msgs.length) {
+        listEl.innerHTML = '<div class="admin-empty">No messages yet.</div>';
+        document.getElementById('badge-messages').textContent = 0;
+      } else {
+        const unread = msgs.filter(m => m.read === false).length;
+        document.getElementById('badge-messages').textContent = unread || msgs.length;
+        listEl.innerHTML = msgs.map((m, i) => renderMessageCard(m, i,
+          m.type === 'discuss-build'
+            ? `<button onclick="moveMessageStage('${m.id}','in_works')" style="background:none;border:1px solid var(--c-gold);color:var(--c-gold);font-size:11px;font-family:var(--font-cond);letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:4px;cursor:pointer;margin-right:.5rem;">Add to In The Works</button>`
+            : ''
+        )).join('');
+      }
+
+      renderWorkStages();
+    }, e => {
+      listEl.innerHTML = '<div class="admin-empty">Error: ' + e.message + '</div>';
+    });
+  }
+
+  // ── "In The Works" / "Completed Builds" — combined orders + messages ──
+  async function moveOrderStage(orderId, stage) {
+    try { await db.collection('orders').doc(orderId).update({ buildStage: stage }); }
+    catch (e) { alert('Failed: ' + e.message); }
+  }
+
+  async function moveMessageStage(msgId, stage) {
+    try { await db.collection('messages').doc(msgId).update({ buildStage: stage }); }
+    catch (e) { alert('Failed: ' + e.message); }
+  }
+
+  function renderWorkStages() {
+    const inWorksEl = document.getElementById('inworks-list');
+    const buildsEl  = document.getElementById('builds-list');
+
+    const inWorksOrders = latestOrders.filter(o => o.buildStage === 'in_works');
+    const inWorksMsgs    = latestMessages.filter(m => m.buildStage === 'in_works');
+    const buildOrders   = latestOrders.filter(o => o.buildStage === 'completed_build');
+    const buildMsgs     = latestMessages.filter(m => m.buildStage === 'completed_build');
+
+    document.getElementById('badge-inworks').textContent = inWorksOrders.length + inWorksMsgs.length;
+    document.getElementById('badge-builds').textContent  = buildOrders.length + buildMsgs.length;
+
+    const inWorksHtml = [
+      ...inWorksOrders.map((o, i) => renderOrderCard(o, 'w-o' + i, true,
+        `<button onclick="moveOrderStage('${o.id}','completed_build')" style="background:none;border:1px solid #4ade80;color:#4ade80;font-size:11px;font-family:var(--font-cond);letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:4px;cursor:pointer;margin-right:.5rem;">Completed Build</button>`
+      )),
+      ...inWorksMsgs.map((m, i) => renderMessageCard(m, 'w-m' + i,
+        `<button onclick="moveMessageStage('${m.id}','completed_build')" style="background:none;border:1px solid #4ade80;color:#4ade80;font-size:11px;font-family:var(--font-cond);letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:4px;cursor:pointer;margin-right:.5rem;">Completed Build</button>`
+      )),
+    ];
+    inWorksEl.innerHTML = inWorksHtml.length ? inWorksHtml.join('') : '<div class="admin-empty">Nothing in the works right now.</div>';
+
+    const buildsHtml = [
+      ...buildOrders.map((o, i) => renderOrderCard(o, 'b-o' + i, true)),
+      ...buildMsgs.map((m, i) => renderMessageCard(m, 'b-m' + i)),
+    ];
+    buildsEl.innerHTML = buildsHtml.length ? buildsHtml.join('') : '<div class="admin-empty">No completed builds yet.</div>';
+  }
+
+  function renderMessageCard(msg, idx, actionHtml) {
+    const date = msg.createdAt
+      ? new Date(msg.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : '—';
+    const isWarranty = msg.type === 'warranty';
+    const isBuild = msg.type === 'discuss-build';
+    const badgeClass = isBuild ? 'msg-badge-build' : (isWarranty ? 'msg-badge-warranty' : 'msg-badge-contact');
+    const badgeLabel = isBuild ? 'Discuss Build' : (isWarranty ? 'Warranty' : 'Contact');
+    const unreadClass = msg.read === false ? 'unread' : '';
+
+    return `
+      <div class="msg-card ${unreadClass}" id="msg-card-${idx}">
+        <div class="msg-header" onclick="toggleMessage('${idx}', '${msg.id}')">
+          <div>
+            <div class="msg-name">${msg.name || 'Unknown'}</div>
+            <div class="msg-meta">
+              ${msg.phone ? `<span>${msg.phone}</span>` : ''}
+              ${msg.email ? `<span>${msg.email}</span>` : ''}
+              ${msg.rod ? `<span>Rod: ${msg.rod}</span>` : ''}
+              <span>${date}</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.75rem;flex-shrink:0">
+            <span class="msg-badge ${badgeClass}">${badgeLabel}</span>
+            <span class="msg-chevron">▾</span>
+          </div>
+        </div>
+        <div class="msg-body">
+          <div class="msg-text">${msg.message || '—'}</div>
+          <div style="margin-top:1rem;display:flex;justify-content:flex-end;align-items:center;">
+            ${actionHtml || ''}
+            <button onclick="deleteMessage('${msg.id}','${idx}')" style="background:none;border:1px solid #4a2020;color:#f87171;font-size:11px;font-family:var(--font-cond);letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:4px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.1)'" onmouseout="this.style.background='none'">Delete</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  async function toggleMessage(idx, firestoreId) {
+    const card = document.getElementById('msg-card-' + idx);
+    card.classList.toggle('open');
+    if (card.classList.contains('open') && card.classList.contains('unread')) {
+      card.classList.remove('unread');
+      try { await db.collection('messages').doc(firestoreId).update({ read: true }); } catch(e) {}
+    }
+  }
+
+  async function deleteMessage(id, idx) {
+    if (!confirm('Delete this message? This cannot be undone.')) return;
+    try {
+      await db.collection('messages').doc(id).delete();
+      document.getElementById('msg-card-' + idx).remove();
+    } catch (e) {
+      alert('Delete failed: ' + e.message);
+    }
+  }
+
+  // ── Delete order ──
+  async function deleteOrder(id, cardId) {
+    if (!confirm('Delete this order? This cannot be undone.')) return;
+    try {
+      await db.collection('orders').doc(id).delete();
+      document.getElementById('order-card-' + cardId).remove();
+      loadOrders();
+    } catch (e) {
+      alert('Delete failed: ' + e.message);
+    }
+  }
+
+  // ── Revenue reporting ─────────────────────────────────────────────────────
+  // Only paid orders count. A 'pending' row is a checkout that was started but
+  // never completed, so counting it would inflate every figure here.
+  let REVENUE_SCOPE = 'monthly';
+  let ALL_ORDERS = [];
+
+  const revMoney = n => '$' + Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  function revenueBuckets(orders, scope) {
+    const paid = orders.filter(o => o.status === 'paid' && o.createdAt);
+    const map = new Map();
+    for (const o of paid) {
+      const d = new Date(o.createdAt);
+      if (isNaN(d)) continue;
+      let key, label;
+      if (scope === 'annual') {
+        key = String(d.getFullYear());
+        label = key;
+      } else if (scope === 'total') {
+        key = 'all';
+        label = 'All Time';
+      } else {
+        key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+        label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      }
+      if (!map.has(key)) map.set(key, { key, label, orders: 0, rod: 0, discount: 0, shipping: 0, fee: 0, gross: 0, net: 0 });
+      const b = map.get(key), x = orderBreakdown(o);
+      b.orders++; b.rod += x.rod; b.discount += x.discount;
+      b.shipping += x.shipping; b.fee += x.fee; b.gross += x.gross; b.net += x.net;
+    }
+    // Newest period first
+    return [...map.values()].sort((a, b) => b.key.localeCompare(a.key));
+  }
+
+  function setRevenueScope(scope) {
+    REVENUE_SCOPE = scope;
+    ['monthly', 'annual', 'total'].forEach(s => {
+      const el = document.getElementById('rev-scope-' + s);
+      if (el) el.classList.toggle('active', s === scope);
+    });
+    renderRevenue();
+  }
+
+  function renderRevenue() {
+    const el = document.getElementById('revenue-body');
+    if (!el) return;
+    const rows = revenueBuckets(ALL_ORDERS, REVENUE_SCOPE);
+
+    if (!rows.length) {
+      el.innerHTML = '<div class="admin-empty">No paid orders yet.</div>';
+      return;
+    }
+
+    // Totals across every paid order, regardless of the scope being viewed
+    const all = revenueBuckets(ALL_ORDERS, 'total')[0];
+
+    const cards = `
+      <div class="rev-cards">
+        <div class="rev-card"><div class="rev-card-label">Paid Orders</div><div class="rev-card-value">${all.orders}</div></div>
+        <div class="rev-card"><div class="rev-card-label">Rod Revenue</div><div class="rev-card-value">${revMoney(all.rod - all.discount)}</div></div>
+        <div class="rev-card"><div class="rev-card-label">Shipping</div><div class="rev-card-value">${revMoney(all.shipping)}</div></div>
+        <div class="rev-card muted"><div class="rev-card-label">Processing Fees</div><div class="rev-card-value">${revMoney(all.fee)}</div></div>
+        <div class="rev-card"><div class="rev-card-label">Total Collected</div><div class="rev-card-value">${revMoney(all.gross)}</div></div>
+        <div class="rev-card accent"><div class="rev-card-label">Net to You</div><div class="rev-card-value">${revMoney(all.net)}</div></div>
+      </div>`;
+
+    const periodHeader = REVENUE_SCOPE === 'annual' ? 'Year' : REVENUE_SCOPE === 'total' ? 'Period' : 'Month';
+    const body = rows.map(b => `
+      <tr>
+        <td class="rev-period">${b.label}</td>
+        <td>${b.orders}</td>
+        <td>${revMoney(b.rod)}</td>
+        <td class="rev-discount">${b.discount ? '−' + revMoney(b.discount) : '—'}</td>
+        <td>${b.shipping ? revMoney(b.shipping) : '—'}</td>
+        <td class="rev-fee">${revMoney(b.fee)}</td>
+        <td>${revMoney(b.gross)}</td>
+        <td class="rev-net">${revMoney(b.net)}</td>
+      </tr>`).join('');
+
+    const foot = rows.length > 1 ? `
+      <tfoot>
+        <tr>
+          <td>Total</td>
+          <td>${all.orders}</td>
+          <td>${revMoney(all.rod)}</td>
+          <td class="rev-discount">${all.discount ? '−' + revMoney(all.discount) : '—'}</td>
+          <td>${all.shipping ? revMoney(all.shipping) : '—'}</td>
+          <td class="rev-fee">${revMoney(all.fee)}</td>
+          <td>${revMoney(all.gross)}</td>
+          <td class="rev-net">${revMoney(all.net)}</td>
+        </tr>
+      </tfoot>` : '';
+
+    el.innerHTML = cards + `
+      <div class="rev-table-wrap">
+        <table class="rev-table">
+          <thead>
+            <tr>
+              <th>${periodHeader}</th><th>Orders</th><th>Rod Cost</th><th>Discounts</th>
+              <th>Shipping</th><th>Processing Fee</th><th>Collected</th><th>Net</th>
+            </tr>
+          </thead>
+          <tbody>${body}</tbody>
+          ${foot}
+        </table>
+      </div>
+      <div class="rev-note">
+        Paid orders only — pending checkouts are excluded. Periods are based on order date.
+        Processing fee is what Stripe deducts (2.9% + $0.30), which the checkout already adds on top
+        of your price, so <strong>Net</strong> is what actually reaches your account.
+      </div>`;
+  }
+
+  // ── Money maths, in one place ─────────────────────────────────────────────
+  // create-checkout.js grosses the charge UP so that Stripe's cut comes out of
+  // the customer's payment, not yours: it solves for a total where
+  //   total − (total × 2.9% + $0.30) === rodSubtotal − discount + shipping
+  // So the exact fee is recoverable from stored fields — no Stripe API call and
+  // no guessing at the rate:
+  //   fee = grandTotal − (rodSubtotal − discount + shipping)
+  // The old code did grandTotal − rodSubtotal − shipping, which omitted the
+  // discount and so reported the wrong fee on any promo-code order.
+  const SHIPPING_FALLBACK = 70;
+  function orderBreakdown(order) {
+    const rod         = Number(order.rodSubtotal || 0);
+    const discount    = Number(order.discountAmount || 0);
+    const hasShipping = order.shippingMethod === 'shipping';
+    const shipping    = hasShipping ? Number(order.shippingCost != null ? order.shippingCost : SHIPPING_FALLBACK) : 0;
+    const gross       = Number(order.grandTotal || 0);
+    const net         = rod - discount + shipping;     // what lands in your account
+    const fee         = Math.max(0, +(gross - net).toFixed(2));
+    return { rod, discount, hasShipping, shipping, gross, fee, net: +net.toFixed(2) };
+  }
+
+  function renderOrderCard(order, idx, isCompleted, actionHtml) {
+    const date = order.createdAt
+      ? new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : '—';
+    const statusClass = order.status === 'paid' ? 'status-paid' : 'status-pending';
+    const statusLabel = order.status === 'paid' ? 'Paid' : 'Pending';
+    const grandTotal  = Number(order.grandTotal || 0);
+    const totalLabel  = grandTotal ? '$' + grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—';
+
+    const items = order.items || [];
+    const rodsHtml = items.map(item => {
+      const lines = (item.lines || []).map(l =>
+        `<div class="spec-row"><span class="spec-label">${l.label}:</span><span class="spec-value">${l.value}</span></div>`
+      ).join('');
+      return `
+        <div class="rod-block">
+          <div class="rod-block-title">
+            <span>${item.rodType || 'Custom Rod'}</span>
+            <span class="rod-block-price">$${Number(item.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          </div>
+          <div class="spec-grid">${lines}</div>
+        </div>`;
+    }).join('');
+
+    // ── Price breakdown (shown on every order) ──
+    let priceBreakdownHtml = '';
+    {
+      const b = orderBreakdown(order);
+      const money = n => '$' + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      priceBreakdownHtml = `
+        <div class="price-breakdown">
+          <div class="price-breakdown-title">Payment Breakdown</div>
+          <div class="price-row">
+            <span class="price-row-label">Rod Cost</span>
+            <span class="price-row-value">${money(b.rod)}</span>
+          </div>
+          ${b.discount > 0 ? `
+          <div class="price-row">
+            <span class="price-row-label">Discount${order.promoCode ? ' (' + order.promoCode + ')' : ''}</span>
+            <span class="price-row-value" style="color:#34d399">−${money(b.discount)}</span>
+          </div>` : ''}
+          ${b.hasShipping ? `
+          <div class="price-row">
+            <span class="price-row-label">Shipping</span>
+            <span class="price-row-value">${money(b.shipping)}</span>
+          </div>` : `
+          <div class="price-row">
+            <span class="price-row-label">Shipping</span>
+            <span class="price-row-value" style="color:var(--c-muted)">Pick Up / Free</span>
+          </div>`}
+          <div class="price-row">
+            <span class="price-row-label">Payment Processing Fee</span>
+            <span class="price-row-value">${money(b.fee)}</span>
+          </div>
+          <div class="price-row total-row">
+            <span class="price-row-label">${order.status === 'paid' ? 'Total Collected' : 'Order Total'}</span>
+            <span class="price-row-value">${money(b.gross)}</span>
+          </div>
+          <div class="price-row">
+            <span class="price-row-label" style="color:var(--c-gold)">Net to You</span>
+            <span class="price-row-value" style="color:var(--c-gold)">${money(b.net)}</span>
+          </div>
+        </div>`;
+    }
+
+    return `
+      <div class="order-card" id="order-card-${idx}">
+        <div class="order-header" onclick="toggleOrder('${idx}')">
+          <div class="order-header-left">
+            <div class="order-customer-name">${order.customerName || 'Unknown'}</div>
+            <div class="order-contact">
+              ${order.customerEmail ? `<span>${order.customerEmail}</span>` : ''}
+              ${order.customerPhone ? `<span>${order.customerPhone}</span>` : ''}
+            </div>
+          </div>
+          <div class="order-header-right">
+            <span class="order-date">${date}</span>
+            <span class="status-badge ${statusClass}">${statusLabel}</span>
+            <span class="order-total">${totalLabel}</span>
+            <span class="order-chevron">▾</span>
+          </div>
+        </div>
+        <div class="order-body">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+            <div class="order-pi" style="margin:0">Stripe ID: ${order.paymentIntentId || '—'}</div>
+            <div style="display:flex;align-items:center;">
+              ${actionHtml || ''}
+              <button onclick="deleteOrder('${order.id}','${idx}')" style="background:none;border:1px solid #4a2020;color:#f87171;font-size:11px;font-family:var(--font-cond);letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:4px;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(248,113,113,.1)'" onmouseout="this.style.background='none'">Delete</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;font-size:13px;">
+            <span><span style="color:var(--c-muted)">Address:</span> <span style="color:var(--c-text)">${order.customerAddress || '—'}</span></span>
+            <span><span style="color:var(--c-muted)">Delivery:</span> <span style="color:var(--c-text)">${order.shippingMethod === 'shipping' ? 'Shipping' : 'Pick Up / Local'}</span></span>
+          </div>
+          ${priceBreakdownHtml}
+          ${rodsHtml || '<div style="color:var(--c-muted);font-size:13px">No rod details saved.</div>'}
+        </div>
+      </div>`;
+  }
+
+  function toggleOrder(idx) {
+    document.getElementById('order-card-' + idx).classList.toggle('open');
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // ── ANALYTICS TAB ── (data written by js/analytics.js)
+  // ════════════════════════════════════════════════════════════════
+  const AN_LIVE_WINDOW_MS = 75 * 1000;   // a tab counts as "here" if it pinged in the last 75s
+  let anRange = '7';
+  let anViews = null;          // cached rows for the current range
+  let anLoadedRange = null;
+  let anLoadedAt = 0;
+  let anLiveDocs = [];
+  let unsubLive = null;
+  let anLiveResub = null;
+  let anLiveTick = null;
+  let anCleaned = false;
+
+  // Pages that are site info rather than rods (used for the "viewed a rod" funnel step)
+  const AN_INFO_PAGES = ['/', '/pages/about', '/pages/contact', '/pages/process', '/pages/warranty',
+    '/pages/privacy', '/pages/terms', '/pages/checkout', '/pages/order-success', '/pages/discuss-build'];
+  const AN_SOURCE_NAMES = { direct: 'Direct / typed in', google: 'Google', instagram: 'Instagram', tiktok: 'TikTok',
+    facebook: 'Facebook', youtube: 'YouTube', bing: 'Bing', duckduckgo: 'DuckDuckGo', yahoo: 'Yahoo',
+    reddit: 'Reddit', x: 'X / Twitter', ai: 'AI chat (ChatGPT etc.)', email: 'Email', qr: 'QR code' };
+  const AN_EVENT_NAMES = { add_to_cart: ['Added to cart', 'cart'], checkout_start: ['Tried to pay', 'pay'],
+    purchase: ['Paid', 'purchase'], form_submit: ['Form sent', 'form'] };
+
+  function anEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function anSrc(s) { return AN_SOURCE_NAMES[s] || s || 'Direct / typed in'; }
+  function anPageName(title, page) {
+    if (page === '/') return 'Home';
+    return title && title !== page ? title : (page || '').replace('/pages/', '');
+  }
+  function anAgo(ms) {
+    const s = Math.max(0, Math.round(ms / 1000));
+    if (s < 60) return s + 's';
+    const m = Math.floor(s / 60);
+    if (m < 60) return m + 'm';
+    return Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+  }
+  function anNum(n) { return n.toLocaleString(); }
+
+  // ── This-device tracking opt-out ──
+  function setNoTrack(on) {
+    try { on ? localStorage.setItem('sfsw_no_track', '1') : localStorage.removeItem('sfsw_no_track'); } catch (e) {}
+  }
+  function initNoTrack() {
+    // Signing into admin on a device stops that device's visits being counted.
+    let v = null;
+    try {
+      v = localStorage.getItem('sfsw_no_track');
+      if (v === null) { localStorage.setItem('sfsw_no_track', '1'); v = '1'; }
+    } catch (e) {}
+    const cb = document.getElementById('an-notrack');
+    if (cb) cb.checked = v === '1';
+  }
+
+  // ── Live visitors ──
+  function startLiveVisitors() {
+    stopLiveVisitors();
+    const subscribe = () => {
+      if (unsubLive) unsubLive();
+      const since = new Date(Date.now() - 10 * 60 * 1000);
+      unsubLive = db.collection('analytics_live').where('lastSeen', '>', since).onSnapshot(snap => {
+        anLiveDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderLive();
+      }, err => {
+        document.getElementById('an-live-list').innerHTML =
+          `<div class="an-err">Live data blocked: ${anEsc(err.message)}<br>Add the analytics rules to Firestore (see FIRESTORE-RULES.md).</div>`;
+      });
+    };
+    subscribe();
+    anLiveResub = setInterval(subscribe, 5 * 60 * 1000);   // slide the 10-min window forward
+    anLiveTick = setInterval(renderLive, 5000);            // drop tabs that stop pinging
+    if (!anCleaned) { anCleaned = true; cleanStaleLive(); }
+  }
+  function stopLiveVisitors() {
+    if (unsubLive) { unsubLive(); unsubLive = null; }
+    clearInterval(anLiveResub); clearInterval(anLiveTick);
+  }
+  async function cleanStaleLive() {
+    // Old presence docs are only needed for a few minutes; tidy anything over a day old.
+    try {
+      const old = await db.collection('analytics_live')
+        .where('lastSeen', '<', new Date(Date.now() - 24 * 3600 * 1000)).limit(400).get();
+      if (old.empty) return;
+      const batch = db.batch();
+      old.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    } catch (e) {}
+  }
+  function renderLive() {
+    const now = Date.now();
+    const active = anLiveDocs.filter(d => !d.gone && d.lastSeen && now - d.lastSeen.toDate().getTime() < AN_LIVE_WINDOW_MS);
+    // One row per visitor (a visitor with two tabs open counts once; show their latest tab)
+    const byVisitor = {};
+    active.forEach(d => {
+      const prev = byVisitor[d.vid];
+      if (!prev || d.lastSeen.toMillis() > prev.lastSeen.toMillis()) byVisitor[d.vid] = d;
+    });
+    const people = Object.values(byVisitor).sort((a, b) => (a.since || 0) - (b.since || 0));
+    const n = people.length;
+    document.getElementById('an-live-num').textContent = n;
+    const badge = document.getElementById('badge-live');
+    if (badge) badge.textContent = n;
+    const pages = {};
+    people.forEach(p => { const k = anPageName(p.title, p.page); pages[k] = (pages[k] || 0) + 1; });
+    const top = Object.entries(pages).sort((a, b) => b[1] - a[1]);
+    document.getElementById('an-live-sub').textContent = n
+      ? top.slice(0, 3).map(([k, c]) => `${c} on ${k}`).join(' · ')
+      : 'Updates live';
+    document.getElementById('an-live-list').innerHTML = n
+      ? people.map(p => `
+          <div class="an-live-row">
+            <span class="pg">${anEsc(anPageName(p.title, p.page))}</span>
+            <span class="meta src">${anEsc(anSrc(p.src))}</span>
+            <span class="meta dev">${anEsc(p.dev || '')}</span>
+            <span class="meta">${p.since ? anAgo(now - p.since) + ' on page' : ''}</span>
+          </div>`).join('')
+      : '<div class="an-live-empty">Nobody on the site right now.</div>';
+  }
+
+  // ── History ──
+  function anRangeStart(range) {
+    const d = new Date(); d.setHours(0, 0, 0, 0);
+    if (range !== 'today') d.setDate(d.getDate() - (parseInt(range, 10) - 1));
+    return d;
+  }
+  function setAnalyticsRange(r) {
+    anRange = r;
+    ['today', '7', '30', '90'].forEach(k => document.getElementById('an-range-' + k).classList.toggle('active', k === r));
+    loadAnalytics(false);
+  }
+  async function loadAnalytics(force) {
+    const body = document.getElementById('analytics-body');
+    if (!force && anViews && anLoadedRange === anRange && Date.now() - anLoadedAt < 5 * 60 * 1000) { renderAnalytics(); return; }
+    if (!anViews || anLoadedRange !== anRange) body.innerHTML = '<div class="admin-loading">Loading…</div>';
+    const btn = document.getElementById('an-refresh'); btn.textContent = '↻ Loading…';
+    try {
+      const snap = await db.collection('analytics_views')
+        .where('ts', '>=', anRangeStart(anRange)).orderBy('ts', 'asc').limit(30000).get();
+      anViews = snap.docs.map(d => { const x = d.data(); x.t = x.ts ? x.ts.toDate() : new Date(); return x; });
+      anLoadedRange = anRange; anLoadedAt = Date.now();
+      renderAnalytics();
+    } catch (e) {
+      body.innerHTML = `<div class="an-err">Couldn't load analytics: ${anEsc(e.message)}<br>If this says "permissions", add the analytics rules to Firestore (see FIRESTORE-RULES.md in the site folder).</div>`;
+    } finally { btn.textContent = '↻ Refresh'; }
+  }
+
+  function anBars(rows, opts) {
+    // rows: [{label, value, tip}] → single-series bar chart with hover tooltips.
+    // Bars are SVG (stretched to width); axis text is HTML so it never distorts.
+    const W = 1000, H = 170, padL = 40, padT = 6;
+    const max = Math.max(1, ...rows.map(r => r.value));
+    const p10 = Math.pow(10, Math.floor(Math.log10(max)));
+    const nice = [1, 2, 2.5, 5, 10].map(m => m * p10).find(v => v >= max);
+    const ticks = [0, nice / 2, nice].filter(Number.isInteger);
+    const n = rows.length, slot = (W - padL) / n, bw = Math.max(2, Math.min(slot * 0.72, 46));
+    const y = v => H - (v / nice) * (H - padT);
+    const every = Math.ceil(n / (opts.maxLabels || 10));
+    let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:${H}px" role="img" aria-label="${anEsc(opts.aria)}">`;
+    ticks.forEach(t => { svg += `<line class="grid" x1="${padL}" x2="${W}" y1="${y(t)}" y2="${y(t)}" vector-effect="non-scaling-stroke"/>`; });
+    rows.forEach((r, i) => {
+      const x = padL + i * slot + (slot - bw) / 2, top = y(r.value), h = H - top;
+      const rr = Math.min(4, bw / 2, h);
+      svg += `<rect class="bar-hit" x="${padL + i * slot}" y="0" width="${slot}" height="${H}" data-i="${i}"/>`;
+      svg += `<path class="bar" data-i="${i}" d="${h > 0 ? `M${x},${H} V${top + rr} Q${x},${top} ${x + rr},${top} H${x + bw - rr} Q${x + bw},${top} ${x + bw},${top + rr} V${H} Z` : ''}"/>`;
+    });
+    svg += '</svg>';
+    let yl = '';
+    ticks.forEach(t => { yl += `<span style="position:absolute;left:0;top:${y(t) / H * 100}%;transform:translateY(-50%);font-size:10px;color:var(--c-dim);font-variant-numeric:tabular-nums">${anNum(t)}</span>`; });
+    let xl = `<div style="display:flex;padding-left:${padL / W * 100}%;margin-top:6px">`;
+    rows.forEach((r, i) => { xl += `<span style="flex:1;min-width:0;text-align:center;font-size:10px;color:var(--c-dim);white-space:nowrap;overflow:visible">${i % every === 0 ? anEsc(r.label) : ''}</span>`; });
+    xl += '</div>';
+    return `<div class="an-chart" data-chart="${opts.id}"><div style="position:relative">${svg}${yl}</div>${xl}<div class="an-tip"></div></div>`;
+  }
+  function anWireChart(id, rows) {
+    const wrap = document.querySelector(`[data-chart="${id}"]`);
+    if (!wrap) return;
+    const tip = wrap.querySelector('.an-tip');
+    const bars = wrap.querySelectorAll('.bar');
+    wrap.querySelectorAll('.bar-hit').forEach(hit => {
+      hit.addEventListener('mouseenter', () => {
+        const i = +hit.dataset.i, r = rows[i];
+        bars.forEach(b => b.classList.toggle('hl', +b.dataset.i === i));
+        tip.innerHTML = r.tip;
+        const box = wrap.getBoundingClientRect(), hb = hit.getBoundingClientRect();
+        let left = hb.left - box.left + hb.width / 2;
+        left = Math.max(70, Math.min(box.width - 70, left));
+        tip.style.left = left + 'px';
+        tip.style.top = '40px';
+        tip.style.opacity = 1;
+      });
+      hit.addEventListener('mouseleave', () => { tip.style.opacity = 0; bars.forEach(b => b.classList.remove('hl')); });
+    });
+  }
+  function anRowsHtml(items, total, opts = {}) {
+    if (!items.length) return '<div class="an-live-empty">No data yet.</div>';
+    const max = Math.max(1, ...items.map(i => i.value));
+    return '<div class="an-rows">' + items.map(i => `
+      <div class="an-row">
+        <span class="lbl" title="${anEsc(i.label)}">${anEsc(i.label)}</span>
+        <span class="val">${anNum(i.value)}${total ? `<span class="m">${Math.round(i.value / total * 100)}%</span>` : ''}${i.extra ? `<span class="m">${i.extra}</span>` : ''}</span>
+        <div class="track"><div class="fill" style="width:${(opts.ofTotal && total ? i.value / total : i.value / max) * 100}%"></div></div>
+      </div>`).join('') + '</div>';
+  }
+
+  function renderAnalytics() {
+    const body = document.getElementById('analytics-body');
+    const rows = anViews || [];
+    const views = rows.filter(r => r.type === 'view');
+    const events = rows.filter(r => r.type === 'event');
+    const visitors = new Set(views.map(r => r.vid));
+    const sessions = {};
+    views.forEach(r => { (sessions[r.sid] = sessions[r.sid] || { src: r.src, dev: r.dev, pages: [], vid: r.vid, newv: r.newv }).pages.push(r.page); });
+    const sessList = Object.values(sessions);
+    const nSess = sessList.length;
+    const newVisitors = new Set(views.filter(r => r.newv).map(r => r.vid)).size;
+    const paidSessions = new Set(events.filter(e => e.ev === 'purchase').map(e => e.sid)).size;
+
+    // KPI cards
+    const cards = [
+      ['Visitors', anNum(visitors.size), 'accent'],
+      ['Visits', anNum(nSess), ''],
+      ['Page Views', anNum(views.length), ''],
+      ['Pages / Visit', nSess ? (views.length / nSess).toFixed(1) : '—', ''],
+      ['New Visitors', visitors.size ? Math.round(newVisitors / visitors.size * 100) + '%' : '—', ''],
+      ['Orders Paid', anNum(paidSessions), ''],
+    ];
+    let html = '<div class="rev-cards">' + cards.map(([l, v, c]) =>
+      `<div class="rev-card ${c}"><div class="rev-card-label">${l}</div><div class="rev-card-value">${v}</div></div>`).join('') + '</div>';
+
+    // Visitors over time
+    let series = [], chartTitle;
+    if (anRange === 'today') {
+      chartTitle = 'Visitors by hour';
+      const nowH = new Date().getHours();
+      for (let h = 0; h <= nowH; h++) series.push({ key: h, set: new Set(), views: 0 });
+      views.forEach(r => { const s = series[r.t.getHours()]; if (s) { s.set.add(r.vid); s.views++; } });
+      series = series.map(s => {
+        const lbl = (s.key % 12 || 12) + (s.key < 12 ? 'a' : 'p');
+        return { label: lbl, value: s.set.size, tip: `<b>${s.set.size}</b> visitor${s.set.size === 1 ? '' : 's'} <span class="m">· ${s.views} views · ${lbl.replace('a', ' AM').replace('p', ' PM')}</span>` };
+      });
+    } else {
+      chartTitle = 'Visitors by day';
+      const start = anRangeStart(anRange), days = parseInt(anRange, 10), idx = {};
+      for (let i = 0; i < days; i++) {
+        const d = new Date(start); d.setDate(start.getDate() + i);
+        const k = d.toDateString(); idx[k] = series.length;
+        series.push({ d, set: new Set(), views: 0 });
+      }
+      views.forEach(r => { const s = series[idx[r.t.toDateString()]]; if (s) { s.set.add(r.vid); s.views++; } });
+      series = series.map(s => {
+        const lbl = s.d.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' });
+        const full = s.d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        return { label: lbl, value: s.set.size, tip: `<b>${s.set.size}</b> visitor${s.set.size === 1 ? '' : 's'} <span class="m">· ${s.views} views · ${full}</span>` };
+      });
+    }
+    html += `<div class="an-section"><h3>${chartTitle}</h3>${anBars(series, { id: 'visitors', aria: chartTitle, maxLabels: Math.max(3, Math.min(anRange === '90' ? 9 : 12, Math.floor((body.clientWidth || 800) / 60))) })}</div>`;
+
+    // Top pages + sources
+    const pageMap = {};
+    views.forEach(r => {
+      const k = r.page; const p = pageMap[k] = pageMap[k] || { label: anPageName(r.title, r.page), value: 0, v: new Set() };
+      p.value++; p.v.add(r.vid); if (r.title) p.label = anPageName(r.title, r.page);
+    });
+    const topPages = Object.values(pageMap).sort((a, b) => b.value - a.value).slice(0, 12)
+      .map(p => ({ label: p.label, value: p.value, extra: `${p.v.size} ppl` }));
+    const srcMap = {};
+    sessList.forEach(s => { const k = anSrc(s.src); srcMap[k] = (srcMap[k] || 0) + 1; });
+    const sources = Object.entries(srcMap).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([label, value]) => ({ label, value }));
+    html += `<div class="an-grid2">
+      <div class="an-section"><h3>Top pages <span>views · people</span></h3>${anRowsHtml(topPages)}</div>
+      <div class="an-section"><h3>Where visits come from <span>visits</span></h3>${anRowsHtml(sources, nSess, { ofTotal: true })}</div>
+    </div>`;
+
+    // Funnel (by visit)
+    const sidsWith = fn => new Set(rows.filter(fn).map(r => r.sid)).size;
+    const funnel = [
+      { label: 'Visited the site', value: nSess },
+      { label: 'Looked at a rod or build', value: sidsWith(r => r.type === 'view' && !AN_INFO_PAGES.includes(r.page)) },
+      { label: 'Added to cart', value: sidsWith(r => r.ev === 'add_to_cart') },
+      { label: 'Opened checkout', value: sidsWith(r => r.type === 'view' && r.page === '/pages/checkout') },
+      { label: 'Tried to pay', value: sidsWith(r => r.ev === 'checkout_start') },
+      { label: 'Paid', value: paidSessions },
+    ];
+    const devMap = {};
+    sessList.forEach(s => { const k = ({ mobile: 'Phone', tablet: 'Tablet', desktop: 'Computer' })[s.dev] || 'Unknown'; devMap[k] = (devMap[k] || 0) + 1; });
+    const devs = Object.entries(devMap).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value }));
+    const forms = events.filter(e => e.ev === 'form_submit');
+    html += `<div class="an-grid2">
+      <div class="an-section"><h3>From visit to order <span>visits · % of all</span></h3>${anRowsHtml(funnel, nSess, { ofTotal: true })}</div>
+      <div class="an-section"><h3>Devices <span>visits</span></h3>${anRowsHtml(devs, nSess, { ofTotal: true })}
+        <h3 style="margin-top:1.4rem">Forms sent <span>${forms.length}</span></h3>${anRowsHtml(
+          Object.entries(forms.reduce((m, f) => (m[f.val || 'contact'] = (m[f.val || 'contact'] || 0) + 1, m), {}))
+            .map(([k, v]) => ({ label: ({ contact: 'Contact', 'discuss-build': 'Discuss a build', warranty: 'Warranty' })[k] || k, value: v })))}
+      </div>
+    </div>`;
+
+    // Recent activity
+    const recent = events.slice().sort((a, b) => b.t - a.t).slice(0, 25);
+    html += `<div class="an-section"><h3>Recent activity</h3>${recent.length ? recent.map(e => {
+      const [name, cls] = AN_EVENT_NAMES[e.ev] || [e.ev, ''];
+      const when = anRange === 'today' ? e.t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+        : e.t.toLocaleDateString([], { month: 'numeric', day: 'numeric' }) + ' ' + e.t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      const what = e.ev === 'form_submit' ? (({ contact: 'Contact form', 'discuss-build': 'Discuss a build', warranty: 'Warranty claim' })[e.val] || e.val)
+        : e.ev === 'purchase' ? 'Order completed' : (e.val || anPageName(e.title, e.page));
+      return `<div class="an-feed-row"><span class="t">${when}</span><span class="w"><span class="an-ev ${cls}">${anEsc(name)}</span>${anEsc(what)}</span><span class="s">${anEsc(anSrc(e.src))}</span></div>`;
+    }).join('') : '<div class="an-live-empty">No carts, checkouts or forms in this period yet.</div>'}</div>`;
+
+    if (!rows.length) html += '<div class="an-note">No visits recorded in this period yet. Tracking starts once the updated site is live and the Firestore rules are added. Your own visits from this device aren\'t counted, so check from another phone or a private window.</div>';
+    if (rows.length >= 30000) html += '<div class="an-note">Showing the first 30,000 records for this period.</div>';
+    body.innerHTML = html;
+    anWireChart('visitors', series);
+  }
+</script>
+</body>
+</html>

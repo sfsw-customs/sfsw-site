@@ -1,0 +1,10 @@
+# macOS / sync clutter
+.DS_Store
+.fuse_hidden*
+# dependencies & local tooling
+node_modules/
+.netlify/
+.env
+*.log
+# old/unused
+*.deprecated
