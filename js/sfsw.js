@@ -782,12 +782,7 @@ class RodConfigurator {
    To change or retire the promo: edit PROMO_BANNER below. Bumping `id` makes
    the banner reappear for people who previously dismissed the old one.
    ────────────────────────────────────────────────────────────────────────── */
-const PROMO_BANNER = {
-  id: 'sept-2026-wraps-and-2rod',           // change this to re-show after a dismissal
-  until: '2026-09-01T23:59:59',             // hides itself automatically after this
-  html: 'Until 09/01/2026: $50 off Upgraded Wraps (Code: <strong>SFRW50</strong>), '
-      + '$100 off if you purchase 2 Rods (Code: <strong>SFSW2100</strong>)'
-};
+const PROMO_BANNER = null;   // no dismissible promo right now (the November promo is in buildNav)
 
 (function initPromoBanner() {
   function show() {

@@ -18,12 +18,6 @@ const SHIPPING_COST = 55;
 //           Rod Wraps named in freeWraps. Split Wraps, Guide Wraps, Abalone and
 //           Performance-only builds are not discounted.
 const PROMO_CODES = {
-  'SFRW50':    { type: 'flat',    value: 50,  target: 'rodwrap' },
-  'SFSWLC':    { type: 'wrapPlusTier',
-                 tiers: { 'Finesse': 25, 'Inshore Spinning': 25 },
-                 tierDefault: 50 },
-  'SFSW2100':  { type: 'flat',    value: 100, minItems: 2 },
-  'SFLD50':    { type: 'flat',    value: 50,  target: 'rodwrap', expires: '2026-10-01' },
   '50WRAPS':   { type: 'wrapSale', percent: 50,
                  freeWraps: ['Snowflake Wrap', '2 Axis Cross Wrap'],
                  expires: '2026-11-30' }
