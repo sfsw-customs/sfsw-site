@@ -39,12 +39,21 @@
     .stock-pending { color: var(--c-muted); font-size: 14px; line-height: 1.7; margin-bottom: 1.5rem; }
     .stock-card .btn { margin-top: auto; width: 100%; justify-content: center; text-align: center; }
     .stock-card .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; }
+    .stock-about { display: grid; grid-template-columns: 1.4fr 1fr; gap: 2rem; background: var(--c-dark2); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: 1.75rem; margin-bottom: 2.5rem; }
+    .stock-about p { font-size: 15px; color: var(--c-text); line-height: 1.75; margin: 0; }
+    .stock-about h3 { font-family: var(--font-cond); font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--c-muted); margin: 0 0 .6rem; }
+    .stock-about .reel { font-family: var(--font-cond); font-size: 1.35rem; font-weight: 700; color: var(--c-gold); margin-bottom: 1.2rem; }
+    .species { display: flex; flex-wrap: wrap; gap: .45rem; }
+    .species span { font-size: 12px; color: var(--c-text); border: 1px solid var(--c-border2); border-radius: 999px; padding: 4px 11px; }
+    .size-btn .reel { font-size: 12px; color: var(--c-text); margin-top: .35rem; }
+    .stock-reel { font-size: 13px; color: var(--c-gold); margin: -.7rem 0 1.1rem; font-family: var(--font-cond); font-weight: 600; letter-spacing: .04em; }
     .custom-cta { margin-top: 2.5rem; text-align: center; color: var(--c-muted); font-size: 14px; }
     .custom-cta a { color: var(--c-gold); text-decoration: none; }
     .custom-cta a:hover { text-decoration: underline; }
     @media (max-width: 760px) {
       .stock-grid { grid-template-columns: 1fr; }
       .size-picker { grid-template-columns: 1fr 1fr; }
+      .stock-about { grid-template-columns: 1fr; gap: 1.25rem; padding: 1.25rem; }
       .stock-specs li { grid-template-columns: 92px 1fr; }
     }
   </style>
@@ -61,6 +70,19 @@
 
 <section class="section">
   <div class="section-inner">
+    <div class="stock-about">
+      <div>
+        <h3>About this rod</h3>
+        <p id="stock-desc"></p>
+      </div>
+      <div>
+        <h3>Recommended reel</h3>
+        <div class="reel" id="stock-reel-range"></div>
+        <h3>Target species</h3>
+        <div class="species" id="stock-species"></div>
+      </div>
+    </div>
+
     <div class="stock-label">1 · Choose your size</div>
     <div class="size-picker" id="size-picker"></div>
 
@@ -84,12 +106,16 @@
   // A model with specs: null shows "specs coming soon" and can't be ordered.
   // ════════════════════════════════════════════════════════════════
   const BLANK = 'Rainshadow SP';
+  const DESCRIPTION = "Our go-to South Florida inshore and nearshore spinning rod. The Rainshadow SP has a responsive tip that throws light jigs and live bait a mile, with enough backbone to pull snapper out of structure and handle a hot jack or mackerel on the run. Light, sensitive and built to take the salt — a do-it-all rod for the bridges, inlets, piers and reef edges.";
+  const REEL_RANGE = '2000 – 4000 size';
+  const SPECIES = ['Mangrove Snapper', 'Yellowtail Snapper', 'Jacks', 'Spanish Mackerel', 'Cero Mackerel',
+                   'Snook', 'Seatrout', 'Redfish', 'Pompano', 'Bluefish', 'Ladyfish'];
   const SIZES = [
-    { length: "7'0", lineWt: '8-17lb',  lureWt: '0.25-0.75oz', blankWt: '1.7oz', adder: 0 },
-    { length: "7'0", lineWt: '10-20lb', lureWt: '0.5-0.75oz',  blankWt: '1.8oz', adder: 0 },
-    { length: "7'0", lineWt: '12-25lb', lureWt: '0.75-1.0oz',  blankWt: '2.2oz', adder: 0 },
-    { length: "8'0", lineWt: '8-17lb',  lureWt: '0.25-0.75oz', blankWt: '2.2oz', adder: 10 },
-    { length: "8'0", lineWt: '10-20lb', lureWt: '0.5-0.75oz',  blankWt: '2.3oz', adder: 15 },
+    { length: "7'0", lineWt: '8-17lb',  lureWt: '0.25-0.75oz', blankWt: '1.7oz', adder: 0,  reel: '2000–3000' },
+    { length: "7'0", lineWt: '10-20lb', lureWt: '0.5-0.75oz',  blankWt: '1.8oz', adder: 0,  reel: '3000–4000' },
+    { length: "7'0", lineWt: '12-25lb', lureWt: '0.75-1.0oz',  blankWt: '2.2oz', adder: 0,  reel: '4000' },
+    { length: "8'0", lineWt: '8-17lb',  lureWt: '0.25-0.75oz', blankWt: '2.2oz', adder: 10, reel: '2500–3000' },
+    { length: "8'0", lineWt: '10-20lb', lureWt: '0.5-0.75oz',  blankWt: '2.3oz', adder: 15, reel: '3000–4000' },
   ];
   const MODELS = [
     { id: 'standard', tier: 'Standard', price: 250, photo: null,
@@ -126,6 +152,7 @@
         <div class="len">${s.length}"</div>
         <div class="lw">${s.lineWt}</div>
         <div class="meta">Lure ${s.lureWt} · Blank ${s.blankWt}</div>
+        <div class="reel">Reel ${s.reel}</div>
         ${s.adder ? `<div class="add">+$${s.adder}</div>` : ''}
       </button>`).join('');
   }
@@ -143,6 +170,7 @@
           <span class="stock-tier">${m.tier}</span>
           <div class="stock-name">${m.tier} Inshore Spinning</div>
           <div class="stock-size">${s.length}" · ${s.lineWt} · Lure ${s.lureWt}</div>
+          <div class="stock-reel">Pairs with a ${s.reel} size reel</div>
           <div class="stock-price">$${price}</div>
           ${body}
           ${m.specs
@@ -165,6 +193,7 @@
       lureLabel: 'Lure Rating',
       lines: [
         { label: 'Model', value: `${m.tier} (stock build)` },
+        { label: 'Recommended Reel', value: `${s.reel} size` },
         { label: 'Blank', value: `${BLANK} — ${s.length} · ${s.lineWt}  (Lure ${s.lureWt}, ${s.blankWt})` + (s.adder ? `  +$${s.adder}` : '') },
         ...m.specs.filter(([k]) => k !== 'Blank').map(([k, v]) => ({ label: k, value: v })),
       ],
@@ -173,6 +202,9 @@
     window.location.href = 'checkout.html';
   }
 
+  document.getElementById('stock-desc').textContent = DESCRIPTION;
+  document.getElementById('stock-reel-range').textContent = REEL_RANGE;
+  document.getElementById('stock-species').innerHTML = SPECIES.map(x => `<span>${x}</span>`).join('');
   renderSizes();
   renderModels();
 </script>
