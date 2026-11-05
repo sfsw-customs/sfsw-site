@@ -483,6 +483,32 @@
     .an-ev.cart { color: var(--c-gold); border-color: rgba(201,148,26,.35); }
     .an-ev.pay { color: var(--c-gold-light); border-color: rgba(232,184,75,.35); }
     .an-ev.form { color: #60a5fa; border-color: rgba(96,165,250,.35); }
+    .an-views { display: flex; gap: 1.25rem; border-bottom: 1px solid var(--c-border); margin-bottom: 1.25rem; }
+    .an-view-btn { background: none; border: none; border-bottom: 2px solid transparent; padding: .55rem 0; color: var(--c-muted); font-family: var(--font-cond); font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; cursor: pointer; margin-bottom: -1px; }
+    .an-view-btn:hover { color: var(--c-text); }
+    .an-view-btn.active { color: var(--c-gold); border-bottom-color: var(--c-gold); }
+    .an-visit { background: var(--c-dark2); border: 1px solid var(--c-border); border-radius: var(--radius-md); margin-bottom: .6rem; overflow: hidden; }
+    .an-visit-head { padding: .8rem 1rem; cursor: pointer; }
+    .an-visit-head:hover { background: rgba(255,255,255,.015); }
+    .an-visit-top { display: flex; justify-content: space-between; gap: .75rem; align-items: center; flex-wrap: wrap; }
+    .an-visit-top .w { font-family: var(--font-cond); font-weight: 600; font-size: 14px; color: var(--c-text); letter-spacing: .02em; }
+    .an-visit-top .b .an-ev { margin: 0 0 0 .35rem; }
+    .an-visit-path { font-size: 13px; color: var(--c-text); margin-top: .3rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .an-visit-meta { font-size: 12px; color: var(--c-muted); margin-top: .2rem; }
+    .an-visit-body { display: none; border-top: 1px solid var(--c-border); padding: .6rem 1rem .8rem; }
+    .an-visit.open .an-visit-body { display: block; }
+    .an-tl-step { display: grid; grid-template-columns: 70px minmax(0,1fr); gap: .75rem; padding: .4rem 0; font-size: 13px; position: relative; }
+    .an-tl-step .t { color: var(--c-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+    .an-tl-step .p { color: var(--c-text); }
+    .an-tl-step .d { color: var(--c-muted); font-size: 12px; margin-left: .6rem; }
+    .an-tl-step.ev { padding-top: 0; }
+    .an-tl-build { margin-top: .3rem; font-size: 12px; color: var(--c-gold-light); }
+    .an-tl-build .an-ev { margin-left: .3rem; }
+    .an-sub { font-family: var(--font-cond); font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--c-text); margin-bottom: .55rem; }
+    .an-cfg { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .an-cfg td { padding: .35rem 0; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: top; }
+    .an-cfg td:first-child { color: var(--c-muted); width: 120px; font-family: var(--font-cond); font-weight: 600; letter-spacing: .05em; text-transform: uppercase; font-size: 11px; padding-top: .45rem; }
+    .an-cfg td:last-child { color: var(--c-text); }
     .an-foot { display: flex; align-items: center; gap: .6rem; font-size: 12px; color: var(--c-muted); margin-top: 1.25rem; flex-wrap: wrap; }
     .an-foot label { display: flex; align-items: center; gap: .5rem; cursor: pointer; }
     .an-foot input { accent-color: var(--c-gold); }
@@ -643,6 +669,11 @@
         <button class="an-refresh" onclick="loadAnalytics(true)" id="an-refresh">↻ Refresh</button>
       </div>
 
+      <div class="an-views">
+        <button class="an-view-btn active" id="an-view-overview" onclick="setAnalyticsView('overview')">Overview</button>
+        <button class="an-view-btn" id="an-view-visits" onclick="setAnalyticsView('visits')">Visits</button>
+        <button class="an-view-btn" id="an-view-builder" onclick="setAnalyticsView('builder')">Rod Builder</button>
+      </div>
       <div id="analytics-body"><div class="admin-loading">Loading…</div></div>
 
       <div class="an-foot">
@@ -1292,12 +1323,14 @@
     facebook: 'Facebook', youtube: 'YouTube', bing: 'Bing', duckduckgo: 'DuckDuckGo', yahoo: 'Yahoo',
     reddit: 'Reddit', x: 'X / Twitter', ai: 'AI chat (ChatGPT etc.)', email: 'Email', qr: 'QR code' };
   const AN_EVENT_NAMES = { add_to_cart: ['Added to cart', 'cart'], checkout_start: ['Tried to pay', 'pay'],
-    purchase: ['Paid', 'purchase'], form_submit: ['Form sent', 'form'] };
+    purchase: ['Paid', 'purchase'], form_submit: ['Form sent', 'form'], discuss_click: ['Discuss build', 'form'] };
 
   function anEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
   function anSrc(s) { return AN_SOURCE_NAMES[s] || s || 'Direct / typed in'; }
   function anPageName(title, page) {
     if (page === '/') return 'Home';
+    const bn = /\/build(\d+)$/.exec(page || '');
+    if (bn && (!title || /build details/i.test(title))) return 'Completed Build #' + bn[1];
     return title && title !== page ? title : (page || '').replace('/pages/', '');
   }
   function anAgo(ms) {
@@ -1409,6 +1442,11 @@
       const snap = await db.collection('analytics_views')
         .where('ts', '>=', anRangeStart(anRange)).orderBy('ts', 'asc').limit(30000).get();
       anViews = snap.docs.map(d => { const x = d.data(); x.t = x.ts ? x.ts.toDate() : new Date(); return x; });
+      try {
+        const bs = await db.collection('analytics_builds')
+          .where('updatedAt', '>=', anRangeStart(anRange)).orderBy('updatedAt', 'desc').limit(5000).get();
+        anBuilds = bs.docs.map(d => { const x = d.data(); x.u = x.updatedAt ? x.updatedAt.toDate() : new Date(); x.changes = x.changes || 0; x.secs = x.secs || 0; return x; });
+      } catch (e) { anBuilds = []; }
       anLoadedRange = anRange; anLoadedAt = Date.now();
       renderAnalytics();
     } catch (e) {
@@ -1474,7 +1512,7 @@
       </div>`).join('') + '</div>';
   }
 
-  function renderAnalytics() {
+  function renderOverview() {
     const body = document.getElementById('analytics-body');
     const rows = anViews || [];
     const views = rows.filter(r => r.type === 'view');
@@ -1581,6 +1619,182 @@
     if (rows.length >= 30000) html += '<div class="an-note">Showing the first 30,000 records for this period.</div>';
     body.innerHTML = html;
     anWireChart('visitors', series);
+  }
+
+  // ── Analytics sub-views: Overview / Visits / Rod Builder ──
+  let anView = 'overview';
+  let anBuilds = [];
+  let anVisitLimit = 40;
+  const AN_BUILD_LABELS = ['Blank', 'Grip', 'Reel Seat', 'Guides', 'Rod Wrap', 'Guide Wrap', 'Butt', 'Split Wrap'];
+
+  function setAnalyticsView(v) {
+    anView = v; anVisitLimit = 40;
+    ['overview', 'visits', 'builder'].forEach(k => document.getElementById('an-view-' + k).classList.toggle('active', k === v));
+    if (anViews) renderAnalytics();
+  }
+  function renderAnalytics() {
+    if (anView === 'visits') return renderVisits();
+    if (anView === 'builder') return renderBuilder();
+    return renderOverview();
+  }
+  function anDur(sec) {
+    sec = Math.max(0, Math.round(sec));
+    if (sec < 60) return sec + 's';
+    const m = Math.floor(sec / 60);
+    if (m < 60) return m + 'm ' + String(sec % 60).padStart(2, '0') + 's';
+    return Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+  }
+  function anWhen(d) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const y = new Date(today); y.setDate(today.getDate() - 1);
+    const t = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    if (d >= today) return 'Today ' + t;
+    if (d >= y) return 'Yesterday ' + t;
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + t;
+  }
+  function anCleanVal(v) { return String(v || '').split(/\s{2,}\+\$|\s{2,}·/)[0].trim(); }
+  function anBuildCfg(b) { try { return JSON.parse(b.config || '{}'); } catch (e) { return {}; } }
+  function anMoney(n) { return '$' + Math.round(n || 0).toLocaleString(); }
+  function anBuildStatus(b) {
+    if (b.status === 'added') return '<span class="an-ev cart">Added to cart</span>';
+    if (b.status === 'discuss') return '<span class="an-ev form">Asked to discuss</span>';
+    return '<span class="an-ev">Left without adding</span>';
+  }
+  function anToggle(id) { const el = document.getElementById(id); if (el) el.classList.toggle('open'); }
+
+  // ── Visits: each visit as a timeline ──
+  function anSessions() {
+    const rows = anViews || [], bySid = {};
+    rows.forEach(r => { (bySid[r.sid] = bySid[r.sid] || []).push(r); });
+    const buildsBy = {};
+    anBuilds.forEach(b => { (buildsBy[b.sid] = buildsBy[b.sid] || []).push(b); });
+    return Object.entries(bySid).map(([sid, list]) => {
+      list.sort((a, b) => a.t - b.t);
+      const views = list.filter(r => r.type === 'view');
+      const first = list[0], last = list[list.length - 1];
+      return {
+        sid, list, views, first, last, builds: buildsBy[sid] || [],
+        src: first.src, dev: first.dev, ret: views.length ? !views[0].newv : false,
+        dur: (last.t - first.t) / 1000,
+        cart: list.some(r => r.ev === 'add_to_cart') || (buildsBy[sid] || []).some(b => b.status === 'added'),
+        paid: list.some(r => r.ev === 'purchase'),
+        form: list.some(r => r.ev === 'form_submit'),
+        built: (buildsBy[sid] || []).length > 0,
+      };
+    }).sort((a, b) => b.first.t - a.first.t);
+  }
+  function renderVisits() {
+    const body = document.getElementById('analytics-body');
+    const sessions = anSessions().filter(s => s.views.length);
+    if (!sessions.length) { body.innerHTML = '<div class="admin-empty">No visits in this period yet.</div>'; return; }
+    const shown = sessions.slice(0, anVisitLimit);
+    let html = `<div class="an-note" style="margin:0 0 .9rem">${anNum(sessions.length)} visits · newest first · tap a visit to see every page in order</div>`;
+    html += shown.map((s, i) => {
+      const devName = ({ mobile: 'Phone', tablet: 'Tablet', desktop: 'Computer' })[s.dev] || '';
+      const path = s.views.map(v => anPageName(v.title, v.page));
+      const pathTxt = path.length > 4 ? [path[0], '…', ...path.slice(-2)].join(' → ') : path.join(' → ');
+      const badges = (s.paid ? '<span class="an-ev purchase">Paid</span>' : '') +
+        (s.cart && !s.paid ? '<span class="an-ev cart">Cart</span>' : '') +
+        (s.built ? '<span class="an-ev pay">Built a rod</span>' : '') +
+        (s.form ? '<span class="an-ev form">Form</span>' : '') +
+        (s.ret ? '<span class="an-ev">Returning</span>' : '');
+      // timeline steps: page views (with time on page) + events, and builder summaries
+      const steps = s.list.map((r, j) => {
+        const next = s.list.slice(j + 1).find(x => x.type === 'view');
+        if (r.type === 'view') {
+          const onPage = next ? anDur((next.t - r.t) / 1000) : '';
+          const b = s.builds.filter(x => x.page === r.page);
+          const bHtml = b.map(x => `<div class="an-tl-build">Customized ${x.changes} option${x.changes === 1 ? '' : 's'} · ${anDur(x.secs)} in builder · ${anMoney(x.total)} build · ${anBuildStatus(x)}</div>`).join('');
+          return `<div class="an-tl-step"><span class="t">${r.t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span><div><span class="p">${anEsc(anPageName(r.title, r.page))}</span>${onPage ? `<span class="d">${onPage}</span>` : '<span class="d">last page</span>'}${bHtml}</div></div>`;
+        }
+        const [name, cls] = AN_EVENT_NAMES[r.ev] || [r.ev, ''];
+        return `<div class="an-tl-step ev"><span class="t"></span><div><span class="an-ev ${cls}">${anEsc(name)}</span><span class="d">${anEsc(r.ev === 'form_submit' ? r.val : (r.val && r.ev !== 'purchase' ? r.val : ''))}</span></div></div>`;
+      }).join('');
+      return `<div class="an-visit" id="an-visit-${i}">
+        <div class="an-visit-head" onclick="anToggle('an-visit-${i}')">
+          <div class="an-visit-top"><span class="w">${anWhen(s.first.t)}</span><span class="b">${badges}</span></div>
+          <div class="an-visit-path">${anEsc(pathTxt)}</div>
+          <div class="an-visit-meta">${anEsc(anSrc(s.src))} · ${devName} · ${s.views.length} page${s.views.length === 1 ? '' : 's'} · ${anDur(s.dur)}</div>
+        </div>
+        <div class="an-visit-body">${steps}</div>
+      </div>`;
+    }).join('');
+    if (sessions.length > anVisitLimit) html += `<button class="rev-scope-btn" style="margin-top:.5rem" onclick="anVisitLimit+=40;renderVisits()">Show more visits</button>`;
+    body.innerHTML = html;
+  }
+
+  // ── Rod Builder ──
+  function renderBuilder() {
+    const body = document.getElementById('analytics-body');
+    const views = (anViews || []).filter(r => r.type === 'view');
+    const builds = anBuilds.slice().sort((a, b) => b.u - a.u);
+    const people = new Set(builds.map(b => b.vid)).size;
+    const added = builds.filter(b => b.status === 'added');
+    const avg = (arr, f) => arr.length ? arr.reduce((s, x) => s + f(x), 0) / arr.length : 0;
+    const liveCutoff = Date.now() - 20 * 60 * 1000;
+    const paidVids = new Set((anViews || []).filter(r => r.ev === 'purchase').map(r => r.vid));
+    const addedVids = new Set(added.map(b => b.vid));
+    const abandoned = builds.filter(b => b.status !== 'added' && b.u.getTime() < liveCutoff && (b.changes >= 3 || b.secs >= 60));
+
+    let html = '<div class="rev-cards">' + [
+      ['Builds Started', anNum(builds.length), 'accent'],
+      ['People Building', anNum(people), ''],
+      ['Avg Time Building', builds.length ? anDur(avg(builds, b => b.secs)) : '—', ''],
+      ['Avg Options Changed', builds.length ? avg(builds, b => b.changes).toFixed(1) : '—', ''],
+      ['Added to Cart', builds.length ? `${added.length} <span style="font-size:.8rem;color:var(--c-muted)">(${Math.round(added.length / builds.length * 100)}%)</span>` : '—', ''],
+      ['Abandoned Builds', anNum(abandoned.length), 'muted'],
+    ].map(([l, v, c]) => `<div class="rev-card ${c}"><div class="rev-card-label">${l}</div><div class="rev-card-value">${v}</div></div>`).join('') + '</div>';
+
+    if (!builds.length) {
+      html += '<div class="admin-empty">No one has customized a rod in this period yet. A build is counted once a visitor changes at least one option on a rod builder page.</div>';
+      body.innerHTML = html; return;
+    }
+
+    // Per-rod table
+    const rods = {};
+    builds.forEach(b => {
+      const r = rods[b.page] = rods[b.page] || { name: b.rod || b.page, builds: 0, added: 0, secs: 0, value: 0 };
+      r.builds++; r.secs += b.secs || 0; if (b.status === 'added') { r.added++; r.value += b.total || 0; }
+    });
+    const pageVisits = {};
+    views.forEach(v => { (pageVisits[v.page] = pageVisits[v.page] || new Set()).add(v.sid); });
+    html += `<div class="an-section"><h3>By rod <span>visits to page · customized · added to cart · avg time</span></h3><div class="rev-table-wrap" style="border:none;background:none"><table class="rev-table" style="min-width:520px"><thead><tr><th>Rod</th><th>Page Visits</th><th>Customized</th><th>Added</th><th>Avg Time</th></tr></thead><tbody>` +
+      Object.entries(rods).sort((a, b) => b[1].builds - a[1].builds).map(([page, r]) => {
+        const pv = pageVisits[page] ? pageVisits[page].size : 0;
+        return `<tr><td>${anEsc(r.name)}</td><td>${anNum(pv)}</td><td>${anNum(r.builds)}${pv ? ` <span style="color:var(--c-muted);font-weight:500">${Math.round(r.builds / pv * 100)}%</span>` : ''}</td><td>${anNum(r.added)}</td><td>${anDur(r.secs / r.builds)}</td></tr>`;
+      }).join('') + '</tbody></table></div></div>';
+
+    // Popular choices
+    const counts = {}, mainC = {}, supC = {}, changed = {};
+    builds.forEach(b => {
+      const cfg = anBuildCfg(b);
+      AN_BUILD_LABELS.forEach(l => { if (cfg[l]) { const v = anCleanVal(cfg[l]); (counts[l] = counts[l] || {})[v] = (counts[l][v] || 0) + 1; } });
+      const m = /Colors:\s*(.+?) main(?:.*supporting:\s*(.+?)(?:\s*\(|$))?/.exec(cfg.Colors || '');
+      if (m) { mainC[m[1]] = (mainC[m[1]] || 0) + 1; (m[2] || '').split(' + ').filter(Boolean).forEach(c => { supC[c] = (supC[c] || 0) + 1; }); }
+      (b.fields || '').split(',').filter(Boolean).forEach(f => { changed[f] = (changed[f] || 0) + 1; });
+    });
+    const top = (obj, n = 5) => Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, n).map(([label, value]) => ({ label, value }));
+    const blocks = [['Main thread color', mainC], ['Supporting colors', supC]]
+      .concat(AN_BUILD_LABELS.filter(l => counts[l]).map(l => [l, counts[l]]));
+    html += `<div class="an-section"><h3>What people pick <span>across ${anNum(builds.length)} builds</span></h3><div class="an-grid2" style="gap:1.4rem 2rem">` +
+      blocks.map(([t, obj]) => `<div><div class="an-sub">${anEsc(t)}</div>${anRowsHtml(top(obj), builds.length, { ofTotal: true })}</div>`).join('') +
+      `</div></div>`;
+    html += `<div class="an-section"><h3>Options people change most <span>builds where changed</span></h3>${anRowsHtml(top(changed, 10), builds.length, { ofTotal: true })}</div>`;
+
+    // Abandoned builds
+    html += `<div class="an-section"><h3>Abandoned builds <span>customized but never added to cart</span></h3>` + (abandoned.length ? abandoned.slice(0, 60).map((b, i) => {
+      const cfg = anBuildCfg(b);
+      const later = paidVids.has(b.vid) || addedVids.has(b.vid);
+      return `<div class="an-visit" id="an-ab-${i}">
+        <div class="an-visit-head" onclick="anToggle('an-ab-${i}')">
+          <div class="an-visit-top"><span class="w">${anEsc(b.rod)} · ${anMoney(b.total)}</span><span class="b">${b.status === 'discuss' ? '<span class="an-ev form">Asked to discuss</span>' : ''}${later ? '<span class="an-ev purchase">Ordered something later</span>' : ''}</span></div>
+          <div class="an-visit-meta">${anWhen(b.u)} · ${b.changes} option${b.changes === 1 ? '' : 's'} changed · ${anDur(b.secs)} building · ${anEsc(anSrc(b.src))} · ${({ mobile: 'Phone', tablet: 'Tablet', desktop: 'Computer' })[b.dev] || ''}</div>
+        </div>
+        <div class="an-visit-body"><table class="an-cfg">${Object.entries(cfg).map(([k, v]) => `<tr><td>${anEsc(k)}</td><td>${anEsc(v)}</td></tr>`).join('')}</table></div>
+      </div>`;
+    }).join('') : '<div class="an-live-empty">None yet.</div>') + '</div>';
+
+    body.innerHTML = html;
   }
 </script>
 </body>

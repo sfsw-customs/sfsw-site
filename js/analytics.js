@@ -5,6 +5,8 @@
 //   analytics_views/{id}  one doc per page view or tracked event (history)
 //   analytics_live/{tab}  one doc per open browser tab, refreshed every 30s
 //                         while the tab is visible (the "on site now" count)
+//   analytics_builds/{id} one doc per visit to a rod builder page where the
+//                         visitor changed options (choices, time, cart status)
 //
 // Visitors get a random anonymous ID in localStorage. No cookies, no IP
 // addresses, no names/emails are stored. Loaded automatically by js/sfsw.js.
@@ -226,6 +228,100 @@
     var el = e.target && e.target.closest && e.target.closest('[data-track]');
     if (el) trackEvent(el.getAttribute('data-track'), el.getAttribute('data-track-val') || '');
   }, true);
+
+  // ── rod builder activity ──
+  // On the configurator pages (offshore-spinning, inshore-spinning, …) every
+  // option change runs updateAll(). We watch it, diff the build summary that
+  // buildOrderItem() produces, and keep one analytics_builds doc per visit to
+  // that builder: what changed, how long they spent, the final configuration,
+  // and whether it went to the cart.
+  function initBuilder() {
+    if (typeof window.updateAll !== 'function' || typeof window.buildOrderItem !== 'function') return;
+    var buildId = rid(20), created = false, startedMs = Date.now();
+    var changes = 0, touched = {}, status = 'browsing', lastSent = '', dirty = false;
+    var activeMs = 0, lastActiveTick = Date.now();
+    var rodType = TITLE;
+
+    function snapshot() {
+      try {
+        var it = window.buildOrderItem();
+        if (it && it.rodType) rodType = it.rodType;
+        var o = {};
+        (it.lines || []).forEach(function (l) { if (l && l.label) o[l.label] = String(l.value == null ? '' : l.value); });
+        return { lines: o, total: Number(it.total) || 0 };
+      } catch (e) { return null; }
+    }
+    var base = snapshot(), prev = base;
+    if (!base) return;
+
+    // active time on the builder: visible + some input in the last 60s
+    setInterval(function () {
+      var n = Date.now();
+      if (document.visibilityState === 'visible' && n - lastInput < 60000) activeMs += n - lastActiveTick;
+      lastActiveTick = n;
+    }, 1000);
+
+    function payload() {
+      var cur = prev || base;
+      var cfg = JSON.stringify(cur.lines);
+      if (cfg.length > 3800) cfg = cfg.slice(0, 3800);
+      return {
+        page: PAGE, rod: String(rodType).slice(0, 80), vid: vid, sid: sess.id, src: sess.src, dev: DEV,
+        changes: changes, secs: Math.round(activeMs / 1000),
+        fields: Object.keys(touched).join(',').slice(0, 400),
+        config: cfg, total: Math.round(cur.total), status: status, started: startedMs
+      };
+    }
+    function send(keepalive) {
+      if (!changes) return;              // only builds someone actually touched
+      var data = payload(), sig = JSON.stringify(data);
+      if (sig === lastSent && created) return;
+      lastSent = sig; dirty = false;
+      // Full-document write each time (no ordering issues if one is in flight
+      // when the page closes). Started time is client ms; updatedAt is server time.
+      commit([{
+        update: { name: DOCS + 'analytics_builds/' + buildId, fields: fields(data) },
+        updateTransforms: [{ fieldPath: 'updatedAt', setToServerValue: 'REQUEST_TIME' }]
+      }], keepalive);
+      created = true;
+    }
+
+    var diffTimer = null;
+    function diff() {
+      var cur = snapshot();
+      if (!cur || !prev) return;
+      var changed = false;
+      for (var k in cur.lines) {
+        if (cur.lines[k] !== prev.lines[k]) { changed = true; touched[k] = 1; }
+      }
+      if (changed) {
+        changes++;
+        prev = cur;
+        touchSession();
+        if (changes === 1) send(false);   // create the doc on the first change
+        else dirty = true;
+      }
+    }
+    var origUpdate = window.updateAll;
+    window.updateAll = function () {
+      var r = origUpdate.apply(this, arguments);
+      clearTimeout(diffTimer); diffTimer = setTimeout(diff, 250);
+      return r;
+    };
+    setInterval(function () { if (dirty) send(false); }, 10000);
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState !== 'visible') send(true); });
+    addEventListener('pagehide', function () { send(true); });
+
+    function finish(st) { diff(); status = st; if (!changes) changes = 1; send(true); }
+    document.addEventListener('click', function (e) {
+      var t = e.target && e.target.closest && e.target.closest('#order-btn, #discuss-btn');
+      if (!t) return;
+      finish(t.id === 'order-btn' ? 'added' : 'discuss');
+      if (t.id === 'discuss-btn') trackEvent('discuss_click', rodType);
+    }, true);
+  }
+  if (document.readyState === 'complete') setTimeout(initBuilder, 300);
+  else addEventListener('load', function () { setTimeout(initBuilder, 300); });
 
   start();
 })();

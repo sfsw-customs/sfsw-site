@@ -1,6 +1,6 @@
 # Firestore rules for site analytics
 
-The analytics tracker (js/analytics.js) writes visitor data to two Firestore
+The analytics tracker (js/analytics.js) writes visitor data to three Firestore
 collections. Firestore blocks those writes until these rules are added.
 
 ## How to add them (about 1 minute)
@@ -50,6 +50,27 @@ collections. Firestore blocks those writes until these rules are added.
                             && sfswShortStr(request.resource.data.vid, 20)
                             && request.resource.data.since is int
                             && request.resource.data.gone is bool;
+      allow read, delete: if sfswIsAdmin();
+    }
+
+    match /analytics_builds/{id} {
+      allow create, update: if request.resource.data.keys().hasOnly(
+                                 ['page','rod','vid','sid','src','dev','changes','secs','fields',
+                                  'config','total','status','started','updatedAt'])
+                            && request.resource.data.updatedAt == request.time
+                            && request.resource.data.status in ['browsing','added','discuss']
+                            && sfswShortStr(request.resource.data.page, 200)
+                            && sfswShortStr(request.resource.data.rod, 80)
+                            && sfswShortStr(request.resource.data.vid, 20)
+                            && sfswShortStr(request.resource.data.sid, 20)
+                            && sfswShortStr(request.resource.data.src, 60)
+                            && sfswShortStr(request.resource.data.dev, 10)
+                            && sfswShortStr(request.resource.data.fields, 400)
+                            && sfswShortStr(request.resource.data.config, 4000)
+                            && request.resource.data.changes is int
+                            && request.resource.data.secs is int
+                            && request.resource.data.started is int
+                            && request.resource.data.total is number;
       allow read, delete: if sfswIsAdmin();
     }
 ```
