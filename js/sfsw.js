@@ -397,7 +397,9 @@ function buildNav(activePage) {
     {href:'../pages/trolling.html',            label:'Trolling'},
     {href:'../pages/high-speed-trolling.html', label:'High Speed Trolling'},
   ];
-  const isRodPage = rodLinks.some(r => r.label === activePage);
+  // Stock and custom pages share some names, so tell them apart by URL.
+  const onStockUrl = /\/stock-[^/]*$/.test(location.pathname);
+  const isRodPage = !onStockUrl && rodLinks.some(r => r.label === activePage);
 
   const stockLinks = [
     {href:'../pages/stock-inshore-spinning.html',      label:'Inshore Spinning'},
@@ -407,7 +409,7 @@ function buildNav(activePage) {
     {href:'../pages/stock-live-bait-conventional.html', label:'Live Bait / Kingfish - Conventional'},
     {href:'../pages/stock-pier-conventional.html',     label:'Pier Conventional'},
   ];
-  const isStockPage = stockLinks.some(r => r.label === activePage);
+  const isStockPage = onStockUrl && stockLinks.some(r => r.label === activePage);
 
   // Top promo banner — hides itself automatically after NAV_PROMO_UNTIL.
   const NAV_PROMO_UNTIL = '2026-11-30T23:59:59';
@@ -428,7 +430,7 @@ function buildNav(activePage) {
           Rods <span style="font-size:10px;opacity:.6">▾</span>
         </a>
         <ul class="nav-dropdown-menu">
-          ${stockLinks.map(r=>`<li><a href="${r.href}" class="${r.label===activePage?'active-rod':''}">${r.label}</a></li>`).join('')}
+          ${stockLinks.map(r=>`<li><a href="${r.href}" class="${isStockPage&&r.label===activePage?'active-rod':''}">${r.label}</a></li>`).join('')}
         </ul>
       </li>
       <li class="nav-dropdown">
@@ -436,7 +438,7 @@ function buildNav(activePage) {
           Customs <span style="font-size:10px;opacity:.6">▾</span>
         </a>
         <ul class="nav-dropdown-menu">
-          ${rodLinks.map(r=>`<li><a href="${r.href}" class="${r.label===activePage?'active-rod':''}">${r.label}</a></li>`).join('')}
+          ${rodLinks.map(r=>`<li><a href="${r.href}" class="${isRodPage&&r.label===activePage?'active-rod':''}">${r.label}</a></li>`).join('')}
         </ul>
       </li>
       <li><a href="../pages/process.html" ${activePage==='The Process'?'class="active"':''}>The Process</a></li>
