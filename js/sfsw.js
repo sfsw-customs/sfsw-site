@@ -405,9 +405,9 @@ function buildNav(activePage) {
     {href:'../pages/stock-inshore-spinning.html',      label:'Inshore Spinning'},
     {href:'../pages/stock-heavy-inshore-spinning.html', label:'Heavy Inshore Spinning'},
     {href:'../pages/stock-saltwater-baitcaster.html',  label:'Saltwater Baitcaster'},
+    {href:'../pages/stock-offshore-spinning.html',     label:'Offshore Spinning'},
     {href:'../pages/stock-bottom-conventional.html',   label:'Bottom Fishing - Conventional'},
     {href:'../pages/stock-live-bait-conventional.html', label:'Live Bait / Kingfish - Conventional'},
-    {href:'../pages/stock-pier-conventional.html',     label:'Pier Conventional'},
   ];
   const isStockPage = onStockUrl && stockLinks.some(r => r.label === activePage);
 

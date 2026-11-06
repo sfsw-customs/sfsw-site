@@ -22,3 +22,9 @@
   for = "/css/*"
   [headers.values]
     Cache-Control = "no-cache, must-revalidate"
+
+# Old stock page (Pier Conventional removed from stock lineup)
+[[redirects]]
+  from = "/pages/stock-pier-conventional.html"
+  to = "/pages/pier-conventional.html"
+  status = 301
