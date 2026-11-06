@@ -2,14 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>SFSW — South Florida Saltwater Custom Rods</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/favicon-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+  <meta name="description" content="High performance custom rods designed for South Florida Saltwater fishing. We source only the highest-quality materials to build rods that outperform and last.">
+  <link rel="canonical" href="https://sfsaltwater.com/">
+
+  <!-- Open Graph / social share -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://sfsaltwater.com/">
+  <meta property="og:site_name" content="South Florida Saltwater">
+  <meta property="og:title" content="SFSW — South Florida Saltwater Custom Rods">
+  <meta property="og:description" content="High performance custom rods designed for South Florida Saltwater fishing. We source only the highest-quality materials to build rods that outperform and last.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SFSW — South Florida Saltwater Custom Rods">
+  <meta name="twitter:description" content="High performance custom rods designed for South Florida Saltwater fishing. We source only the highest-quality materials to build rods that outperform and last.">
+
   <link rel="stylesheet" href="css/global.css">
-  <!-- Snipcart -->
-<link rel="preconnect" href="https://app.snipcart.com">
-<link rel="preconnect" href="https://cdn.snipcart.com">
-<link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.3.0/default/snipcart.css">
-<script async src="https://cdn.snipcart.com/themes/v3.3.0/default/snipcart.js"></script>
   <style>
     .nav-links a[href="index.html"] { color: var(--c-text); }
     .categories { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
@@ -83,101 +96,99 @@
   </style>
 </head>
 <body>
-<div id="snipcart" data-api-key="YOUR_PUBLIC_API_KEY_HERE" hidden></div>
+
 <div id="nav-mount"></div>
 
 <section class="hero">
   <div class="hero-bg"></div>
-  <div class="hero-eyebrow fade-up">South Florida Saltwater</div>
-  <h1 class="hero-title fade-up fade-up-1">Custom Rods <em>Built</em><br>for the Flats</h1>
-  <p class="hero-body fade-up fade-up-2">Every rod hand-built to your specs in Miami, Florida. Choose your blank, guides, handle, and colors — we'll build it in 3–5 weeks.</p>
+  <img src="preview/SFSW Logo/South Florida Saltwater.png" alt="SFSW Logo" class="fade-up" style="max-height:163px;width:auto;margin-bottom:1.75rem;display:block;margin-left:auto;margin-right:auto">
+  <h1 class="hero-title fade-up fade-up-1" style="font-size:clamp(2.4rem,5.5vw,4.2rem);line-height:1.1;margin-bottom:0.4rem">Designed for South Florida</h1>
+  <div class="fade-up fade-up-1" style="font-family:var(--font-display);font-style:italic;font-size:clamp(2.4rem,5.5vw,4.2rem);color:var(--c-gold);line-height:1.1;margin-bottom:2rem">Built for Performance</div>
+  <div class="fade-up fade-up-2" style="margin-bottom:2rem;text-align:center">
+    <div style="font-family:var(--font-cond);font-size:17px;font-weight:700;letter-spacing:.12em;color:var(--c-text);text-transform:uppercase">High Performance Custom Rods</div>
+    <div style="font-family:var(--font-cond);font-size:12px;font-weight:600;letter-spacing:.22em;color:var(--c-gold);text-transform:uppercase;margin-top:5px">Boca Raton, FL</div>
+  </div>
   <div class="hero-ctas fade-up fade-up-3">
-    <a href="pages/rods.html" class="btn btn-primary btn-lg">Browse All Rods</a>
-    <a href="pages/contact.html" class="btn btn-outline btn-lg">Talk to a Builder</a>
+    <a href="#rod-categories" class="btn btn-primary btn-lg" onclick="event.preventDefault();document.getElementById('rod-categories').scrollIntoView({behavior:'smooth'})">Browse All Rods</a>
+    <a href="pages/contact.html" class="btn btn-outline btn-lg">Contact Us</a>
+  </div>
+  <div class="fade-up fade-up-3" style="margin-top:1.25rem;text-align:center">
+    <a href="pages/builds.html" class="btn btn-primary btn-lg">Browse Completed Builds</a>
   </div>
 </section>
 
 <div class="section" style="padding-top:0">
   <div class="section-inner">
-    <div class="feature-strip fade-up">
+    <div class="build-slideshow fade-up" id="build-slideshow">
+      <img id="build-slideshow-img" src="preview/Builds/build-k-1.png" alt="South Florida Saltwater rod build">
+      <button type="button" id="build-slideshow-prev" class="build-slideshow-nav build-slideshow-prev" aria-label="Previous photo">&#8249;</button>
+      <button type="button" id="build-slideshow-next" class="build-slideshow-nav build-slideshow-next" aria-label="Next photo">&#8250;</button>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="padding-top:0">
+  <div class="section-inner">
+    <div class="feature-strip feature-strip-3 fade-up">
       <div class="feature-item">
-        <span class="feature-icon">🎣</span>
-        <div class="feature-title">Hand-Built</div>
-        <div class="feature-desc">Every rod wrapped, finished, and inspected by hand</div>
+        <span class="feature-icon">🏆</span>
+        <div class="feature-title">High Quality Materials</div>
+        <div class="feature-desc">We source only the highest-quality materials to build rods that outperform and last.</div>
       </div>
       <div class="feature-item">
         <span class="feature-icon">🌊</span>
-        <div class="feature-title">South Florida Spec</div>
-        <div class="feature-desc">Built for tarpon, snook, bonefish & more</div>
+        <div class="feature-title">Designed For South Florida</div>
+        <div class="feature-desc">Blanks are selected based on their performance and unique characteristics to fit South Florida's saltwater fishing styles.</div>
       </div>
       <div class="feature-item">
         <span class="feature-icon">⚙️</span>
-        <div class="feature-title">Your Build</div>
-        <div class="feature-desc">Choose every component — nothing stock</div>
+        <div class="feature-title">Designed to Maximize Performance</div>
+        <div class="feature-desc">Maximizing a rod's performance comes down to material selection, balance, and guide layout. Strategic configurations ensure a rod performs to the best of its ability</div>
+      </div>
+    </div>
+    <div class="feature-strip feature-strip-2 fade-up">
+      <div class="feature-item">
+        <span class="feature-icon">🎯</span>
+        <div class="feature-title">Customization</div>
+        <div class="feature-desc">We work with you along the way to ensure that your rod is designed to perfection based on your preferences.</div>
       </div>
       <div class="feature-item">
         <span class="feature-icon">📦</span>
-        <div class="feature-title">3–5 Week Lead</div>
-        <div class="feature-desc">Ships anywhere in the US</div>
+        <div class="feature-title">Current Lead Time: 3-5 weeks</div>
+        <div class="feature-desc">Pick-up available in Boca Raton. Shipping available for rods under 8'0</div>
       </div>
     </div>
   </div>
 </div>
 
-<section class="section">
+<section class="section" id="rod-categories">
   <div class="section-inner">
-    <div class="section-label">Product Lines</div>
-    <h2 class="section-title">Every Type of Saltwater Rod</h2>
+    <h2 class="section-title">Rod Categories</h2>
     <p style="color:var(--c-muted);font-size:15px;max-width:560px;margin-bottom:2.5rem;line-height:1.7;">From ultra-light finesse applications to heavy-duty bottom rigs — each category is tailored to the specific demands of South Florida saltwater fishing.</p>
 
     <div class="categories" id="cat-grid"></div>
   </div>
 </section>
 
-<section class="section" style="background:var(--c-dark2);border-top:1px solid var(--c-border);border-bottom:1px solid var(--c-border)">
-  <div class="section-inner">
-    <div class="section-label">How It Works</div>
-    <h2 class="section-title">Order in 4 Steps</h2>
-    <div class="process-steps" style="margin-top:2rem">
-      <div class="process-step">
-        <h3>Choose a Rod Type</h3>
-        <p>Pick the category that matches your target species and fishing style.</p>
-      </div>
-      <div class="process-step">
-        <h3>Configure Your Build</h3>
-        <p>Select blank material, guides, handle, reel seat, thread colors, and add-ons.</p>
-      </div>
-      <div class="process-step">
-        <h3>Submit Your Order</h3>
-        <p>We'll confirm your build details and collect payment within 24 hours.</p>
-      </div>
-      <div class="process-step">
-        <h3>Receive Your Rod</h3>
-        <p>3–5 weeks lead time. Delivered securely, ready to fish.</p>
-      </div>
-    </div>
-  </div>
-</section>
 
 <section class="section">
   <div class="section-inner">
-    <div class="section-label">Reviews</div>
-    <h2 class="section-title">Built to Fish, Loved by Anglers</h2>
+    <h2 class="section-title">Reviews</h2>
     <div class="testimonial-grid" style="margin-top:2rem">
       <div class="testimonial">
         <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text">"This rod changed how I fish the Keys. Ultra sensitive, beautifully finished — and the thread wrap came out perfect in SFSW Midnight Blue."</p>
-        <div class="testimonial-author">— Marco D., Key Largo</div>
+        <p class="testimonial-text">"Helped me choose which blanks and parts would be best for what i wanted. Rod came out so clean"</p>
+        <div class="testimonial-author">— Cam</div>
       </div>
       <div class="testimonial">
         <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text">"My snook rod has landed over 60 fish this season. The IM10 blank with Fuji SiC guides is absolutely dialed in. Worth every penny."</p>
-        <div class="testimonial-author">— Reyes F., Fort Lauderdale</div>
+        <p class="testimonial-text">"One of the nicest feeling rods I have ever used. Just performs so well and extremely fun to fish with. Thank you!"</p>
+        <div class="testimonial-author">— Isaac</div>
       </div>
       <div class="testimonial">
         <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text">"Ordered two — a finesse rod and a live bait conventional. Both were delivered in under 4 weeks and the quality is honestly better than anything I've bought retail."</p>
-        <div class="testimonial-author">— Jake P., Miami</div>
+        <p class="testimonial-text">"Best rod I have ever purchased. Matches my reel perfectly and feels great. Been mad fun to catch snook with it"</p>
+        <div class="testimonial-author">— Max</div>
       </div>
     </div>
   </div>
@@ -192,28 +203,136 @@
   document.getElementById('footer-mount').innerHTML = buildFooter().replace(/href="([^"]+\.html)"/g, 'href="pages/$1"');
 
   const CATEGORIES = [
-    { num:'01', tag:'Light Inshore', name:'Inshore Spinning', desc:'Versatile spinning rods built for snook, redfish, and juvenile tarpon on the flats and in passes.', from:'$249', href:'pages/inshore-spinning.html' },
-    { num:'02', tag:'Technical Presentations', name:'Finesse Rod', desc:'Ultra-light, high-sensitivity builds for bonefish, permit, and pressured flats fish.', from:'$279', href:'pages/finesse.html' },
-    { num:'03', tag:'Live Bait', name:'Live Bait Conventional', desc:'Conventional setups for pilchards and live blue runners. Built for trolling and kite fishing.', from:'$299', href:'pages/live-bait-conventional.html' },
-    { num:'04', tag:'Live Bait', name:'Live Bait Spinning', desc:'Spinning counterpart to the conventional. Spinning reel mechanics with live bait power.', from:'$269', href:'pages/live-bait-spinning.html' },
-    { num:'05', tag:'Structure Fishing', name:'Bottom Rod', desc:'Heavy-duty bottom rods for grouper, snapper, and amberjack over structure.', from:'$289', href:'pages/bottom-rod.html' },
-    { num:'06', tag:'Shore Fishing', name:'Pier Rod', desc:'Long, powerful rods for pier and bridge fishing. Built to handle big runs and rough conditions.', from:'$259', href:'pages/pier-rod.html' },
-    { num:'07', tag:'Big Game Inshore', name:'Snook / Tarpon', desc:'Purpose-built for silver kings and slot snook. Fast action, extra backbone, ultra-finish.', from:'$319', href:'pages/snook-tarpon.html' },
+    { num:'01', tag:'Technical Presentations', name:'Finesse', desc:'Ultra-light, ultra-sensitive. Designed for light-tackle techniques and bait fishing', from:'$375', href:'pages/finesse.html' },
+    { num:'02', tag:'Light Inshore', name:'Inshore Spinning', desc:'Ultra-light, ultra-sensitive blanks to maximize control and feel. Excellent for mangrove/yellowtail snappers, jacks, small snook, and more', from:'$350', href:'pages/inshore-spinning.html' },
+    { num:'03', tag:'Big Game Inshore', name:'Heavy Inshore Spinning', desc:'Lightweight, sensitive blanks that possess immense power and backbone. Excellent for snappers, snook, tarpon, mackerel, jacks, and more', from:'$375', href:'pages/heavy-inshore.html' },
+    { num:'04', tag:'Baitcaster', name:'Saltwater Baitcaster', desc:'Custom baitcaster builds for saltwater applications.', comingSoon:true, href:'pages/saltwater-baitcaster.html' },
+    { num:'05', tag:'Offshore', name:'Offshore Spinning', desc:'Powerful blanks with a focus on strength and durability out on the water. Excellent for mahi, mackerel, tuna, cobia, snapper,  grouper, and more.', from:'$375', href:'pages/offshore-spinning.html' },
+    { num:'06', tag:'Boat Rod — Conventional', name:'Bottom Fishing - Conventional', desc:'Performance blanks that are sensitive, lightweight, can pull fish off structure, and feel great to fish with. Excellent for snapper and grouper. ', from:'$400', href:'pages/bottom-conventional.html' },
+    { num:'07', tag:'Live Bait / Kingfish', name:'Live Bait / Kingfish - Conv.', desc:'Performance blanks that are sensitive, lightweight, have a soft tip that shuts off perfectly, and feel great to fish with. Excellent for Mackerel, Mahi, Tuna, Cobia, and more.', from:'$365', href:'pages/live-bait-conventional.html' },
+    { num:'08', tag:'Pier / Jetty', name:'Pier Spinning - 8\'8 - 9\'0"', desc:'Built for the demands of pier and jetty fishing. Powerful blanks with strong backbones that can cast with precision and put up big fights', from:'$500', href:'pages/pier-spinning.html' },
+    { num:'09', tag:'Pier / Boat', name:'Pier Conventional', desc:'Heavy duty rods designed for Bottom or Trolley fishing on the piers', from:'$400', href:'pages/pier-conventional.html' },
+    { num:'10', tag:'Trolling', name:'Trolling', desc:'Purpose-built trolling rods for offshore trolling spreads.', comingSoon:true, href:'pages/trolling.html' },
+    { num:'11', tag:'High Speed Trolling', name:'High Speed Trolling', desc:'Purpose-built high speed trolling rods for offshore trolling spreads.', comingSoon:true, href:'pages/high-speed-trolling.html' },
   ];
 
   const grid = document.getElementById('cat-grid');
   grid.innerHTML = CATEGORIES.map(c => `
     <a href="${c.href}" class="cat-card">
-      <div class="cat-card-num">${c.num}</div>
       <div class="cat-card-tag">${c.tag}</div>
       <div class="cat-card-name">${c.name}</div>
       <p class="cat-card-desc">${c.desc}</p>
       <div class="cat-card-footer">
-        <span class="cat-card-from">From ${c.from}</span>
+        <span class="cat-card-from">${c.comingSoon ? 'Coming Soon' : 'From ' + c.from}</span>
         <span class="cat-card-arrow">→</span>
       </div>
     </a>
   `).join('');
+</script>
+
+<script>
+  // Homepage build photo slideshow — build-k-1 always first, rest shuffled randomly each page load
+  (function () {
+    const FIRST_PHOTO = 'preview/Builds/build-k-1.png';
+    const OTHER_PHOTOS = [
+      'preview/Builds/29.png', 'preview/Builds/30.png', 'preview/Builds/31.png', 'preview/Builds/32.png',
+      'preview/Builds/33.png', 'preview/Builds/34.png', 'preview/Builds/35.png', 'preview/Builds/36.png',
+      'preview/Builds/TEMPMID_Build-f-1.png', 'preview/Builds/TEMPMID_Build-f-2.png', 'preview/Builds/TEMPMID_Build-f-3.png',
+      'preview/Builds/TEMPMID_Build-f-4.png', 'preview/Builds/TEMPMID_Build-f-5.png',
+      'preview/Builds/build-i-2.png', 'preview/Builds/build-i-3.png', 'preview/Builds/build-i-4.png',
+      'preview/Builds/build-b-1.png', 'preview/Builds/build-b-2.png', 'preview/Builds/build-b-3.png',
+      'preview/Builds/build-b-4.png', 'preview/Builds/build-b-5.png',
+      'preview/Builds/build-c-1.png', 'preview/Builds/build-c-2.png', 'preview/Builds/build-c-3.png',
+      'preview/Builds/build-d-1.png', 'preview/Builds/build-d-2.png', 'preview/Builds/build-d-3.png',
+      'preview/Builds/build-d-4.png', 'preview/Builds/build-d-5.png', 'preview/Builds/build-d-6.png',
+      'preview/Builds/build-d-7.png', 'preview/Builds/build-d-8.png',
+      'preview/Builds/build-e-1.png', 'preview/Builds/build-e-2.png', 'preview/Builds/build-e-3.png',
+      'preview/Builds/build-e-4.png', 'preview/Builds/build-e-5.png',
+      'preview/Builds/build-f-1.png', 'preview/Builds/build-f-2.png', 'preview/Builds/build-f-3.png',
+      'preview/Builds/build-f-4.png', 'preview/Builds/build-f-5.png',
+      'preview/Builds/build-g-1.png', 'preview/Builds/build-g-2.png', 'preview/Builds/build-g-3.png',
+      'preview/Builds/build-g-4.png', 'preview/Builds/build-g-5.png',
+      'preview/Builds/build-h-1.png', 'preview/Builds/build-h-2.png', 'preview/Builds/build-h-3.png',
+      'preview/Builds/build-j-1.png', 'preview/Builds/build-j-2.png', 'preview/Builds/build-j-3.png',
+      'preview/Builds/build-j-4.png', 'preview/Builds/build-j-5.png', 'preview/Builds/build-j-6.png',
+      'preview/Builds/build-k-2.png', 'preview/Builds/build-k-3.png', 'preview/Builds/build-k-4.png',
+      'preview/Builds/build-l-1.png', 'preview/Builds/build-l-2.png', 'preview/Builds/build-l-3.png',
+      'preview/Builds/build-m-1.png', 'preview/Builds/build-m-2.png', 'preview/Builds/build-m-3.png',
+      'preview/Builds/build-m-4.png', 'preview/Builds/build-m-5.png', 'preview/Builds/build-m-6.png',
+      'preview/Builds/build-m-7.png', 'preview/Builds/build-m-8.png',
+      'preview/Builds/build-n-1.png', 'preview/Builds/build-n-2.png', 'preview/Builds/build-n-3.png',
+      'preview/Builds/build-n-4.png',
+      'preview/Builds/build-o-1.png', 'preview/Builds/build-o-2.png', 'preview/Builds/build-o-3.png',
+      'preview/Builds/build-o-4.png', 'preview/Builds/build-o-5.png', 'preview/Builds/build-o-6.png',
+      'preview/Builds/build-o-7.png', 'preview/Builds/build-o-8.png',
+      'preview/Builds/build-p-1.png', 'preview/Builds/build-p-2.png', 'preview/Builds/build-p-3.png',
+      'preview/Builds/build-p-4.png',
+      'preview/Builds/build-q-1.png', 'preview/Builds/build-q-2.png', 'preview/Builds/build-q-3.png',
+      'preview/Builds/build-q-4.png', 'preview/Builds/build-q-5.png', 'preview/Builds/build-q-6.png',
+      'preview/Builds/build-q-7.png', 'preview/Builds/build-q-8.png',
+      'preview/Builds/build-r-1.png', 'preview/Builds/build-r-2.png', 'preview/Builds/build-r-3.png',
+      'preview/Builds/build-r-4.png', 'preview/Builds/build-r-5.png', 'preview/Builds/build-r-6.png',
+      'preview/Builds/build-s-1.png', 'preview/Builds/build-s-2.png', 'preview/Builds/build-s-3.png',
+      'preview/Builds/build-s-4.png',
+      'preview/Builds/build-t-1.png', 'preview/Builds/build-t-2.png', 'preview/Builds/build-t-3.png',
+      'preview/Builds/build-t-4.png', 'preview/Builds/build-t-5.png', 'preview/Builds/build-t-6.png',
+      'preview/Builds/build-t-7.png', 'preview/Builds/build-t-8.png', 'preview/Builds/build-t-9.png',
+      'preview/Builds/build-v-1.png', 'preview/Builds/build-v-2.png', 'preview/Builds/build-v-3.png',
+      'preview/Builds/build-v-4.png', 'preview/Builds/build-v-5.png', 'preview/Builds/build-v-6.png',
+      'preview/Builds/build-v-7.png', 'preview/Builds/build-v-8.png', 'preview/Builds/build-v-9.png',
+      'preview/Builds/build-v-10.png', 'preview/Builds/build-v-11.png',
+      'preview/Builds/build-w-1.png', 'preview/Builds/build-w-2.png', 'preview/Builds/build-w-3.png',
+      'preview/Builds/build-w-4.png', 'preview/Builds/build-w-5.png', 'preview/Builds/build-w-6.png',
+      'preview/Builds/build-w-7.png', 'preview/Builds/build-w-8.png',
+      'preview/Builds/build-x-1.png', 'preview/Builds/build-x-2.png', 'preview/Builds/build-x-3.png',
+      'preview/Builds/build-x-4.png', 'preview/Builds/build-x-5.png', 'preview/Builds/build-x-6.png',
+      'preview/Builds/build-x-7.png',
+      'preview/Builds/build-y-1.png', 'preview/Builds/build-y-2.png', 'preview/Builds/build-y-3.png',
+      'preview/Builds/build-y-4.png', 'preview/Builds/build-y-5.png', 'preview/Builds/build-y-6.png',
+      'preview/Builds/build-y-7.png',
+    ];
+
+    // Fisher-Yates shuffle — re-randomized on every page load
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    const photos = [FIRST_PHOTO, ...shuffle(OTHER_PHOTOS)];
+    let index = 0;
+    const img = document.getElementById('build-slideshow-img');
+    const nextBtn = document.getElementById('build-slideshow-next');
+    const prevBtn = document.getElementById('build-slideshow-prev');
+    let timer = null;
+
+    function show(i) {
+      index = (i + photos.length) % photos.length;
+      img.src = photos[index];
+    }
+
+    function next() {
+      show(index + 1);
+    }
+
+    function prev() {
+      show(index - 1);
+    }
+
+    function resetTimer() {
+      if (timer) clearInterval(timer);
+      timer = setInterval(next, 3000);
+    }
+
+    if (img && nextBtn && prevBtn) {
+      nextBtn.addEventListener('click', () => { next(); resetTimer(); });
+      prevBtn.addEventListener('click', () => { prev(); resetTimer(); });
+      resetTimer();
+    }
+  })();
 </script>
 </body>
 </html>
