@@ -863,7 +863,8 @@
     try {
       // Store order data — PaymentIntent is NOT created yet (deferred intent pattern)
       pendingOrderData = {
-        items: cart.map(item => ({ rodType: item.rodType, total: item.total, lines: item.lines })),
+        items: cart.map(item => ({ rodType: item.rodType, total: item.total, lines: item.lines,
+          ...(item.wrapDesign ? { wrapDesign: { summary: item.wrapDesign.summary, kind: item.wrapDesign.kind, pattern: item.wrapDesign.pattern, axes: item.wrapDesign.axes, angle: item.wrapDesign.angle, size: item.wrapDesign.size, blank: item.wrapDesign.blank, colors: item.wrapDesign.colors, thumb: item.wrapDesign.thumb, setup: item.wrapDesign.setup ? JSON.stringify(item.wrapDesign.setup) : '' } } : {}) })),
         customerName: name,
         customerEmail: email,
         customerPhone: phone,

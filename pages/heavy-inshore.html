@@ -90,6 +90,17 @@
     .option-item-body{display:flex;flex-direction:column;min-width:0;flex:1}
     .option-item-name{color:var(--c-text)}
     .option-item-desc{font-size:11.5px;color:var(--c-muted);line-height:1.5;margin-top:3px}
+    .design-tile{display:flex;gap:14px;align-items:center;padding:14px;border:1px dashed rgba(201,148,26,.55);border-radius:var(--radius-md);background:rgba(201,148,26,.06);cursor:pointer;margin-bottom:10px;transition:border-color .15s,background .15s}
+    .design-tile:hover{border-color:var(--c-gold);background:rgba(201,148,26,.1)}
+    .design-tile.selected{border-style:solid;border-color:var(--c-gold)}
+    .design-tile-thumb{width:92px;height:52px;border-radius:4px;background:var(--c-dark3);object-fit:cover;flex-shrink:0;border:1px solid var(--c-border)}
+    .design-tile-icon{width:92px;height:52px;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--c-dark3);color:var(--c-gold);font-size:22px;border:1px solid var(--c-border)}
+    .design-tile-body{flex:1;min-width:0}
+    .design-tile-title{font-family:var(--font-cond);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:14px;color:var(--c-text)}
+    .design-tile-desc{font-size:12.5px;color:var(--c-muted);line-height:1.5;margin-top:2px}
+    .design-tile-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+    .design-tile-actions button{background:none;border:1px solid var(--c-border2);color:var(--c-text);border-radius:4px;padding:4px 10px;font-family:var(--font-cond);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+    .design-tile-actions button:hover{border-color:var(--c-gold);color:var(--c-gold)}
     .option-item-price{font-family:var(--font-cond);font-size:12px;font-weight:600;color:var(--c-gold);flex-shrink:0;margin-left:1rem;padding-top:1px}
     .sub-group{margin-bottom:16px}
     .sub-group:last-child{margin-bottom:0}
@@ -502,7 +513,7 @@
                 </div>
               </div>
             </div>
-            <p style="font-size:12.5px;color:var(--c-muted);line-height:1.6;margin:10px 0 12px">Below are various different wrapping styles, please select which style you like. We will work together to make sure the wrap is designed to your preference. If you have a photo of a wrap you want, feel free to text me a copy.</p>
+            <p style="font-size:12.5px;color:var(--c-muted);line-height:1.6;margin:10px 0 12px">Pick one of the wrap styles below, or tap <strong style="color:var(--c-text)">Design Your Own</strong> to lay out the pattern and thread colors yourself. We will work together to make sure the wrap is designed to your preference. If you have a photo of a wrap you want, feel free to text me a copy.</p>
             <div class="option-list" id="rod-wrap-options"></div>
             <div id="wrap-abalone-colors" style="display:none;margin-top:12px;padding:10px 12px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius)"></div>
           </div>
@@ -652,6 +663,7 @@
 <div id="footer-mount"></div>
 <script src="../js/sfsw.js"></script>
 <script src="../js/similar-build.js"></script>
+<script src="../js/wrap-design.js"></script>
 <script>
 document.getElementById('nav-mount').innerHTML = buildNav('');
 document.getElementById('footer-mount').innerHTML = buildFooter();
@@ -1037,6 +1049,7 @@ const S = {
   mainIdx:  0,                // Main thread color (WRAP_COLORS)
   supportIdxs: [],            // Supporting colors (indices into WRAP_COLORS). First 2 included, each additional +$10.
   wrapId:  ROD_WRAPS[0].id,
+  customDesign: null,         // customer's own wrap from the Wrap Designer (priced as the matching ROD_WRAPS option)
   wrapUserSelected: false,
   wrapPhotoIdx: 0,            // 0-based index of current rod-wrap photo
   splitWrapId: null,          // optional Split Wrap design (only offered for split-style grips) — null = none selected
@@ -1269,6 +1282,7 @@ function applyPerformanceMode(on) {
     S.supportIdxs = [];
     S.wrapId = ROD_WRAPS[0].id;
     S.wrapUserSelected = false;
+    S.customDesign = null;
     S.guideWrapId = 'blacked-out';
     S.guideWrapUserSelected = false;
   }
@@ -1409,7 +1423,49 @@ function pickTipUpgrade(e, kind) {
   });
 }
 function pickWrap(id)  {
-  requestAnimationFrame(() => { S.wrapId = id; S.wrapPhotoIdx = 0; S.wrapUserSelected = true; renderWraps(); updateAll();   });
+  requestAnimationFrame(() => { S.wrapId = id; S.wrapPhotoIdx = 0; S.wrapUserSelected = true; S.customDesign = null; renderWraps(); updateAll();   });
+}
+
+// ── Design Your Own (js/wrap-design.js + /wrap-designer/) ──
+function openWrapDesigner() {
+  sfswOpenWrapDesigner({
+    start: S.customDesign,
+    onDesign: d => {
+      const r = sfswReadWrapDesign(d, WRAP_COLORS);
+      const w = ROD_WRAPS.find(x => x.name === r.wrapName) || ROD_WRAPS[0];
+      S.customDesign = r.design;
+      S.wrapId = w.id; S.wrapPhotoIdx = 0; S.wrapUserSelected = true;
+      if (r.colorIdxs.length) { S.mainIdx = r.colorIdxs[0]; S.supportIdxs = r.colorIdxs.slice(1); }
+      renderWraps(); updateAll();
+      const sec = document.getElementById('sec-rod-wraps');
+      if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+}
+function removeWrapDesign(e) {
+  if (e) e.stopPropagation();
+  S.customDesign = null; renderWraps(); updateAll();
+}
+function designTileHtml() {
+  const d = S.customDesign;
+  if (!d) return `<div class="design-tile" onclick="openWrapDesigner()">
+      <div class="design-tile-icon">✎</div>
+      <div class="design-tile-body">
+        <div class="design-tile-title">Design Your Own</div>
+        <div class="design-tile-desc">Pick the pattern, axis lines and every thread color, and see it on the rod. Same price as the matching wrap style.</div>
+      </div>
+      <span class="option-item-price">Open →</span>
+    </div>`;
+  const w = getWrap();
+  return `<div class="design-tile selected" onclick="openWrapDesigner()">
+      <img class="design-tile-thumb" src="${d.thumb}" alt="Your wrap design">
+      <div class="design-tile-body">
+        <div class="design-tile-title">Your Design</div>
+        <div class="design-tile-desc">${d.summary} · priced as ${w.name}</div>
+        <div class="design-tile-actions"><button type="button" onclick="event.stopPropagation();openWrapDesigner()">Edit Design</button><button type="button" onclick="removeWrapDesign(event)">Remove</button></div>
+      </div>
+      <span class="option-item-price">${w.adder===0?'Included':'+$'+w.adder}</span>
+    </div>`;
 }
 function pickSplitWrap(id) {
   requestAnimationFrame(() => { S.splitWrapId = (S.splitWrapId === id) ? null : id; S.splitWrapPhotoIdx = 0; renderSplitWrapOptions(); updateAll();   });
@@ -1552,8 +1608,8 @@ function nextWrapPhoto() {
 function renderWraps() {
   const el = document.getElementById('rod-wrap-options');
   if (el) {
-    el.innerHTML = ROD_WRAPS.map(w => {
-      let html = `<div class="option-item ${w.id===S.wrapId?'selected':''}" onclick="pickWrap('${w.id}')">
+    el.innerHTML = designTileHtml() + ROD_WRAPS.map(w => {
+      let html = `<div class="option-item ${w.id===S.wrapId && !S.customDesign?'selected':''}" onclick="pickWrap('${w.id}')">
         <div class="option-item-body">
           <span class="option-item-name">${w.name}</span>
           ${w.desc ? `<span class="option-item-desc">${w.desc}</span>` : ''}
@@ -1794,8 +1850,17 @@ function renderWrapPreview() {
   const nextBtn  = document.getElementById('wrap-next');
   const colorEl  = document.getElementById('wrap-abalone-colors');
 
-  nameEl.textContent  = wrap.name;
+  nameEl.textContent  = S.customDesign ? 'Your Design — ' + S.customDesign.summary : wrap.name;
   priceEl.textContent = wrap.adder ? '  +$' + wrap.adder : '  Included';
+
+  // Customer's own design: show their preview picture
+  if (S.customDesign && S.customDesign.thumb) {
+    wrapEl.classList.remove('is-empty');
+    imgEl.src = S.customDesign.thumb; imgEl.alt = 'Your wrap design'; imgEl.style.opacity = 1;
+    counter.textContent = ''; prevBtn.style.display = 'none'; nextBtn.style.display = 'none';
+    if (colorEl) colorEl.style.display = 'none';
+    return;
+  }
 
   // Abalone: static photo + color swatches
   if (wrap.photo) {
@@ -2224,9 +2289,10 @@ function renderBuildStrip() {
     rodWrapSlot.style.display = '';
     const wrap = getWrap();
     const wrapImg = document.getElementById('build-rodwrap-img');
-    const wrapSrc = wrap.photo ? wrap.photo : (wrap.photoCount ? `../preview/rod-wraps/${wrap.photoSlug || wrap.id}-1.png` : '');
+    const wrapSrc = S.customDesign && S.customDesign.thumb ? S.customDesign.thumb
+      : wrap.photo ? wrap.photo : (wrap.photoCount ? `../preview/rod-wraps/${wrap.photoSlug || wrap.id}-1.png` : '');
     if (wrapSrc) { wrapImg.src = wrapSrc; wrapImg.alt = wrap.name; wrapImg.onerror = () => { wrapImg.style.opacity = 0.15; }; wrapImg.style.opacity = 1; }
-    document.getElementById('build-rodwrap-name').textContent = wrap.name;
+    document.getElementById('build-rodwrap-name').textContent = S.customDesign ? 'Your Design — ' + S.customDesign.summary : wrap.name;
     // Colors slot
     const colorsSlot = document.getElementById('build-colors-slot');
     const colorsList = document.getElementById('build-wrap-colors-list');
@@ -2366,7 +2432,7 @@ function updateAll() {
   document.getElementById('chosen-butt').textContent        = buttDisplayName() + (rubberCoverAdder() ? ' + Rubber Cover' : '');
   document.getElementById('chosen-guides').textContent      = guideDisplayName() + (guideColorLabel() ? ' · ' + guideColorLabel() : '');
   document.getElementById('chosen-wrap-color').textContent  = colorSummary;
-  document.getElementById('chosen-rod-wrap').textContent    = S.performanceOnly ? 'Performance — None' : wrap.name;
+  document.getElementById('chosen-rod-wrap').textContent    = S.performanceOnly ? 'Performance — None' : (S.customDesign ? 'Your Design' : wrap.name);
   const gw = getGuideWrap();
   document.getElementById('chosen-guide-wrap').textContent  = gw.name + (guideWrapAdder() ? ' +$' + guideWrapAdder() : '') + (S.performanceOnly ? ' (Performance)' : '');
   const accSummary = accessoriesSummaryText();
@@ -2470,13 +2536,15 @@ function buildOrderItem() {
       {label:'Butt',        value: buttDisplayName() + (rubberCoverAdder() ? ' + Rubber Cover' : '') + (buttAdder() + rubberCoverAdder() ? '  +$' + (buttAdder() + rubberCoverAdder()) : '')},
       {label:'Guides',      value: guideDisplayName() + (guideColorName ? ' (' + guideColorName + ')' : '') + (getGuide().adder ? '  +$' + getGuide().adder : '') + (tipUpgradeActive() ? '  · ' + tipUpgradeLabel() + ' +$' + tipUpgradeFee() : '')},
       {label:'Colors',      value: colorLine},
-      {label:'Rod Wrap',    value: S.performanceOnly ? 'Performance Build — No decorative wrap' : (getWrap().name + (getWrap().adder ? '  +$' + getWrap().adder : ''))},
+      {label:'Rod Wrap',    value: S.performanceOnly ? 'Performance Build — No decorative wrap' : (getWrap().name + (S.customDesign ? ' — Custom Design: ' + S.customDesign.summary : '') + (getWrap().adder ? '  +$' + getWrap().adder : ''))},
       ...(!S.performanceOnly && isSplitGrip() && getSplitWrap() ? [{label:'Split Wrap', value: getSplitWrap().name + (splitWrapAdder() ? '  +$' + splitWrapAdder() : '')}] : []),
       {label:'Guide Wrap', value: getGuideWrap().name + (guideWrapAdder() ? '  +$' + guideWrapAdder() : '') + (S.performanceOnly ? '  (Performance)' : '')},
       {label:'Accessories', value: accessoriesSummaryText()},
       ...(S.performanceOnly ? [{label:'Performance Discount', value: '−$50'}] : []),
     ],
-    total: calcTotal()
+    total: calcTotal(),
+    // the customer's own wrap design (picture, pattern, axes, angle, thread colors) — shown on the admin order
+    wrapDesign: (!S.performanceOnly && S.customDesign) ? S.customDesign : null
   };
 }
 

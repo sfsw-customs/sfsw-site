@@ -1218,6 +1218,7 @@
             <span class="rod-block-price">$${Number(item.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </div>
           <div class="spec-grid">${lines}</div>
+          ${wrapDesignHtml(item.wrapDesign)}
         </div>`;
     }).join('');
 
@@ -1295,6 +1296,27 @@
           ${priceBreakdownHtml}
           ${rodsHtml || '<div style="color:var(--c-muted);font-size:13px">No rod details saved.</div>'}
         </div>
+      </div>`;
+  }
+
+  // Customer's own wrap from the Wrap Designer (custom builder → checkout → order)
+  function wrapDesignHtml(d) {
+    if (!d || !d.thumb) return '';
+    const esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const colors = (d.colors || []).map((c, i) => `
+      <span style="display:inline-flex;align-items:center;gap:6px;margin:0 10px 6px 0;font-size:12.5px;color:var(--c-text)">
+        <span style="width:13px;height:13px;border-radius:50%;background:${esc(c.hex)};border:1px solid rgba(255,255,255,.3)"></span>${i + 1}. ${esc(c.name)}${c.threads != null ? ' <span style="color:var(--c-muted)">× ' + esc(c.threads) + '</span>' : ''}
+      </span>`).join('');
+    const facts = [['Pattern', d.pattern], ['Axis lines', d.axes], ['Angle', d.angle], ['Pattern size', d.size]]
+      .filter(f => f[1] !== '' && f[1] != null)
+      .map(f => `<span style="margin-right:14px"><span style="color:var(--c-muted)">${f[0]}:</span> ${esc(f[1])}</span>`).join('');
+    return `
+      <div style="margin-top:12px;padding:12px;border:1px solid rgba(201,148,26,.35);border-radius:6px;background:rgba(201,148,26,.05)">
+        <div style="font-family:var(--font-cond);font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--c-gold);margin-bottom:8px">Customer's Wrap Design</div>
+        <a href="${esc(d.thumb)}" target="_blank" rel="noopener" title="Open full size"><img src="${esc(d.thumb)}" alt="Wrap design" style="width:100%;max-width:640px;border-radius:4px;display:block;background:#000"></a>
+        <div style="font-size:13px;margin:10px 0 6px">${facts}</div>
+        <div style="font-size:11px;color:var(--c-muted);letter-spacing:.08em;text-transform:uppercase;margin:6px 0 4px">Thread order (center out) · × threads</div>
+        <div>${colors}</div>
       </div>`;
   }
 
