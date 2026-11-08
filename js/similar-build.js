@@ -37,7 +37,11 @@
       'cross wrap 4 axis': '4 axis cross wrap'
     },
     seat: {
-      'deluxe': 'deluxe', 'fuji deluxe trigger': 'deluxe', 'fuji deluxe': 'fuji deluxe'
+      'deluxe': 'deluxe', 'fuji deluxe trigger': 'deluxe', 'fuji deluxe': 'fuji deluxe',
+      'at aluminum trigger': 'alps at', 'alps aluminum trigger': 'alps at'   // ALPS AT = aluminum trigger seat
+    },
+    butt: {
+      'at aluminum butt': 'at weighted butt'
     }
   };
 
@@ -107,7 +111,6 @@
 
     // Blank + size
     var blankV = spec['Blank'] || '';
-    if (blankV && /n\/a|custom/i.test(blankV)) miss('Blank', 'that rod used a one-off custom blank');
     if (blankV && !/n\/a|custom/i.test(blankV)) {
       var blank = null, bScore = 0.59;
       (D.BLANKS || []).forEach(function (b) {
@@ -120,15 +123,22 @@
         var vs = blank.variants || [], vi = -1;
         vs.forEach(function (v, i) { if (vi < 0 && lenKey(v.length) === L && lbKey(v.lineWt) === W) vi = i; });
         var exact = vi > -1;
-        if (vi < 0) vs.forEach(function (v, i) { if (vi < 0 && lbKey(v.lineWt) === W) vi = i; });
-        if (vi < 0) vs.forEach(function (v, i) { if (vi < 0 && lenKey(v.length) === L) vi = i; });
-        if (vi < 0) vi = 0;
-        if (exact) hit('Size');
-        else miss('Size', [spec['Length'], spec['Line Weight']].filter(Boolean).join(' · ') + ' (closest size selected)');
+        if (vi < 0) {
+          // next closest: same length if possible, then the nearest line rating
+          var lbMid = function (k) { var m = /(\d+)-(\d+)/.exec(k); return m ? (+m[1] + +m[2]) / 2 : 0; };
+          var lenIn = function (k) { var m = /(\d+)'(\d+)/.exec(k); return m ? +m[1] * 12 + +m[2] : 0; };
+          var bestD = Infinity;
+          vs.forEach(function (v, i) {
+            var d = Math.abs(lenIn(lenKey(v.length)) - lenIn(L)) * 3 + Math.abs(lbMid(lbKey(v.lineWt)) - lbMid(W));
+            if (d < bestD) { bestD = d; vi = i; }
+          });
+          if (vi < 0) vi = 0;
+        }
+        if (exact) hit('Size');   // otherwise the next closest size is used
         S.variantIdx = vi; S.variantAdder = (vs[vi] && vs[vi].adder) || 0;
         var ext = /extended to\s*(\d+)\s*'\s*(\d*)/i.exec(spec['Length'] || '');
         if (ext && 'extendLength' in S) S.extendLength = ext[1] + "'" + (ext[2] || '0');
-      } else miss('Blank', blankV);
+      }  // blank not offered in this builder → keep the builder's default
     }
 
     // Reel seat
@@ -138,7 +148,7 @@
     }
 
     // Grip (+ heat shrink)
-    if (spec['Grip']) {
+    if (spec['Grip']) {  // grip / heat-shrink misses are silent too
       var parts = spec['Grip'].split('·'), g = norm(parts[0]);
       var flat = [];
       (D.GRIPS || []).forEach(function (grp) { (grp.items || []).forEach(function (it) { flat.push(it); }); });
@@ -148,10 +158,10 @@
         : cork ? (custom ? (full ? has('ccork-custom-full') : (has('ccork-custom-split') || has('ccork-custom-full')))
                          : (full ? has('cork-full') : has('cork-split')))
         : (custom ? has('eva-custom') : (full ? (has('eva-full') || has('eva-split')) : (has('eva-split') || has('eva-full'))));
-      if (gid) { S.gripId = gid; hit('Grip'); } else miss('Grip', parts[0].trim());
+      if (gid) { S.gripId = gid; hit('Grip'); }
       if (parts[1] && D.HEATSHRINK_OPTIONS) {
         var hs = best(parts[1].replace(/heat\s*shrink/i, ''), D.HEATSHRINK_OPTIONS, function (h) { return h.name; }, 0.5);
-        if (hs) { S.heatShrinkId = hs.id; hit('Heat Shrink'); } else miss('Heat Shrink', parts[1].trim());
+        if (hs) { S.heatShrinkId = hs.id; hit('Heat Shrink'); }
       }
     }
 
@@ -161,6 +171,7 @@
       var gim = /gimbal/i.test(bv) && D.GIMBAL_OPTIONS ? best(bv, D.GIMBAL_OPTIONS, function (x) { return x.name; }) : null;
       if (gim) { S.gimbalId = gim.id; hit('Gimbal'); }
       else {
+        bv = aliasOf('butt', bv);
         var butt = best(bv, D.BUTT_OPTIONS, function (x) { return x.name; }, 0.7) ||
                    best(bv.replace(/\bfoam\b/i, 'EVA'), D.BUTT_OPTIONS, function (x) { return x.name; }, 0.7);
         if (butt) { S.buttId = butt.id; hit('Butt'); } else miss('Butt', bv);
@@ -218,11 +229,20 @@
     }
     if (!perf && spec['Guide Wrap'] && D.GUIDE_WRAPS) {
       var gw = best(spec['Guide Wrap'], D.GUIDE_WRAPS, function (x) { return x.name; }, 0.7);
-      if (gw) { S.guideWrapId = gw.id; S.guideWrapUserSelected = true; hit('Guide Wrap'); } else miss('Guide Wrap', spec['Guide Wrap']);
+      if (gw) { S.guideWrapId = gw.id; S.guideWrapUserSelected = true; hit('Guide Wrap'); }  // else leave unselected
     }
-    if (spec['Accessories']) miss('Accessories', spec['Accessories']);
 
     var result = { perf: perf, matched: matched, missed: missed, build: saved };
+    if (perf) {
+      var keepMain = S.mainIdx, keepSupport = (S.supportIdxs || []).slice();
+      setTimeout(function () {
+        if (typeof window.applyPerformanceMode !== 'function') return;
+        S.performanceOnly = true;
+        window.applyPerformanceMode(true);          // hides wrap sections, resets colors…
+        S.mainIdx = keepMain; S.supportIdxs = keepSupport;   // …so put the build's colors back
+        if (typeof window.updateAll === 'function') window.updateAll();
+      }, 0);
+    }
     showBanner(result);
     return result;
   };
@@ -238,8 +258,8 @@
       div.style.cssText = 'max-width:1200px;margin:1.25rem auto 0;padding:1rem 1.25rem;border:1px solid rgba(201,148,26,.45);background:rgba(201,148,26,.07);border-radius:8px;font-size:14px;line-height:1.6;color:var(--c-text);width:calc(100% - 2rem)';
       div.innerHTML = '<strong style="color:var(--c-gold);font-family:var(--font-cond);letter-spacing:.08em;text-transform:uppercase;font-size:12px">Built from Completed Order' + (num ? ' #' + num : '') + '</strong><br>'
         + 'We\'ve pre-selected the specs from that rod. Review each section below and change anything you like.'
-        + (r.perf ? '<br><span style="color:var(--c-muted)">That rod was a Performance Build — turn on "Performance Only" below if you want the same.</span>' : '')
-        + (r.missed.length ? '<br><span style="color:var(--c-muted)">Not available in this builder, so left for you to choose: ' + esc(r.missed.join(' · ')) + '</span>' : '');
+        + (r.perf ? '<br><span style="color:var(--c-muted)">That rod was a Performance Build, so Performance Only is turned on.</span>' : '')
+        + (r.missed.length ? '<br><span style="color:var(--c-muted)">Pick these by hand if you want them: ' + esc(r.missed.join(' · ')) + '</span>' : '');
       hero.insertAdjacentElement('afterend', div);
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', put); else put();
