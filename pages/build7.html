@@ -153,6 +153,10 @@
       cursor: pointer;
     }
 
+
+    .similar-cta { display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin: 0 0 2rem; }
+    .similar-cta .btn { cursor:pointer; }
+    .similar-cta span { color: var(--c-muted); font-size: 13px; }
     .build-not-found {
       text-align: center;
       padding: 3rem 1rem;
@@ -181,6 +185,7 @@
 <div id="footer-mount"></div>
 <script src="../js/sfsw.js"></script>
 <script src="../js/builds-data.js"></script>
+<script src="../js/similar-build.js"></script>
 <script>
   document.getElementById('nav-mount').innerHTML = buildNav('Builds');
   document.getElementById('footer-mount').innerHTML = buildFooter();
@@ -234,16 +239,22 @@
       </div>
     `).join('');
 
+    const similarHtml = (typeof sfswSimilarUrl === 'function' && sfswSimilarUrl(build))
+      ? `<div class="similar-cta"><button type="button" class="btn btn-primary" onclick="sfswBuildSimilar(BUILDS.find(b => b.id === '${build.id}'))">Build a Similar Rod →</button><span>Opens the ${build.rodType} builder with this rod's specs pre-selected.</span></div>`
+      : '';
+
     root.innerHTML = `
       <a href="builds.html" class="build-back">← All Builds</a>
       <div class="detail-header">
         <div class="detail-rod-type">${build.rodType}</div>
         <div class="detail-subtitle">${build.subtitle}</div>
       </div>
+      ${similarHtml}
       <div class="detail-photo-grid">${photosHtml}</div>
       ${build.notes ? `<div class="detail-notes">${build.notes}</div>` : ''}
       <div class="detail-specs-title">Full Spec Breakdown</div>
       <div class="detail-specs-grid">${specsHtml}</div>
+      ${similarHtml}
     `;
   }
 

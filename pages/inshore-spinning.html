@@ -614,6 +614,7 @@
 
 <div id="footer-mount"></div>
 <script src="../js/sfsw.js"></script>
+<script src="../js/similar-build.js"></script>
 <script>
 document.getElementById('nav-mount').innerHTML = buildNav('');
 document.getElementById('footer-mount').innerHTML = buildFooter();
@@ -957,7 +958,7 @@ const BUTT_OPTIONS = [
   // cork (plain cork or custom cork) — see the filter in the butt renderer.
   // Listed first, but deliberately never the default: see defaultButt().
   {id:"rubberized-cork-butt", name:"Rubberized Cork Butt", adder:0, photo:"../preview/butts/rubberized-cork-butt.png", corkOnly:true},
-  {id:"eva-butt", name:"EVA Butt", adder:0, photo:"../preview/butts/eva-butt.png"},
+  {id:"eva-butt", name:"Foam Butt", adder:0, photo:"../preview/butts/eva-butt.png"},
   {id:"alps-rubber", isDefault:true,      name:"ALPS Rubber Butt",           adder:0,  photo:"../preview/butts/alps-rubber-butt.png", desc:"Standard Rod Butt"},
   {id:"alps-aluminum-rubber-butt", name:"ALPS Aluminum Rubber Butt", adder:10, photo:"../preview/butts/alps-aluminum-rubber-butt.png", colors:['Gold','Blue','Gunmetal','Black','Silver']},
   {id:"alps-aluminum-butt", name:"ALPS Aluminum Butt",  adder:15, photo:"../preview/butts/alps-aluminum-butt-2.png",   colors:['Gold','Blue','Gunmetal','Black','Silver']},
@@ -2398,6 +2399,17 @@ document.getElementById('discuss-btn').addEventListener('click', () => {
     const btn = document.getElementById('order-btn');
     if (btn) btn.textContent = 'Update Cart →';
   }
+})();
+(function restoreFromSimilar() {
+  if (new URLSearchParams(window.location.search).get('edit')) return;
+  if (typeof sfswApplySimilarBuild !== 'function') return;
+  sfswApplySimilarBuild(S, {
+    BLANKS: BLANKS, SEATS: SEATS, GRIPS: GRIPS, GUIDES: GUIDES, ROD_WRAPS: ROD_WRAPS,
+    BUTT_OPTIONS: BUTT_OPTIONS, HEATSHRINK_OPTIONS: HEATSHRINK_OPTIONS, WRAP_COLORS: WRAP_COLORS,
+    GUIDE_WRAPS: typeof GUIDE_WRAPS !== 'undefined' ? GUIDE_WRAPS : null,
+    GIMBAL_OPTIONS: typeof GIMBAL_OPTIONS !== 'undefined' ? GIMBAL_OPTIONS : null,
+    SPLIT_WRAP_OPTIONS: typeof SPLIT_WRAP_OPTIONS !== 'undefined' ? SPLIT_WRAP_OPTIONS : null
+  });
 })();
 renderBlankCards();
 renderSeats();

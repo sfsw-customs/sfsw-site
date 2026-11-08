@@ -651,6 +651,7 @@
 
 <div id="footer-mount"></div>
 <script src="../js/sfsw.js"></script>
+<script src="../js/similar-build.js"></script>
 <script>
 document.getElementById('nav-mount').innerHTML = buildNav('Pier Spinning - 8\'8 - 9\'0"');
 document.getElementById('footer-mount').innerHTML = buildFooter();
@@ -2434,6 +2435,17 @@ document.getElementById('discuss-btn').addEventListener('click', () => {
     const btn = document.getElementById('order-btn');
     if (btn) btn.textContent = 'Update Cart →';
   }
+})();
+(function restoreFromSimilar() {
+  if (new URLSearchParams(window.location.search).get('edit')) return;
+  if (typeof sfswApplySimilarBuild !== 'function') return;
+  sfswApplySimilarBuild(S, {
+    BLANKS: BLANKS, SEATS: SEATS, GRIPS: GRIPS, GUIDES: GUIDES, ROD_WRAPS: ROD_WRAPS,
+    BUTT_OPTIONS: BUTT_OPTIONS, HEATSHRINK_OPTIONS: HEATSHRINK_OPTIONS, WRAP_COLORS: WRAP_COLORS,
+    GUIDE_WRAPS: typeof GUIDE_WRAPS !== 'undefined' ? GUIDE_WRAPS : null,
+    GIMBAL_OPTIONS: typeof GIMBAL_OPTIONS !== 'undefined' ? GIMBAL_OPTIONS : null,
+    SPLIT_WRAP_OPTIONS: typeof SPLIT_WRAP_OPTIONS !== 'undefined' ? SPLIT_WRAP_OPTIONS : null
+  });
 })();
 renderBlankCards();
 renderSeats();
