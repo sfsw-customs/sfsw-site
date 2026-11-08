@@ -424,7 +424,6 @@ function buildNav(activePage) {
     </a>
     <ul class="nav-links">
       <li><a href="../index.html" ${activePage==='Home'?'class="active"':''}>Home</a></li>
-      <li><a href="../pages/builds.html" ${activePage==='Builds'?'class="active"':''}>Builds</a></li>
       <li class="nav-dropdown">
         <a href="#" onclick="toggleNavDropdown(event)" class="${isStockPage?'active':''}" style="display:flex;align-items:center;gap:4px">
           Rods <span style="font-size:10px;opacity:.6">▾</span>
@@ -441,6 +440,7 @@ function buildNav(activePage) {
           ${rodLinks.map(r=>`<li><a href="${r.href}" class="${isRodPage&&r.label===activePage?'active-rod':''}">${r.label}</a></li>`).join('')}
         </ul>
       </li>
+      <li><a href="../pages/builds.html" ${activePage==='Builds'?'class="active"':''}>Builds</a></li>
       <li><a href="../pages/process.html" ${activePage==='The Process'?'class="active"':''}>The Process</a></li>
       <li><a href="../pages/contact.html" ${activePage==='Contact'?'class="active"':''}>Contact</a></li>
     </ul>
@@ -453,7 +453,6 @@ function buildNav(activePage) {
   <div id="mobile-nav" style="display:none;position:fixed;inset:0;background:rgba(10,14,18,.97);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:1.25rem;overflow-y:auto;padding:2rem">
     <button onclick="toggleMobileNav()" style="position:fixed;top:1.5rem;right:2rem;background:none;border:none;color:#e8e4dc;font-size:24px;cursor:pointer;">✕</button>
     <a href="../index.html" onclick="toggleMobileNav()" style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#e8e4dc;text-decoration:none">Home</a>
-    <a href="../pages/builds.html" onclick="toggleMobileNav()" style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#e8e4dc;text-decoration:none">Builds</a>
     <button onclick="toggleMobileDropdown(event,'mobile-stock-list','mobile-stock-chevron')" id="mobile-stock-toggle" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#c9941a;padding:4px 0">
       Rods <span id="mobile-stock-chevron" style="font-size:14px;transition:transform .2s">▾</span>
     </button>
@@ -466,6 +465,7 @@ function buildNav(activePage) {
     <div id="mobile-rods-list" style="display:none;flex-direction:column;align-items:center;gap:1.25rem">
       ${rodLinks.map(r=>`<a href="${r.href}" onclick="toggleMobileNav()" style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#e8e4dc;text-decoration:none">${r.label}</a>`).join('')}
     </div>
+    <a href="../pages/builds.html" onclick="toggleMobileNav()" style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#e8e4dc;text-decoration:none">Builds</a>
     <div style="border-top:1px solid rgba(255,255,255,.08);width:80%;margin:.5rem 0"></div>
     <a href="../pages/process.html" onclick="toggleMobileNav()" style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#e8e4dc;text-decoration:none">The Process</a>
     <a href="../pages/contact.html" onclick="toggleMobileNav()" style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#e8e4dc;text-decoration:none">Contact</a>
