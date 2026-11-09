@@ -996,6 +996,18 @@ window.addEventListener('message',e=>{ if(e.data && e.data.wdHeight) $('crossFra
   const crossState=()=>new Promise((res,rej)=>{ const id=Date.now()+''; const f=document.getElementById('crossFrame');
     const on=e=>{ if(e.data&&e.data.wlState&&e.data.id===id){ removeEventListener('message',on); res(e.data.wlState); } };
     addEventListener('message',on); f.contentWindow.postMessage({wlGet:id},'*'); setTimeout(()=>rej(new Error('timeout')),3000); });
+  // "Repeat colors to fill the pattern" uses up the open space, so the pattern between
+  // can't show while it's on. Make the two options take turns instead of leaving
+  // pattern-between controls on screen that do nothing.
+  (function(){
+    // (delegated: these checkboxes get re-created when the controls redraw)
+    const flip=(id,v)=>{ const el=document.getElementById(id); if(el && el.checked!==v){ el.checked=v; el.dispatchEvent(new Event('change',{bubbles:true})); } };
+    document.addEventListener('change',e=>{
+      const t=e.target; if(!t||!t.checked) return;
+      if(t.id==='fill') flip('innerOn',false);
+      else if(t.id==='innerOn') flip('fill',false);
+    });
+  })();
   window.sfswDesignState=async()=>document.body.classList.contains('cross') ? await crossState() : taperState();
   document.getElementById('useBtn').addEventListener('click',async()=>{
     const btn=document.getElementById('useBtn'), msg=document.getElementById('useMsg'); btn.disabled=true; msg.textContent='';
