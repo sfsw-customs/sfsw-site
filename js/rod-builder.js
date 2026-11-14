@@ -471,6 +471,11 @@
       if (S.customDesign && optList) [].forEach.call(optList.querySelectorAll('.option-item'), function (o) { o.classList.toggle('selected', (o.getAttribute('onclick') || '').indexOf("'" + S.wrapId + "'") > 0); });
       return r; };
   }
+  // the photos at the top of Rod Wrap are always the real photos of the wrap picked; the customer's own design shows on the 3D rod and in the designer
+  var _preview = window.renderWrapPreview;
+  if (dz && typeof _preview === 'function') window.renderWrapPreview = function () {
+    var d = S.customDesign; S.customDesign = null;
+    try { return _preview.apply(this, arguments); } finally { S.customDesign = d; } };
   var dzNow = dzBox && dzBox.querySelector('.rb-dz-now');
   // the page's own swatches: every metallic is +$5
   function metLabels() { [].forEach.call(document.querySelectorAll('.wrap-color-section-label'), function (l) {
@@ -492,6 +497,7 @@
       [].forEach.call(document.querySelectorAll('#summary .summary-line'), function (l) { var a = l.querySelector('.sl-label'), v = l.querySelector('.sl-val');
         if (a && v && a.textContent === 'Colors') v.textContent = names.join(' / ') + (fee ? '  +$' + fee : ''); });
       var cc = $('chosen-wrap-color'); if (cc) cc.textContent = names.join(' / ');
+      var cw = $('chosen-rod-wrap'), wn = wrapById(S.wrapId); if (cw && wn) cw.textContent = wn.name;
     }
   }
   function designOn() { return !S.performanceOnly && presetOf(S.wrapId) && S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign : null; }
