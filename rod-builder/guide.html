@@ -1250,7 +1250,7 @@ if(!WL_PAID){
   addEventListener('scroll',update,{passive:true}); addEventListener('resize',()=>{ if(on) unpin(); update(); });
 });
 </script>
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.js","three/addons/":"./vendor/three/addons/"}}</script>
 <script type="module">
 // 3D views: the guide and its wrap on the blank, drawn with the same models as the Rod Builder, seen level from the side
 import * as THREE from 'three';
