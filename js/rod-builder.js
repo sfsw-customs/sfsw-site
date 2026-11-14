@@ -28,8 +28,11 @@
   var css = [
     '.rb-page,.rb-page body{overflow-x:clip!important;overflow-y:visible!important}',   // overflow-x:hidden on the page stops the 3D rod staying at the top
     '.rb-on .build-strip{display:none!important}',
-    '.rb-on.configurator-layout{grid-template-areas:"steps sidebar"}',
-    '@media (max-width:900px){.rb-on.configurator-layout{grid-template-areas:"steps" "sidebar"}}',
+    '.rb-on.configurator-layout{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"steps"!important}',   // the 3D rod and the picks take the full width
+    '.rb-build .config-sidebar{position:static;width:auto;max-width:640px;margin:0 auto;grid-area:auto}',
+    '.rb-stage{height:clamp(240px,42vh,440px)}',
+    '.rb-tab .rb-tot{color:var(--c-gold-light);font-weight:600;margin-left:2px}',
+    '.rb-step-last .rb-nav{max-width:640px;margin-left:auto;margin-right:auto}',
     '.rb-top{position:sticky;top:var(--rb-top,64px);z-index:40;background:var(--c-dark);padding-bottom:10px;margin-bottom:4px}',
     '.rb-stage{position:relative;height:clamp(230px,36vh,340px);border:1px solid var(--c-border);border-radius:var(--radius-md);overflow:hidden;background:radial-gradient(120% 90% at 50% 35%,#2a3a4c,#0a0e12)}',
     '.rb-stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}',
@@ -126,7 +129,10 @@
     { title: 'Wrap', sub: 'Pick one of our wraps, then make it yours in the Wrap Designer: thread colors, counts and angle. Split grips can add a wrap between the rear grips.', view: 'wrap',
       parts: [perfBox, secOf('sec-wrap-color'), secOf('sec-rod-wraps'), secOf('sec-split-wrap'), accCard('acc-decal-count', 'Decals', 'decals')] },
     { title: 'Guide <em>Wraps</em>', tab: 'Guide Wraps', sub: 'How each guide is wrapped onto the blank.', view: 'guides',
-      parts: [gwPerf, secOf('sec-guide-wraps')] }
+      parts: [gwPerf, secOf('sec-guide-wraps')] },
+    // the last step: everything picked, the total, Add to Cart
+    { title: 'Your <em>Build</em>', tab: 'Your Build', sub: 'Everything you picked, with the total. Tap a step above to change anything.', view: 'all', last: true,
+      parts: [(function () { var sb = document.querySelector('.config-sidebar'); if (!sb) return null; var w = el('div', 'rb-build'); w.appendChild(sb); return w; })()] }
   ];
   STEPS.forEach(function (s) { s.parts = s.parts.filter(Boolean); });
   STEPS = STEPS.filter(function (s) { return s.parts.length; });
@@ -171,8 +177,9 @@
     s.parts.forEach(function (x) { p.appendChild(x); });
     var nav = el('div', 'rb-nav'), next = STEPS[i + 1];
     if (i) { var b = el('button', 'btn btn-outline rb-back', '← Back'); b.type = 'button'; b.onclick = function () { go(i - 1, true); }; nav.appendChild(b); }
-    var n = el('button', 'btn btn-primary rb-next', next ? 'Next: ' + (next.tab || next.title) + ' →' : 'Review Your Build →'); n.type = 'button';
-    n.onclick = function () { next ? go(i + 1, true) : review(); }; nav.appendChild(n);
+    if (next) { var n = el('button', 'btn btn-primary rb-next', 'Next: ' + (next.tab || next.title) + ' →'); n.type = 'button';
+      n.onclick = function () { go(i + 1, true); }; nav.appendChild(n); }
+    if (s.last) p.classList.add('rb-step-last');
     p.appendChild(nav); panels.appendChild(p); s.panel = p;
   });
   col.insertBefore(panels, col.firstChild); col.insertBefore(top, panels);
@@ -335,6 +342,8 @@
       gwPerf.style.display = S.performanceOnly ? 'block' : 'none';
       if (splitChosen && !S.splitWrapId) splitChosen.textContent = 'Optional · tap to add';
       designerAfterUpdate();
+      var LS = STEPS[STEPS.length - 1], pd = $('price-display');   // the running total sits on the Your Build tab
+      if (LS && LS.last && pd) LS.tabEl.querySelector('.rb-t').innerHTML = 'Your Build <span class="rb-tot">' + pd.textContent.trim() + '</span>';
     } catch (e) {}
     sync(); return r;
   };
