@@ -59,6 +59,7 @@
     '.rb-nav .btn{justify-content:center;font-size:14px;padding:13px 16px}',
     '.rb-nav .rb-back{flex:0 0 auto}.rb-nav .rb-next{flex:1 1 auto}',
     '.rb-perf-note{display:none;background:var(--c-dark2);border:1px solid var(--c-border);border-radius:var(--radius-md);padding:14px 16px;font-size:13px;color:var(--c-muted);margin-bottom:10px}',
+    '.rb-no3d{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;font-size:14px;line-height:1.5;color:var(--c-muted)}.rb-no3d b{color:var(--c-text);font-weight:600}',
     '.rb-flash{animation:rbflash 1.2s ease}',
     '.rb-on #rod-wrap-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}',
     '.rb-on #rod-wrap-options .design-tile{display:none!important}',
@@ -191,8 +192,13 @@
   var poll = setInterval(function () {
     try { var w = frame.contentWindow; if (w && w.SFSW_rod) { rod = w.SFSW_rod; clearInterval(poll); clearTimeout(giveUp); lastSent = ''; sync(); var v = lastView; lastView = null; rod.ready.then(function () { setTimeout(function () { view(v || STEPS[cur].view); }, 300); }); } } catch (e) {}
   }, 200);
-  // no 3D on this device (very old browser, WebGL off): fall back to the photo strip the page already has
-  var giveUp = setTimeout(function () { if (rod) return; clearInterval(poll); stage.remove(); showBtn.remove(); approx.remove(); layout.classList.remove('rb-on'); col.insertBefore(document.querySelector('.build-strip') || el('div'), col.firstChild); }, 30000);
+  // no 3D on this device (WebGL off, or Chrome blocked it after a graphics reset): say so in the 3D box; the steps still work
+  function no3D() { if (rod) return; clearInterval(poll); clearTimeout(giveUp); frame.remove();
+    var m = el('div', 'rb-no3d', '<b>The 3D preview can\u2019t start in this browser right now.</b><br>Quit and reopen your browser, then reload this page. Your picks still work below.');
+    stage.appendChild(m); }
+  var giveUp = setTimeout(no3D, 30000);
+  (function () { try { var c = document.createElement('canvas'); if (!(c.getContext('webgl2') || c.getContext('webgl'))) setTimeout(no3D, 0); } catch (e) { setTimeout(no3D, 0); } })();
+  frame.addEventListener('load', function () { try { frame.contentWindow.addEventListener('error', function (e) { if (/WebGL/i.test(String(e.message))) no3D(); }); } catch (e) {} });
 
   // the camera follows what is being picked
   panels.addEventListener('click', function (e) {
