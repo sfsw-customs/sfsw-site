@@ -194,7 +194,7 @@
   }, 200);
   // no 3D on this device (WebGL off, or Chrome blocked it after a graphics reset): say so in the 3D box; the steps still work
   function no3D() { if (rod) return; clearInterval(poll); clearTimeout(giveUp); frame.remove();
-    var m = el('div', 'rb-no3d', '<b>The 3D preview can\u2019t start in this browser right now.</b><br>Quit and reopen your browser, then reload this page. Your picks still work below.');
+    var m = el('div', 'rb-no3d', '<div><b>The 3D preview can\u2019t start in this browser right now.</b><br>Quit and reopen your browser, then reload this page. Your picks still work below.</div>');
     stage.appendChild(m); }
   var giveUp = setTimeout(no3D, 30000);
   (function () { try { var c = document.createElement('canvas'); if (!(c.getContext('webgl2') || c.getContext('webgl'))) setTimeout(no3D, 0); } catch (e) { setTimeout(no3D, 0); } })();
