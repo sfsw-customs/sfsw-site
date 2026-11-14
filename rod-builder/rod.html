@@ -1929,7 +1929,10 @@ const sfswBoot = (async () => {
   async function pump() { if (busy) return; busy = true; try { while (want) { const p = want; want = null; try { await apply(p); } catch (e) { console.error(e); } } } finally { busy = false; } }
   // the size the wrap above the fore grip was fitted to on this blank, for the page's Wrap Designer
   const fit = async () => { await sfswBoot; const w = await taperReady('main'); const c = firstFit.main || w.wlCapture(); return { unit: c.unit, len: c.len, dB: c.dB, dM: c.dM, dT: c.dT }; };
-  window.SFSW_rod = { set(p) { want = p; return pump(); }, fit, mem: () => JSON.parse(JSON.stringify(renderer.info.memory)), view(v, now) { try { goView(v, now); } catch (e) {} }, state: () => clone(st), ready: sfswBoot };
+  // custom grips: the page's ring designer paints its strips with the rod's own cork and EVA textures
+  const ringKit = async () => { loadRingTex(); for (let i = 0; i < 300 && !(corkReady && evaRingReady); i++) await wait(100); return corkReady && evaRingReady; };
+  const paintRings = (cv, rings, ppi) => { const len = rings.reduce((a, r) => a + r.t, 0) || 1; stripPaint(cv, rings, len, ppi); };
+  window.SFSW_rod = { set(p) { want = p; return pump(); }, fit, ringKit, paintRings, mem: () => JSON.parse(JSON.stringify(renderer.info.memory)), view(v, now) { try { goView(v, now); } catch (e) {} }, state: () => clone(st), ready: sfswBoot };
   try { parent.postMessage({ sfswRod: 'ready' }, location.origin); } catch (e) {}
 }
 

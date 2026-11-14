@@ -73,6 +73,27 @@
     '.rb-dz-note{font-size:12.5px;color:var(--c-muted);margin:4px 0 10px;line-height:1.45}',
     '.rb-dz iframe{display:block;width:100%;min-height:900px;border:0;background:#0a0e12}',
     '.rb-dz-load{font-size:13px;color:var(--c-muted);padding:20px 0}',
+    '.rb-rg{margin:6px 0 10px;padding:12px 14px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius);display:grid;gap:8px}',
+    '.rb-rg-lbl{font-size:12.5px;color:var(--c-muted)}.rb-rg-lbl b{color:var(--c-text);font-weight:600}',
+    '.rb-rg-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--c-muted)}',
+    '.rb-seg{display:inline-flex;flex-wrap:wrap;gap:0;border:1px solid var(--c-border2);border-radius:8px;overflow:hidden;width:max-content;max-width:100%}',
+    '.rb-seg button{background:var(--c-dark2);color:var(--c-muted);border:0;border-right:1px solid var(--c-border);padding:7px 12px;font:600 12px var(--font-cond);letter-spacing:.08em;text-transform:uppercase;cursor:pointer}',
+    '.rb-seg button:last-child{border-right:0}.rb-seg button[aria-pressed="true"]{background:var(--c-gold);color:#0a0e12}',
+    '.rb-seg.rb-big button{padding:9px 16px}',
+    '.rb-chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px;max-height:236px;overflow:auto;padding-right:2px}',
+    '.rb-chips button{display:grid;gap:4px;justify-items:center;padding:6px 4px;background:var(--c-dark2);border:1px solid var(--c-border);border-radius:8px;color:var(--c-text);font-size:11px;line-height:1.2;cursor:pointer}',
+    '.rb-chips button img{width:100%;height:34px;object-fit:cover;border-radius:4px;display:block}',
+    '.rb-chips button[aria-pressed="true"]{border-color:var(--c-gold);box-shadow:0 0 0 1px var(--c-gold)}',
+    '.rb-strip{overflow-x:auto;padding:2px 0}',
+    '.rb-rings{position:relative;display:flex;height:52px;border-radius:6px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.45)}',
+    '.rb-rings canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}',
+    '.rb-rings button{position:relative;height:100%;border:0;padding:0;background:transparent center/cover;cursor:pointer;flex:0 0 auto}',
+    '.rb-rings button:hover{box-shadow:inset 0 0 0 2px var(--c-gold)}',
+    '.rb-rings.flat button{border-right:1px solid rgba(0,0,0,.35)}',
+    '.rb-mini{background:var(--c-dark2);border:1px solid var(--c-border2);color:var(--c-text);border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer}',
+    '.rb-rg-prev{display:grid;gap:10px;padding:18px 10px;justify-items:center}',
+    '.rb-rg-prow{display:grid;gap:4px;justify-items:center}.rb-rg-plbl{font:600 11px var(--font-cond);letter-spacing:.14em;text-transform:uppercase;color:var(--c-gold)}',
+    '.rb-rg-prev .rb-rings button{pointer-events:none}',
     '@keyframes rbflash{0%,60%{box-shadow:0 0 0 2px var(--c-gold)}100%{box-shadow:0 0 0 2px transparent}}'
   ].join('\n');
   document.head.appendChild(el('style', null, css));
@@ -254,7 +275,12 @@
     if (S.heatShrinkId && SHRINK_AS[S.heatShrinkId]) { if (p.mat === 'eva') p.shrink = SHRINK_AS[S.heatShrinkId]; }
     // custom cork: the pieces picked on the page, ring by ring
     p.cork = null;
-    if (call('isCustomCorkGrip') && S.customCork) {
+    var RGs = rgOn() ? rgState() : null;
+    if (RGs) {
+      p.cork = JSON.parse(JSON.stringify(RGs.g));
+      if (p.style === 'split') { if (rgLen(p.cork.butt)) p.gButt = clamp(rgLen(p.cork.butt), 1, 20); if (rgLen(p.cork.rear)) p.gRear = clamp(rgLen(p.cork.rear), 1, 12); }
+      if (rgLen(p.cork.fore)) p.gFore = clamp(rgLen(p.cork.fore), 1, 12);
+    } else if (call('isCustomCorkGrip') && S.customCork) {
       var bot = rings(S.customCork.bottom), mid = rings(S.customCork.middle), tp = rings(S.customCork.top);
       if (p.style === 'split') {
         p.cork = { butt: bot, rear: mid.length ? mid : bot.slice(-1), fore: tp };
@@ -518,6 +544,130 @@
   if (dz) setTimeout(function () {
     if (S.customDesign && S.customDesign.setup && S.customDesign.sfsw) toDesigner(S.wrapId, S.customDesign); else toDesigner(S.wrapId); }, 0);
 
+
+  // ───────────────────────── Custom grips: ring by ring ─────────────────────────
+  // Custom cork and custom EVA are designed like the WrapLab Rod Builder: pick a grip piece, pick a cork or EVA ring,
+  // pick the ring size, then tap rings on the strip. The 3D rod shows every ring. The grip's price is the page's own.
+  var RG_KIND = { 'ccork-custom-split': 'cork', 'ccork-custom-full': 'cork', 'eva-custom': 'eva' };
+  var RGB = BASE + 'rod-parts/', rgList = { cork: [], eva: [] }, rgReal = false, rgEl = null, rgUi = { piece: null, m: null, t: 0.5, tab: null };
+  fetch(BASE + 'rings.json').then(function (r) { return r.json(); }).then(function (d) { rgList = d; rgRender(); }).catch(function () {});
+  var rgOn = function () { return !!RG_KIND[S.gripId]; };
+  var rgIsEva = function (id) { return id.indexOf('eva:') === 0; };
+  var rgName = function (id) { var e = rgIsEva(id), l = e ? rgList.eva : rgList.cork, k = e ? id.slice(4) : id, f = l.find(function (x) { return x[0] === k; }); return (e ? 'EVA ' : '') + (f ? f[1] : k); };
+  var rgChip = function (id) { return rgIsEva(id) ? RGB + 'eva/' + id.slice(4) + '.webp' : RGB + 'cork/' + id + '-chip.webp'; };
+  var rgKeys = function () { var g = call('getGrip') || {}; return g.style === 'full' ? [['full', 'Rear grip'], ['fore', 'Fore grip']] : [['butt', 'Butt piece'], ['rear', 'Rear piece'], ['fore', 'Fore grip']]; };
+  var rgLen = function (r) { return (r || []).reduce(function (a, x) { return a + x.t; }, 0); };
+  function rgFill(len, m) { var out = [], n = len; while (n > 1e-6) { var t = n >= 0.5 ? 0.5 : 0.25; out.push({ m: m, t: t }); n -= t; } return out; }
+  // the rings live in S, so they go into the cart and come back with Edit
+  function rgState() {
+    if (!rgOn()) return null;
+    var kind = RG_KIND[S.gripId], H = CFG.handle || {};
+    if (!S.gripRings || S.gripRings.grip !== S.gripId) {
+      var m0 = kind === 'eva' ? 'eva:black' : 'burl', len = { butt: H.gButt || 2.5, rear: H.gRear || 2.5, fore: H.gFore || 2.5, full: 6 };
+      S.gripRings = { grip: S.gripId, g: {} };
+      rgKeys().forEach(function (k) { S.gripRings.g[k[0]] = rgFill(len[k[0]], m0); });
+      rgUi = { piece: null, m: m0, t: 0.5, tab: kind };
+    }
+    if (!rgUi.m) { rgUi.m = kind === 'eva' ? 'eva:black' : 'burl'; rgUi.tab = kind; }
+    if (!rgKeys().some(function (k) { return k[0] === rgUi.piece; })) rgUi.piece = rgKeys()[0][0];
+    return S.gripRings;
+  }
+  function rgBuild() {
+    rgEl = el('div', 'rb-rg');
+    rgEl.innerHTML = '<div class="rb-rg-lbl">Grip to design</div><div class="rb-seg rb-big" data-k="piece"></div>' +
+      '<div class="rb-rg-lbl"><span class="rb-rg-kind"></span>: <b class="rb-rg-name"></b></div><div class="rb-seg" data-k="tab"><button type="button" data-v="cork">Cork</button><button type="button" data-v="eva">EVA</button></div>' +
+      '<div class="rb-chips"></div>' +
+      '<div class="rb-rg-row">Ring size <div class="rb-seg" data-k="size"><button type="button" data-v="0.25">0.25 in</button><button type="button" data-v="0.5">0.5 in</button></div></div>' +
+      '<div class="rb-rg-lbl"><b class="rb-rg-now"></b> · tap a ring to give it this material and size</div><div class="rb-strip"></div>' +
+      '<div class="rb-rg-row"><button type="button" class="rb-mini" data-a="fill">Fill this grip</button><button type="button" class="rb-mini" data-a="add">Add ring</button><button type="button" class="rb-mini" data-a="del">Remove last ring</button><span class="rb-rg-len"></span></div>';
+    rgEl.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var b = e.target.closest('button'); if (!b) return;
+      var seg = b.closest('.rb-seg'), G = rgState(); if (!G) return;
+      var cur = function () { return (G.g[rgUi.piece] || []).map(function (r) { return { m: r.m, t: r.t }; }); };
+      var set = function (r) { G.g[rgUi.piece] = r; changed(); };
+      if (seg) { var k = seg.dataset.k, v = b.dataset.v;
+        if (k === 'piece') rgUi.piece = v; else if (k === 'tab') rgUi.tab = v; else if (k === 'size') rgUi.t = +v;
+        return rgRender(); }
+      if (b.dataset.m) { rgUi.m = b.dataset.m; return rgRender(); }
+      if (b.dataset.i != null) {   // painting a ring keeps the grip's length, like WrapLab
+        var r = cur(), i = +b.dataset.i, old = r[i], t = rgUi.t;
+        if (t < old.t) r.splice(i, 1, { m: rgUi.m, t: t }, { m: old.m, t: old.t - t });
+        else if (t > old.t && r[i + 1]) { r[i] = { m: rgUi.m, t: t }; var nx = r[i + 1]; if (nx.t > t - old.t) nx.t -= t - old.t; else r.splice(i + 1, 1); }
+        else r[i] = { m: rgUi.m, t: old.t };
+        return set(r); }
+      var a = b.dataset.a;
+      if (a === 'fill') set(cur().map(function (x) { return { m: rgUi.m, t: x.t }; }));
+      if (a === 'add') { var r2 = cur(); if (rgLen(r2) + rgUi.t <= 20) { r2.push({ m: rgUi.m, t: rgUi.t }); set(r2); } }
+      if (a === 'del') { var r3 = cur(); if (r3.length > 1) { r3.pop(); set(r3); } }
+    });
+    function changed() { rgRender(); call('renderGripPreview'); updateAll(); }
+  }
+  function rgPaint(host, rings, maxW, h) {   // a strip of rings, lit like a round grip (the rod's own textures when 3D is up)
+    var len = rgLen(rings) || 1, ppi = Math.max(18, Math.min(160, (maxW - 2) / len));
+    var wrap = el('div', 'rb-rings' + (rgReal ? '' : ' flat')); wrap.style.width = Math.round(len * ppi) + 'px'; if (h) wrap.style.height = h + 'px';
+    if (rgReal && rod && rod.paintRings) { var cv = document.createElement('canvas'); wrap.appendChild(cv); try { rod.paintRings(cv, rings, ppi); } catch (e) {} }
+    rings.forEach(function (r, i) { var b = el('button', null, ''); b.type = 'button'; b.dataset.i = i; b.title = rgName(r.m) + ', ' + r.t + ' in';
+      b.style.width = (r.t * ppi) + 'px'; if (!rgReal) b.style.backgroundImage = 'url("' + rgChip(r.m) + '")'; wrap.appendChild(b); });
+    host.appendChild(wrap);
+  }
+  function rgRender() {
+    if (!rgEl || !rgOn()) return; var G = rgState(); if (!G) return;
+    var seg = function (k) { return rgEl.querySelector('.rb-seg[data-k="' + k + '"]'); };
+    seg('piece').innerHTML = rgKeys().map(function (k) { return '<button type="button" data-v="' + k[0] + '" aria-pressed="' + (k[0] === rgUi.piece) + '">' + k[1] + '</button>'; }).join('');
+    [].forEach.call(seg('tab').children, function (b) { b.setAttribute('aria-pressed', b.dataset.v === rgUi.tab); });
+    [].forEach.call(seg('size').children, function (b) { b.setAttribute('aria-pressed', +b.dataset.v === rgUi.t); });
+    rgEl.querySelector('.rb-rg-kind').textContent = rgIsEva(rgUi.m) ? 'EVA' : 'Cork';
+    rgEl.querySelector('.rb-rg-name').textContent = rgIsEva(rgUi.m) ? rgName(rgUi.m).slice(4) : rgName(rgUi.m);
+    var list = rgUi.tab === 'eva' ? rgList.eva.map(function (x) { return 'eva:' + x[0]; }) : rgList.cork.map(function (x) { return x[0]; });
+    rgEl.querySelector('.rb-chips').innerHTML = list.map(function (id) { return '<button type="button" data-m="' + id + '" aria-pressed="' + (id === rgUi.m) + '"><img src="' + rgChip(id) + '" alt="" loading="lazy"><span>' + (rgIsEva(id) ? rgName(id).slice(4) : rgName(id)) + '</span></button>'; }).join('');
+    var rings = G.g[rgUi.piece] || [], strip = rgEl.querySelector('.rb-strip'); strip.innerHTML = '';
+    rgPaint(strip, rings, strip.clientWidth || 600);
+    var name = (rgKeys().find(function (k) { return k[0] === rgUi.piece; }) || ['', 'Grip'])[1];
+    rgEl.querySelector('.rb-rg-now').textContent = name + ' · ' + rgLen(rings).toFixed(2) + ' in';
+    rgEl.querySelector('.rb-rg-len').textContent = rings.length + ' rings · ' + rgLen(rings).toFixed(2) + ' in';
+  }
+  function rgSummary() {
+    var G = rgState(); if (!G) return '';
+    return rgKeys().map(function (k) { var n = {}, rs = G.g[k[0]] || [];
+      rs.forEach(function (r) { var key = rgName(r.m) + ' ' + r.t + '"'; n[key] = (n[key] || 0) + 1; });
+      return k[1] + ' ' + rgLen(rs).toFixed(2) + ' in: ' + Object.keys(n).map(function (x) { return n[x] + ' × ' + x; }).join(', '); }).join(' | ');
+  }
+  // the ring designer takes the place of the page's "pick up to 3 cork designs" grid and EVA color list
+  window.corkSelectionHtml = function () { return '<div class="rb-rg-slot"></div>'; };
+  var _rgGrips = window.renderGrips;
+  if (typeof _rgGrips === 'function') window.renderGrips = function () {
+    var r = _rgGrips.apply(this, arguments);
+    var sel = document.querySelector('select[onchange*="pickEvaColor"]');
+    if (sel) { var box = sel.closest('div'); var slot = el('div', 'rb-rg-slot'); box.replaceWith(slot); }
+    var slot2 = document.querySelector('.rb-rg-slot');
+    if (slot2 && rgOn()) { if (!rgEl) rgBuild(); slot2.appendChild(rgEl); rgRender(); }
+    return r;
+  };
+  // the photo at the top of Grips: the customer's rings, piece by piece
+  var _rgPrev = window.renderGripPreview;
+  if (typeof _rgPrev === 'function') window.renderGripPreview = function () {
+    var r = _rgPrev.apply(this, arguments);
+    var photo = $('grip-photo'), strip = $('grip-photo-cork-strip'), G = rgState();
+    if (G && photo && strip) {
+      photo.style.display = 'none'; strip.style.display = ''; strip.innerHTML = '';
+      var box = el('div', 'rb-rg-prev');
+      rgKeys().forEach(function (k) { var row = el('div', 'rb-rg-prow'); row.appendChild(el('div', 'rb-rg-plbl', k[1] + ' · ' + rgLen(G.g[k[0]]).toFixed(2) + ' in'));
+        rgPaint(row, G.g[k[0]] || [], Math.min(560, (strip.clientWidth || 600) - 20), 46); box.appendChild(row); });
+      strip.appendChild(box);
+      var ds = $('grip-meta-desc'); if (ds) ds.textContent = 'Design each grip ring by ring below: pick cork or EVA rings and tap them onto the strip. If you have a photo of something you like, please contact us.';
+    }
+    return r;
+  };
+  var _rgOrder = window.buildOrderItem;
+  if (typeof _rgOrder === 'function') window.buildOrderItem = function () {
+    var it = _rgOrder.apply(this, arguments);
+    if (rgOn()) { var sm = rgSummary(); (it.lines || []).forEach(function (l) { if (l.label === 'Grip') l.value = l.value + ' — Rings: ' + sm; }); it.gripRings = JSON.parse(JSON.stringify(S.gripRings)); }
+    return it;
+  };
+  // once the rod's textures are in, the strips look like the real rings
+  (function waitKit() { if (!rod || !rod.ringKit) return setTimeout(waitKit, 500);
+    rod.ringKit().then(function (ok) { rgReal = !!ok; if (rgOn()) { rgRender(); call('renderGripPreview'); } }); })();
 
   go(0, false);
   window.updateAll();
