@@ -624,6 +624,9 @@
     if (!rgEl || !rgOn()) return; var G = rgState(); if (!G) return;
     var seg = function (k) { return rgEl.querySelector('.rb-seg[data-k="' + k + '"]'); };
     seg('piece').innerHTML = rgKeys().map(function (k) { return '<button type="button" data-v="' + k[0] + '" aria-pressed="' + (k[0] === rgUi.piece) + '">' + k[1] + '</button>'; }).join('');
+    var evaOnly = RG_KIND[S.gripId] === 'eva';   // custom EVA grips are EVA rings only; custom cork grips can mix in EVA
+    if (evaOnly) { rgUi.tab = 'eva'; if (!rgIsEva(rgUi.m)) rgUi.m = 'eva:black'; }
+    seg('tab').style.display = evaOnly ? 'none' : '';
     [].forEach.call(seg('tab').children, function (b) { b.setAttribute('aria-pressed', b.dataset.v === rgUi.tab); });
     [].forEach.call(seg('size').children, function (b) { b.setAttribute('aria-pressed', +b.dataset.v === rgUi.t); });
     rgEl.querySelector('.rb-rg-kind').textContent = rgIsEva(rgUi.m) ? 'EVA' : 'Cork';
