@@ -1,0 +1,1938 @@
+<!doctype html>
+<html lang="en" data-theme="dark" class="insite">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Rod Builder | South Florida Saltwater</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: the rod on a lit bench fills the left (pinned on top on phones); the parts, in build order, scroll on the right.
+   The wrap designers open over the parts column, so the rod stays in view while you design. */
+:root{
+  --bg:#eef1f4; --panel:#ffffff; --line:#d3d9e1; --fg:#16202b; --muted:#5a6676;
+  --ink:#1d2b3a; --accent:#b3262c; --accent-soft:rgba(179,38,44,.08);
+  --stage-a:#f7f9fb; --stage-b:#d9dfe6; --chip:#f3f5f8; --warn:#9a5b00;
+  --display:"Barlow Condensed","Arial Narrow","Helvetica Neue",sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --side:430px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#12161c; --panel:#1a2029; --line:#2d3644; --fg:#e6eaf0; --muted:#97a2b2;
+  --ink:#3b4c62; --accent:#e5585e; --accent-soft:rgba(229,88,94,.12);
+  --stage-a:#26303c; --stage-b:#10141a; --chip:#222a35; --warn:#e0a24a; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#12161c; --panel:#1a2029; --line:#2d3644; --fg:#e6eaf0; --muted:#97a2b2;
+  --ink:#3b4c62; --accent:#e5585e; --accent-soft:rgba(229,88,94,.12);
+  --stage-a:#26303c; --stage-b:#10141a; --chip:#222a35; --warn:#e0a24a; color-scheme:dark }
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--body)}
+*{box-sizing:border-box}
+.app{display:grid;grid-template-columns:minmax(0,1fr) var(--side);height:100%}
+.stage{position:relative;background:radial-gradient(120% 90% at 50% 35%,var(--stage-a),var(--stage-b));min-height:0;overflow:hidden}
+#cv{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+#cv:active{cursor:grabbing}
+.brand{position:absolute;top:14px;left:max(16px,env(safe-area-inset-left,0px));display:flex;align-items:baseline;gap:10px;pointer-events:none}
+.brand b{font:700 26px/1 var(--display);letter-spacing:.02em;text-transform:uppercase}
+.brand b i{color:var(--accent)}
+.insite .brand{display:none}
+/* Grip Designer: just the grips, reel seat and butt cap */
+.gripmode #s-type,.gripmode #s-blank,.gripmode #s-wrap,.gripmode #s-guides,.gripmode #s-gwrap,.gripmode #views [data-v="wrap"],.gripmode #views [data-v="guides"],.gripmode #views [data-v="tip"],.gripmode .sec:has(#parts){display:none!important}   /* inside the site page the menu bar already says WrapLab */
+.brand span{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tools{position:absolute;top:12px;right:max(12px,env(safe-area-inset-right,0px));display:flex;gap:6px}
+.chipbtn{font:600 13px var(--body);border:1px solid var(--line);background:var(--panel);color:var(--muted);padding:7px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.chipbtn[aria-pressed="true"]{color:var(--accent);border-color:var(--accent)}
+.dock{position:absolute;left:0;right:0;bottom:12px;display:grid;justify-items:center;gap:8px;padding-inline:max(12px,env(safe-area-inset-left,0px)) max(12px,env(safe-area-inset-right,0px))}
+.views{display:flex;gap:4px;padding:4px;border-radius:999px;background:color-mix(in srgb,var(--panel) 90%,transparent);border:1px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,.12);max-width:100%;overflow-x:auto;scrollbar-width:none}
+.views button{font:600 13px var(--body);border:0;background:none;color:var(--muted);padding:7px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.views button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.slide{display:flex;align-items:center;gap:10px;width:min(560px,100%);font:500 12px var(--body);color:var(--muted);background:color-mix(in srgb,var(--panel) 90%,transparent);border:1px solid var(--line);border-radius:999px;padding:5px 14px}
+.slide input{flex:1;accent-color:var(--accent)}
+.hint{font:12px var(--body);color:var(--muted)}
+.side{overflow-y:auto;border-left:1px solid var(--line);background:var(--bg);padding-block:18px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font:700 30px/1 var(--display);text-transform:uppercase;margin:0 0 4px;text-wrap:balance}
+h1 i{color:var(--accent)}
+.lede{color:var(--muted);margin:0 0 14px;font-size:14px}
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;display:grid;gap:12px}
+.sec h2{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0;font:700 19px/1 var(--display);text-transform:uppercase;letter-spacing:.03em}
+.sec h2 small{font:500 12px var(--mono);text-transform:none;letter-spacing:0;color:var(--muted);text-align:right}
+.sec h2 em{font:500 11px var(--mono);font-style:normal;color:var(--accent);margin-right:6px}
+.lbl{display:grid;gap:6px;font-size:13px;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:end}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--chip)}
+.seg button{font:600 13px var(--body);border:0;background:none;color:var(--fg);padding:7px 12px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.seg.big{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);width:100%}
+.seg.big button{padding:9px 6px;font-size:14px;text-align:center}
+.sw{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.sw button,.sw label{width:28px;height:28px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0;background-size:cover;background-position:center;position:relative}
+.sw button[aria-pressed="true"],.sw label.on{box-shadow:0 0 0 2px var(--accent)}
+.sw label{background:conic-gradient(#e33,#ee3,#3e3,#3ee,#33e,#e3e,#e33)}
+.sw .swi{display:flex;flex-direction:column;align-items:center;gap:3px;width:50px}
+.sw .swi small{font:500 10px/1.15 var(--body);color:var(--muted);text-align:center;overflow-wrap:anywhere}
+.sw .swi button[aria-pressed="true"]+small{color:var(--fg);font-weight:700}
+.sw{align-items:flex-start}
+.sw label input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.card{display:grid;gap:2px;text-align:left;border:1px solid var(--line);border-radius:8px;background:var(--chip);padding:8px;cursor:pointer;color:var(--fg);font:inherit}
+.card[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.card .ph{height:38px;display:flex;align-items:center;justify-content:center}
+.card img{max-height:36px;max-width:100%;object-fit:contain}
+.card.tall .ph{height:64px}.card.tall img{max-height:62px}
+.card b{font:600 13px/1.25 var(--body)}
+.card small{font-size:11px;color:var(--muted)}
+.grouplbl{font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);grid-column:1/-1;margin-top:2px}
+input[type=number],select{font:inherit;color:var(--fg);background:var(--chip);border:1px solid var(--line);border-radius:7px;padding:6px 8px;width:92px;font-variant-numeric:tabular-nums}
+select{width:auto}
+.savedPick select,.gripPick select{width:100%}
+.gripmode .gripPick{display:none}
+.drawer header{flex-wrap:wrap}
+.dPick{flex:1 1 100%}
+.num small{color:var(--muted)}
+.note{font-size:12px;color:var(--muted);margin:0}
+.note.warn{color:var(--warn)}
+.design{display:flex;align-items:center;gap:12px;border:1px dashed var(--line);border-radius:8px;padding:10px}
+.design canvas{width:110px;height:34px;border-radius:4px;background:var(--chip);flex:none}
+.design div{display:grid;gap:2px;min-width:0}
+.design b{font:600 13px var(--body)}
+.design small{font-size:12px;color:var(--muted)}
+.btn{font:600 13px var(--body);border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:7px;padding:8px 14px;cursor:pointer;white-space:nowrap}
+.btn.ghost{background:none;color:var(--accent)}
+.chk{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--fg)}
+.chk input{accent-color:var(--accent);width:16px;height:16px}
+.parts{font-size:13px;display:grid}
+.parts div{display:grid;grid-template-columns:118px minmax(0,1fr);gap:10px;padding:6px 0;border-top:1px solid var(--line)}
+.parts div:first-child{border-top:0}
+.parts span:first-child{color:var(--muted)}
+.foot{font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:center;margin-top:8px}
+.corkbox{display:grid;gap:10px;border-top:1px dashed var(--line);padding-top:10px}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:8px 6px;padding:2px}
+.chips button{display:flex;flex-direction:column;gap:3px;padding:0;border:0;background:none;color:var(--muted);font:500 10px/1.15 inherit;text-align:center;cursor:pointer;min-width:0}
+.chips button span{min-height:2.3em;display:flex;align-items:flex-end;justify-content:center}
+.chips button img{display:block;width:100%;height:28px;border-radius:6px;object-fit:cover;background:var(--line);box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+#corkTab{display:grid;grid-template-columns:1fr 1fr;width:200px;align-self:center;margin:2px auto 6px}
+#corkTab button{text-align:center}
+.chips button[aria-pressed="true"]{color:var(--fg);font-weight:700}
+.chips button[aria-pressed="true"] img{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--fg)}
+.ringstrip{display:flex;align-items:stretch;justify-content:center;height:52px;overflow-x:auto}
+.ringstrip .rings{position:relative;display:flex;flex:none;height:100%;border-radius:2px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.16)}
+.ringstrip canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.ringstrip button{position:relative;flex:none;height:100%;border:0;padding:0;cursor:pointer;background:transparent;border-radius:0}
+.ringstrip .rings.flat button{background-size:auto 100%;background-position:center;border-right:1px solid rgba(0,0,0,.35)}
+.ringstrip button:hover{outline:2px solid var(--accent);outline-offset:-2px}
+.ringstrip .end{flex:none;width:30px;align-self:stretch;display:grid;place-items:center;font:600 9px var(--mono);letter-spacing:.04em;color:rgba(255,255,255,.55);background:#2a1a12;writing-mode:vertical-rl;transform:rotate(180deg)}
+.saverow{display:flex;gap:8px}
+.saverow input{flex:1;min-width:0;font:500 14px var(--body);padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:var(--chip);color:var(--fg)}
+.saverow .btn{flex:none}
+#saveMsg.ok{color:#1d7a3e}#saveMsg.bad{color:var(--accent)}
+.corkrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.btn.sm{padding:5px 10px;font-size:12px}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.load{position:absolute;inset:0;display:grid;place-items:center;font:600 14px var(--body);color:var(--muted);pointer-events:none}
+/* designer drawer: over the parts column on wide screens, the bottom half on phones */
+.drawer{position:fixed;top:0;right:0;bottom:0;width:var(--side);background:var(--bg);border-left:1px solid var(--line);display:grid;grid-template-rows:auto 1fr;z-index:20;transform:translateX(105%);transition:transform .25s ease;box-shadow:-10px 0 30px rgba(0,0,0,.12)}
+.drawer.open{transform:none}
+.drawer header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px max(12px,env(safe-area-inset-right,0px)) 10px 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+.drawer header b{font:700 18px/1.1 var(--display);text-transform:uppercase;letter-spacing:.03em}
+.drawer header small{display:block;font:12px var(--body);color:var(--muted);text-transform:none;letter-spacing:0}
+.frames{position:relative;min-height:0}
+.frames iframe{position:absolute;inset:0;width:100%;height:100%;border:0;visibility:hidden;background:var(--bg)}
+.frames iframe.on{visibility:visible}
+@media (prefers-reduced-motion:reduce){ .drawer{transition:none} }
+@media (max-width:860px){
+  .app{display:block;height:auto}
+  .stage{position:sticky;top:0;height:50vh;height:50svh;z-index:2;border-bottom:1px solid var(--line)}
+  .side{border-left:0;overflow:visible}
+  .brand b{font-size:21px}
+  .hint{display:none}
+  .drawer{top:auto;width:100%;height:50vh;height:50svh;transform:translateY(105%);border-left:0;border-top:1px solid var(--line)}
+}
+
+/* ---- SFSW embed ---- */
+:root,:root[data-theme="dark"]{--bg:#0a0e12;--panel:#111820;--line:rgba(255,255,255,.14);--fg:#e8e4dc;--muted:#8a9aaa;--ink:#c9941a;--accent:#c9941a;--accent-soft:rgba(201,148,26,.12);--stage-a:#2a3a4c;--stage-b:#0a0e12;--chip:#1a2430;--body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:dark}
+html,body{height:100%;overflow:hidden;background:#0a0e12}
+.app{display:grid!important;grid-template-columns:minmax(0,1fr)!important;height:100%!important}
+.stage{position:relative!important;height:100%!important;border:0!important}
+.side{position:absolute!important;left:-10000px;top:0;width:430px;height:100%;visibility:hidden;pointer-events:none}
+.brand{display:none!important}
+.drawer{top:0!important;bottom:0!important;width:430px!important;height:auto!important;transform:translateX(120%)!important;visibility:hidden}
+.views button[aria-pressed="true"]{color:#0a0e12}
+.dock{bottom:8px;gap:6px}
+.hint{font-size:11px}
+@media (max-height:340px){ .hint,.slide{display:none} }
+@media (max-width:560px){ .hint{display:none} .views button{padding:6px 9px;font-size:12px} .tools{top:8px} .chipbtn{padding:5px 10px;font-size:12px} }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="stage" id="stage">
+    <canvas id="cv" aria-label="3D view of the rod you are building"></canvas>
+    <div class="load" id="load">Building your rod…</div>
+    <script>try{ if(window.frameElement&&/^f-(rod|grip)$/.test(window.frameElement.id)) document.documentElement.classList.add('insite'); }catch(e){}
+    if(new URLSearchParams(location.search).has('grip')) document.documentElement.classList.add('gripmode');</script>
+    <div class="brand"><b>Wrap<i>Lab</i></b><span>Rod builder</span></div>
+    <div class="tools"><button type="button" class="chipbtn" id="spin" aria-pressed="false">Spin rod</button></div>
+    <div class="dock">
+      <div class="hint">Drag to turn · scroll or pinch to zoom · right-drag or two fingers to move</div>
+      <label class="slide" for="along">Butt<input type="range" id="along" min="0" max="1000" value="80" aria-label="Move along the rod">Tip</label>
+      <div class="views" id="views" role="group" aria-label="Camera views">
+        <button type="button" data-v="all" aria-pressed="false">Whole rod</button>
+        <button type="button" data-v="butt" aria-pressed="false">Butt</button>
+        <button type="button" data-v="handle" aria-pressed="true">Handle</button>
+        <button type="button" data-v="wrap" aria-pressed="false">Wrap</button>
+        <button type="button" data-v="guides" aria-pressed="false">Guides</button>
+        <button type="button" data-v="tip" aria-pressed="false">Tip</button>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side" id="side">
+    <h1>Build the <i>whole rod</i></h1>
+    <p class="lede">Blank, handle, reel seat, guides and wraps, laid out at true size. Every change shows on the rod right away.</p>
+
+    <section class="sec" id="s-save">
+      <h2><span>Save build</span></h2>
+      <div class="saverow"><input type="text" id="saveName" maxlength="60" placeholder="Name this build" aria-label="Build name"><button type="button" class="btn" id="saveBtn">Save build</button></div>
+      <div class="saverow" style="margin-top:8px"><button type="button" class="btn" id="dlBtn">Download picture</button></div>
+      <p class="note" id="saveMsg" aria-live="polite">Saves the whole rod, wraps included. Find it in Saved Builds on WrapLab.</p>
+    </section>
+
+    <section class="sec" id="s-type">
+      <h2><span><em>1</em>Rod type</span></h2>
+      <div class="seg big" id="rtype"><button type="button" data-v="spinning" aria-pressed="true">Spinning</button><button type="button" data-v="baitcaster" aria-pressed="false">Baitcaster</button><button type="button" data-v="conventional" aria-pressed="false">Conventional</button></div>
+      <p class="note" id="typeNote"></p>
+    </section>
+
+    <section class="sec" id="s-blank">
+      <h2><span><em>2</em>Blank</span><small id="blankNow"></small></h2>
+      <div class="row">
+        <label class="lbl" for="len">Length<select id="len"></select></label>
+        <div class="lbl">Finish<div class="seg" id="finish"><button type="button" data-v="gloss" aria-pressed="true">Gloss</button><button type="button" data-v="matte" aria-pressed="false">Matte</button></div></div>
+      </div>
+      <div class="lbl">Blank color<div class="sw" id="blankSw"></div></div>
+    </section>
+
+    <section class="sec" id="s-grip">
+      <h2><span><em>3</em>Grips</span><small id="gripNow"></small></h2>
+      <div class="row">
+        <div class="lbl">Material<div class="seg" id="mat"><button type="button" data-v="cork" aria-pressed="true">Cork</button><button type="button" data-v="eva" aria-pressed="false">EVA</button></div></div>
+        <div class="lbl">Style<div class="seg" id="style"><button type="button" data-v="split" aria-pressed="true">Split</button><button type="button" data-v="full" aria-pressed="false">Full</button></div></div>
+      </div>
+      <div class="lbl" id="evaBox" hidden>EVA color<div class="sw" id="evaSw"></div></div>
+      <div class="lbl" id="shrinkBox" hidden>Heat shrink over the EVA<div class="seg" id="shrink"><button type="button" data-v="none">None</button><button type="button" data-v="xflock">X-Tube</button><button type="button" data-v="fish">Fish Scale</button><button type="button" data-v="honey">Honeycomb</button></div><span id="shrinkColLbl" style="margin-top:6px">Color: <b id="shrinkName" style="color:var(--fg)"></b></span><div class="sw" id="shrinkSw"></div></div>
+      <label class="chk" id="corkOnLbl"><input type="checkbox" id="corkOn"> Custom grips</label>
+      <div class="corkbox" id="corkBox" hidden>
+        <div class="lbl">Grip to design<div class="seg big" id="corkPiece"></div></div>
+        <div class="lbl"><span><span id="corkKind">Cork</span>: <b id="corkName" style="color:var(--fg)"></b></span><div class="seg" id="corkTab"><button type="button" data-v="cork" aria-pressed="true">Cork</button><button type="button" data-v="eva" aria-pressed="false">EVA</button></div><div class="chips" id="corkChips"></div></div>
+        <div class="corkrow">Ring size<div class="seg" id="corkSize"><button type="button" data-v="0.25" aria-pressed="false">0.25 in</button><button type="button" data-v="0.5" aria-pressed="true">0.5 in</button></div></div>
+        <div class="lbl"><span><b id="corkPieceNow" style="color:var(--fg)"></b> · tap a ring to give it this material and size</span><div class="ringstrip" id="ringStrip"></div></div>
+        <div class="corkrow"><button type="button" class="btn ghost sm" id="corkFill">Fill this grip</button><button type="button" class="btn ghost sm" id="corkAdd">Add ring</button><button type="button" class="btn ghost sm" id="corkDel">Remove last ring</button><span id="corkLen"></span></div>
+      </div>
+      <div class="row">
+        <label class="lbl num" for="gButt" id="gButtLbl">Butt piece (in)<input type="number" id="gButt" min="1" max="20" step="0.25" value="2.5"></label>
+        <label class="lbl num" for="gRear" id="gRearLbl">Rear piece (in)<input type="number" id="gRear" min="1" max="12" step="0.25" value="2.5"></label>
+        <label class="lbl num" for="gFore">Fore grip (in)<input type="number" id="gFore" min="0" max="12" step="0.25" value="2.5"></label>
+      </div>
+      <p class="note" id="gripNote"></p>
+      <div class="lbl">Winding checks
+        <label class="chk"><input type="checkbox" id="chkFore"> On the top of the fore grip</label>
+        <label class="chk" id="chkSplitLbl"><input type="checkbox" id="chkSplit"> On the split grips, facing each other</label>
+      </div>
+      <div class="lbl" id="checkBox" hidden>Winding check type<div class="seg big" id="checkType"></div><span style="margin-top:6px">Color: <b id="checkName" style="color:var(--fg)"></b></span><div class="sw" id="checkSw"></div></div>
+      <label class="lbl gripPick" for="gripSaved">Use a saved grip<select id="gripSaved"></select><small class="note" id="gripSavedNote" style="margin:0"></small></label>
+    </section>
+
+    <section class="sec" id="s-seat">
+      <h2><span><em>4</em>Reel seat</span><small id="seatNow"></small></h2>
+      <label class="lbl" for="seatAt">Bottom of the seat from the butt (inches)<input type="number" id="seatAt" min="4" max="30" step="0.25" value="10"></label>
+      <div class="lbl" id="seatColBox">Color<div class="sw" id="seatSw"></div></div>
+      <div class="lbl" id="lockBox" hidden><label class="chk"><input type="checkbox" id="lockOn"> Aluminum locking nut</label><small class="note" style="margin:0">Sits on the threads right behind the seat's nut.</small><div class="sw" id="lockSw"></div></div>
+      <div class="cards" id="seats"></div>
+    </section>
+
+    <section class="sec" id="s-butt">
+      <h2><span><em>5</em>Butt cap</span><small id="buttNow"></small></h2>
+      <div class="lbl" id="buttColBox">Butt color<div class="sw" id="buttSw"></div></div>
+      <div class="cards" id="butts"></div>
+    </section>
+
+    <section class="sec" id="s-wrap">
+      <h2><span><em>6</em>Wrap</span><small id="wrapNow"></small></h2>
+      <label class="chk"><input type="checkbox" id="mainOn" checked> Wrap above the fore grip</label>
+      <div class="design" id="mainBox"><canvas id="mainPrev" width="220" height="68"></canvas><div><b>Wrap Designer</b><small id="mainSum">Loading…</small></div></div>
+      <button type="button" class="btn" data-open="main" id="mainEdit">Design this wrap</button>
+      <label class="lbl savedPick" for="mainSaved">Or use a saved build<select id="mainSaved"></select></label>
+      <div id="splitArea">
+        <label class="chk"><input type="checkbox" id="splitOn"> Split wrap between the rear grips</label>
+        <div class="design" id="splitBox" hidden><canvas id="splitPrev" width="220" height="68"></canvas><div><b>Split wrap</b><small id="splitSum">Loading…</small></div></div>
+        <p class="note warn" id="splitNote" hidden></p>
+        <button type="button" class="btn" data-open="split" id="splitEdit" hidden style="margin-top:8px">Design the split wrap</button>
+        <label class="lbl savedPick" for="splitSaved" style="margin-top:8px">Or use a saved build<select id="splitSaved"></select></label>
+      </div>
+    </section>
+
+    <section class="sec" id="s-guides">
+      <h2><span><em>7</em>Guides</span><small id="guideNow"></small></h2>
+      <label class="lbl" for="gcount">Number of guides<select id="gcount"></select></label>
+      <div class="lbl" id="klRunBox" hidden>Running guides<div class="seg" id="klRun"><button type="button" data-v="0">All double foot</button><button type="button" data-v="1">1 + KL</button><button type="button" data-v="2">2 + KL</button><button type="button" data-v="3">3 + KL</button></div><small class="note" style="margin:4px 0 0">Some builders use 1 to 3 double-foot guides by the reel, then Fuji KL single-foot guides the rest of the way.</small></div>
+      <div class="lbl" id="gColBox">Frame color<div class="sw" id="gColSw"></div></div>
+      <div class="cards" id="guides"></div>
+    </section>
+
+    <section class="sec" id="s-gwrap">
+      <h2><span><em>8</em>Guide wraps</span><small id="gwrapNow"></small></h2>
+      <div class="design"><canvas id="gwPrev" width="220" height="68"></canvas><div><b>Guide Wrap Designer</b><small id="gwSum">Loading…</small></div></div>
+      <button type="button" class="btn" data-open="guide">Design the guide wraps</button>
+      <label class="lbl savedPick" for="guideSaved">Or use a saved build<select id="guideSaved"></select></label>
+    </section>
+
+
+    <section class="sec">
+      <h2><span>Your build</span></h2>
+      <div class="parts" id="parts"></div>
+    </section>
+
+    <p class="foot">WrapLab rod builder · preview</p>
+  </aside>
+</div>
+
+<div class="drawer" id="drawer" aria-hidden="true">
+  <header><b id="dTitle">Designer<small>Changes show on the rod as you go</small></b><button type="button" class="btn" id="dDone">Done</button>
+    <label class="lbl savedPick dPick" for="dSaved">Use a saved build<select id="dSaved"></select></label></header>
+  <div class="frames">
+    <iframe id="f-main" src="taper.html" title="Wrap Designer for the wrap"></iframe>
+    <iframe id="f-split" src="taper.html" title="Wrap Designer for the split wrap"></iframe>
+    <iframe id="f-guide" src="guide.html" title="Guide Wrap Designer"></iframe>
+  </div>
+</div>
+
+<script>
+// Grip Designer: retitle and renumber the sections that stay
+if(document.documentElement.classList.contains('gripmode')){
+  document.title='Grip Designer | WrapLab';
+  const side=document.getElementById('side'); side.querySelector('h1').innerHTML='Design your <i>grips</i>';
+  side.querySelector('.lede').textContent='Cork and EVA grips ring by ring, with the reel seat and butt cap, at true size. Every change shows on the rod right away.';
+  const b=document.querySelector('.brand span'); if(b) b.textContent='Grip designer';
+  [['s-grip',1],['s-seat',2],['s-butt',3]].forEach(([id,n])=>{ const e=document.querySelector('#'+id+' h2 em'); if(e) e.textContent=n; });
+  const m=document.getElementById('saveMsg'); if(m) m.textContent='Saves your grips, reel seat and butt cap. Find it in Saved Builds on WrapLab.';
+}
+</script>
+<script>window.WL_rodPaid=()=>true;</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import { GUIDES, R_KL, isTi, CH, chart, guideModel as guideModel3, guideWrapMesh as guideWrapMesh3 } from './guide3d.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const $ = id => document.getElementById(id);
+// Grip Designer: the rod stops just past the fore grip (no wraps or guides), and the blank is black
+const GRIP = document.documentElement.classList.contains('gripmode');
+const RL = () => GRIP && L.handle1 ? L.handle1 + 0.12 : st.len;
+const P = 'rod-parts/';
+const IN = 25.4;
+const slug = s => s.toLowerCase().replace(/\+/g, '-').replace(/\s+/g, '-');
+
+// ---------- parts, from the SFSW builders: which seats and guides go on spinning vs casting/conventional rods ----------
+const MC = {'Shiny Dark Grey':'#2a2c30',Black:'#1a1a1a',Blue:'#1a5fb8',Gold:'#b58a2a',Silver:'#c8ccd1',Gunmetal:'#3a3d42',Red:'#c41e1e',Purple:'#7a2aa8',SeaFoam:'#79c9a3',Green:'#2a8a3a',Orange:'#d4621a',Grey:'#4a4d52','Black+Gold':'#1a1a1a',Teal:'#1aaba0',Matte:'#2b2d31',Titanium:'#8b8e93'};
+const C_ATALUM = ['Blue','Red','Black','Silver','Gunmetal','Green','Purple','Black+Gold'];
+const C_ALPSALUM = ['Red','Green','Purple','Blue','Silver','Gunmetal','Gold','Black+Gold','Black'];
+const SEATS = {
+  spinning: [
+    {id:'fuji-deluxe',name:'Fuji Deluxe',colors:['Silver','Grey'],lock:true},
+    {id:'fuji-tvs',name:'Fuji TVS',p:1.8,lock:true},
+    {id:'alps-vtg',name:'ALPS VTG',p:1.25,model:'alpsVtg',lock:true},
+    {id:'at-alum-spin',name:'AT Aluminum Spin',colors:['Silver','Black','Blue','Gunmetal','Red']},
+    {id:'at-alum',name:'AT Aluminum',colors:C_ATALUM},
+    {id:'alps-mvt',name:'ALPS MVT',colors:['Black','Silver','Blue','Purple','Red','Gold'],p:1.8,model:'alpsMvt'},
+    {id:'alps-alum',name:'ALPS Aluminum',colors:C_ALPSALUM,model:'alpsAlum'},
+    {id:'alps-triangle',name:'ALPS Triangle',colors:['Black','Blue','Silver','Gunmetal','Gold','Orange','SeaFoam'],model:'alpsTriangle'},
+    {id:'alps-tri',name:'ALPS Triangle INS',colors:['Black','Blue','Silver','Gunmetal'],model:'alpsTriangleIns'}],
+  baitcaster: [
+    {id:'fuji-deluxe-trigger',name:'Fuji Deluxe Trigger',colors:['Silver','Grey'],p:7,model:'fujiDT',lock:true},
+    {id:'fuji-tch-trigger',name:'Fuji TCH Titanium',p:7},
+    {id:'at-alum-trigger',name:'AT Aluminum Trigger',colors:['Black','Gunmetal','Silver'],p:7,model:'atTrigger'},
+    {id:'alps-trigger',name:'ALPS AT Trigger',colors:['Black','Blue','Silver','Gunmetal','Gold','Green','Purple','Red','Orange','SeaFoam'],p:7,model:'alpsTrigger'}],
+  conventional: [
+    {id:'fuji-deluxe',name:'Fuji Deluxe',colors:['Silver','Grey'],lock:true},
+    {id:'fuji-dpsh',name:'Fuji DPSH'},
+    {id:'at-alum',name:'AT Aluminum',colors:C_ATALUM},
+    {id:'at-boat',name:'AT Aluminum Boat',colors:['Black','Silver','Gold','Blue','Black+Gold']},
+    {id:'alps-alum',name:'ALPS Aluminum',colors:C_ALPSALUM,model:'alpsAlum'}]
+};
+const seatImg = (s, c) => P + 'seats/' + (s.colors ? s.id + '-' + slug(c) : s.id) + '.webp';
+const guideImg = (g, c, r) => P + 'guides/' + (g.id === 'foul' ? 'foulproof-guide' : g.id === 'tidf' ? 'tiforged-double-foot-black'
+  : isTi(r) && g.id !== 'tihf' ? g.slug + '-titanium' : g.slug + '-' + cardCol(g, c || g.colors[0])) + '.webp';
+// card photos by color: Fuji's shiny dark grey matches the darkest card and its gunmetal the grey one
+const cardCol = (g, c) => c === 'Shiny Dark Grey' ? 'black' : c === 'Gunmetal' && g.slug.startsWith('fuji') ? 'grey' : slug(c);
+const RINGC = () => '#141518';
+const guideModel = (g, size, colHex, ringHex) => guideModel3(g, size, colHex, ringHex, { ti: isTi(gRing(g)) });
+const guideWrapMesh = (info, px, flip, spans) => guideWrapMesh3(info, px, flip, spans, blankR);   // inserts are black on every guide
+const SIZES = { spinning:[30,20,16,12,10,8,8,7,7,6,6,5.5], baitcaster:[16,12,10,8,8,7,7,6,6,6,5.5,5.5], conventional:[20,16,12,10,10,8,8,8,7,7,6,6] };
+const SIZES_HEAVY = [25,20,16,12,12,10,10,8,8,8,8,8];
+const BUTTS = [
+  {id:'rubberized-cork-butt',name:'Rubberized Cork Butt',only:'cork'},
+  {id:'eva-butt',name:'EVA Butt',side:'eva-butt-side',dia:1.2,foam:true},
+  {id:'alps-rubber',name:'ALPS Rubber Butt',img:'alps-rubber-butt'},
+  {id:'alps-aluminum-rubber-butt',name:'ALPS Aluminum Rubber Butt',colors:['Gold','Blue','Gunmetal','Black','Silver']},
+  {id:'alps-aluminum-butt',name:'ALPS Aluminum Butt',colors:['Gold','Blue','Gunmetal','Black','Silver'],img:'alps-aluminum-butt-2'},
+  {id:'alps-tri-butt',name:'ALPS Triangle Weighted Butt',colors:['Gold','Blue','Gunmetal','Black','Silver'],img:'alps-triangle-weighted-butt'},
+  {id:'at-weighted-butt',name:'AT Weighted Butt',colors:['Gold','Blue','Gunmetal','Black','Silver','Red']},
+  {id:'alps-rubber-gimbal',name:'ALPS Rubber Gimbal',types:['spinning','conventional']},
+  {id:'at-gimbal',name:'AT Gimbal',colors:['Black','Green','Blue','Silver','Purple','Gold','Red'],types:['spinning','conventional']},
+  {id:'alps-gimbal',name:'ALPS Gimbal',colors:['Silver','Gunmetal','Black','Blue','Purple','Green','Matte','Red','Teal'],types:['spinning','conventional']}];
+const EVA = [['black','Black'],['white','White'],['gray','Gray'],['graygrain','Gray Grain'],['blue','Blue'],['lightblue','Light Blue'],['darkblue','Dark Blue'],['bluegrain','Blue Grain'],['bluecamo','Blue Camo'],['camo','Camo'],['darkgreen','Dark Green'],['limegreen','Lime Green'],['teal','Teal'],['red','Red'],['orange','Orange'],['pink','Pink'],['purple','Purple']];
+// custom cork rings (Brett's cork options); each ring is 0.25 or 0.5 in
+const CORK = [['burl','Natural Burl'],['burl-blue','Blue Burl'],['burl-black','Black Burl'],['burl-green','Green Burl'],['burl-red','Red Burl'],['burl-camo','Horizontal Burl'],['burl-tiger','Vertical Burl'],['burl-rubber','Burnt Burl'],
+  ['composite','Natural Composite'],['spk-blue','Blue Speckle'],['spk-black','Black Speckle'],['spk-green','Green Speckle'],['spk-red','Red Speckle'],['rubber','Burnt'],['sandwich','Burnt Sandwich'],['rubber-chunk','Burnt Mix']];
+const isEva = id => id.startsWith('eva:');
+const corkName = id => isEva(id) ? 'EVA ' + (EVA.find(e => e[0] === id.slice(4)) || ['', id.slice(4)])[1] : (CORK.find(c => c[0] === id) || ['', id])[1];
+const ringChip = id => isEva(id) ? `${P}eva/${id.slice(4)}.webp` : `${P}cork/${id}-chip.webp`;
+const BLANK = [['Black','#16181c'],['Graphite','#3a3f47'],['Navy','#14284d'],['Deep blue','#1b4f8a'],['Teal','#0f6f6a'],['Forest','#1f4a2c'],['Burgundy','#5a1620'],['White','#e9e9e4']];
+// winding checks (trim bands), the three types Brett offers, each with its own colors
+const CK = { Gold:'#c9a24a', Purple:'#7d2a9e', Red:'#b8242c', Silver:'#c8ccd1', Black:'#1f2124', Blue:'#2a4fb8', Green:'#1f7a3a', Bronze:'#8a6a4a', Gunmetal:'#4a4d52', Champagne:'#d4c48c' };
+const CHECKS = {
+  slim:   { name:'Slim bevel', len:0.12, colors:['Gold','Purple','Red','Silver','Black','Blue','Gunmetal'] },
+  dimple: { name:'Dimpled',    len:0.26, colors:['Black','Blue','Gold','Green','Purple','Red','Silver','Bronze','Gunmetal'] },
+  step:   { name:'Stepped',    len:0.17, colors:['Gunmetal','Silver','Champagne','Gold','Black','Green','Blue','Purple','Red'] } };
+const CHECK = Object.entries(CK);
+let dimpleTex = null;
+
+const st = { type:'spinning', len:84, finish:'gloss', blank:'#16181c', mat:'cork', style:'split', eva:'black',
+  gButt:2.5, gRear:2.5, gFore:2.5, seatAt:10, seat:{spinning:SEATS.spinning[0].id,baitcaster:SEATS.baitcaster[0].id,conventional:SEATS.conventional[0].id}, seatCol:{}, butt:BUTTS[0].id, buttCol:{}, check:'#c9a24a', checkType:'slim',
+  chkFore:false, chkSplit:false, cork:{ on:false, piece:'butt', m:'burl', t:0.5, g:{}, tab:'cork' }, guide:{spinning:GUIDES.spinning[0].id,baitcaster:GUIDES.baitcaster[0].id,conventional:GUIDES.conventional[0].id}, gCol:{}, ring:{}, gcount:{spinning:8,baitcaster:8,conventional:8}, mainOn:true, splitOn:false, klRun:0, lockOn:false, lockCol:'Black', gFirst:{}, gEdit:false, gList:{}, shrink:'none', shrinkCol:{ xflock:'Black', fish:'Black', honey:'Black' } };
+// guides: one per foot of rod plus one, with any part of a foot rounding up (7'6" = 9, 9' = 10), plus the tip-top
+const autoGuides = () => { const n = Math.ceil(st.len / 12 - 1e-9) + 1; Object.keys(st.gcount).forEach(t => st.gcount[t] = n); };
+autoGuides();
+[...SEATS.spinning, ...SEATS.baitcaster, ...SEATS.conventional].forEach(s => { if (s.colors) st.seatCol[s.id] = s.colors[0]; });
+BUTTS.forEach(b => { if (b.colors) st.buttCol[b.id] = b.colors[0]; });
+const seatDef = () => SEATS[st.type].find(s => s.id === st.seat[st.type]);
+const guideDef = () => GUIDES[st.type].find(g => g.id === st.guide[st.type]);
+// baitcasters (any double-foot guide) and spinning rods with the Fuji KW or TiForged double foot can run 1, 2 or 3
+// double-foot guides first, then Fuji KL single-foot guides the rest of the way to the tip
+const KL_DEF = () => GUIDES.spinning.find(g => g.id === 'kl');
+const KL_RUN = [30, 25, 20, 16, 12], KT_RUN = [10, 8, 7, 6, 5.5, 5];   // the Fuji KL and KT sizes a running guide can be
+const nearOf = (l, s) => l.reduce((a, v) => Math.abs(v - s) < Math.abs(a - s) ? v : a, l[0]);
+const klOk = () => { const g = guideDef(); return g.style !== 'single' && (st.type === 'baitcaster' || (st.type === 'spinning' && ['kw', 'tidf'].includes(g.id))); };
+const klFrom = () => (st.klRun > 0 && klOk()) ? st.klRun : Infinity;   // first KL guide's index
+const guideAt = i => i >= klFrom() ? KL_DEF() : guideDef();
+const gColor = g => { const v = st.gCol[st.type + g.id]; return g.colors.includes(v) ? v : g.colors[0] || 'Black'; };
+const gRing = g => st.ring[st.type + g.id] || g.rings[0];
+
+// ---------- scene ----------
+const cv = $('cv'), stage = $('stage');
+const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+const scene = new THREE.Scene();
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f98, 0.6));
+const key = new THREE.DirectionalLight(0xffffff, 1.5); key.position.set(10, 30, 25); scene.add(key);
+const camera = new THREE.PerspectiveCamera(32, 1, 0.05, 3000);
+const controls = new OrbitControls(camera, cv);
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 1.2; controls.maxDistance = 500;
+controls.screenSpacePanning = true; controls.zoomToCursor = true;
+const rod = new THREE.Group(); scene.add(rod);
+let parts = new THREE.Group(); rod.add(parts);
+function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(stage);
+
+// ---------- helpers ----------
+const AXIS = g => { g.rotateZ(-Math.PI / 2); return g; };          // three's lathe/cylinder axis is Y; the rod runs along X (butt at 0)
+const imgCache = {};
+const loadImg = src => imgCache[src] || (imgCache[src] = new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('missing ' + src)); i.src = src; }));
+const profCache = new Map();
+// side-on product photo -> per-column outline: top and bottom edge around the tube's center line
+function profile(img) {
+  if (profCache.has(img)) return profCache.get(img);
+  const W = img.naturalWidth, H = img.naturalHeight, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0);
+  const d = x.getImageData(0, 0, W, H).data, top = new Float32Array(W), bot = new Float32Array(W);
+  for (let i = 0; i < W; i++) { let t = -1, b = -1;
+    for (let j = 0; j < H; j++) if (d[(j * W + i) * 4 + 3] > 80) { if (t < 0) t = j; b = j; }
+    top[i] = t < 0 ? H / 2 : t; bot[i] = b < 0 ? H / 2 : b + 1; }
+  let a = 0, z = W - 1; while (a < W && bot[a] - top[a] < 3) a++; while (z > a && bot[z] - top[z] < 3) z--;
+  // the tube's center line: the middle of the plainest (thinnest) columns, so a trigger or a palm swell doesn't pull it off
+  const hs = []; for (let i = a; i <= z; i++) hs.push([bot[i] - top[i], (top[i] + bot[i]) / 2]);
+  hs.sort((p, q) => p[0] - q[0]); const thin = hs.slice(0, Math.max(5, Math.round(hs.length * 0.35))).map(p => p[1]).sort((p, q) => p - q);
+  const axis = thin[Math.floor(thin.length / 2)];
+  const out = { W, H, top, bot, a, z, axis }; profCache.set(img, out); return out;
+}
+// the photo turned into a solid: each column becomes a ring whose top and bottom follow the photo, with anything that
+// sticks out on one side only (a trigger, a hood, a palm swell) swelling out as a narrow ridge (exponent p) instead of a full ring
+function turned(img, len, dia, { p = 2.5, uvTile = false } = {}) {
+  const Pf = profile(img), cols = Math.min(160, Pf.z - Pf.a + 1), seg = 64;
+  const rt = i => Math.max(0, Pf.axis - Pf.top[i]), rb = i => Math.max(0, Pf.bot[i] - Pf.axis);
+  let maxR = 0; for (let i = Pf.a; i <= Pf.z; i++) maxR = Math.max(maxR, Math.min(rt(i), rb(i)));
+  const k = (dia / 2) / maxR, pos = [], uv = [], idx = [];
+  if (len == null) len = (Pf.z - Pf.a) * k;          // true length from the photo's own proportions
+  for (let i = 0; i < cols; i++) {
+    const col = Math.floor(Pf.a + (Pf.z - Pf.a) * i / (cols - 1)), t = rt(col), b = rb(col), base = Math.min(t, b), x = len * i / (cols - 1);
+    for (let j = 0; j <= seg; j++) { const th = j / seg * Math.PI * 2, cs = Math.cos(th), sn = Math.sin(th);
+      const r = base + (t - base) * Math.pow(Math.max(0, cs), p) + (b - base) * Math.pow(Math.max(0, -cs), p);
+      pos.push(x, r * k * cs, r * k * sn);
+      if (uvTile) uv.push(i / (cols - 1), j / seg); else uv.push(col / Pf.W, 1 - (Pf.axis - r * cs * 0.985) / Pf.H); }
+  }
+  for (let i = 0; i < cols - 1; i++) for (let j = 0; j < seg; j++) { const a = i * (seg + 1) + j, b = a + seg + 1; idx.push(a, a + 1, b, b, a + 1, b + 1); }
+  [0, cols - 1].forEach((i, e) => { const c = pos.length / 3, col = Math.floor(Pf.a + (Pf.z - Pf.a) * i / (cols - 1));
+    pos.push(len * i / (cols - 1), 0, 0); uv.push(uvTile ? i / (cols - 1) : (Pf.a + Pf.z) / 2 / Pf.W, uvTile ? 0.5 : 1 - Pf.axis / Pf.H);   // end faces take the part's middle color
+    const ring0 = pos.length / 3, mu = (Pf.a + Pf.z) / 2 / Pf.W;
+    for (let j = 0; j <= seg; j++) { const v = i * (seg + 1) + j; pos.push(pos[v * 3], pos[v * 3 + 1] * 0.999, pos[v * 3 + 2] * 0.999);
+      uv.push(uvTile ? uv[v * 2] : mu + (uv[v * 2 + 1] - 0.5) * 0.15, uvTile ? uv[v * 2 + 1] : 1 - Pf.axis / Pf.H + (uv[v * 2 + 1] - (1 - Pf.axis / Pf.H)) * 0.5); }
+    for (let j = 0; j < seg; j++) { const a = ring0 + j; e ? idx.push(c, a + 1, a) : idx.push(c, a, a + 1); } });
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx); g.computeVertexNormals(); g.userData.len = len;
+  // radius at a distance along the part (for fitting a butt cap to the grip)
+  g.userData.rAt = d => { const col = Math.floor(Pf.a + Math.min(1, Math.max(0, d / len)) * (Pf.z - Pf.a)); return Math.min(rt(col), rb(col)) * k; };
+  return g;
+}
+const texCache = new Map();
+function photoTex(img, repeat) {
+  const k = img.src + (repeat ? repeat.join() : '');
+  if (texCache.has(k)) return texCache.get(k);
+  const t = new THREE.Texture(img); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  if (repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat); }
+  t.needsUpdate = true; texCache.set(k, t); return t;
+}
+// photos carry their own light, so they glow a little to keep the product's look in the shade
+const photoMat = (t, rough = 0.5) => new THREE.MeshStandardMaterial({ map: t, roughness: rough, metalness: 0, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.22, envMapIntensity: 0.55 });
+const metal = (c, rough = 0.3) => new THREE.MeshStandardMaterial({ color: c, metalness: 0.85, roughness: rough });
+const rubber = () => new THREE.MeshStandardMaterial({ color: 0x232427, roughness: 0.85 });
+const blankR = x => { const r0 = st.type === 'conventional' ? 0.29 : st.type === 'baitcaster' ? 0.26 : 0.25, r1 = 0.04; return r0 + (r1 - r0) * Math.min(1, Math.max(0, x / st.len)); };
+// a thread sleeve on the blank: u runs along the rod from x0 to x1, v once around
+function sleeve(x0, x1, over, mat, seg = 64) {
+  const cols = Math.max(2, Math.ceil((x1 - x0) / 0.05)), pos = [], uv = [], idx = [];
+  for (let i = 0; i <= cols; i++) { const x = x0 + (x1 - x0) * i / cols, r = blankR(x) + over;
+    for (let j = 0; j <= seg; j++) { const th = j / seg * Math.PI * 2; pos.push(x, r * Math.cos(th), r * Math.sin(th)); uv.push(i / cols, j / seg); } }
+  for (let i = 0; i < cols; i++) for (let j = 0; j < seg; j++) { const a = i * (seg + 1) + j, b = a + seg + 1; idx.push(a, a + 1, b, b, a + 1, b + 1); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx); g.computeVertexNormals(); return new THREE.Mesh(g, mat);
+}
+const wrapMat = canvas => { const t = new THREE.CanvasTexture(canvas); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  return new THREE.MeshPhysicalMaterial({ map: t, roughness: 0.38, clearcoat: 1, clearcoatRoughness: 0.08, alphaTest: 0.5, side: THREE.DoubleSide }); };
+const hexRGB = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+
+// ---------- the designers: real WrapLab tools in the drawer, read straight off their pages ----------
+const F = { main: $('f-main'), split: $('f-split'), guide: $('f-guide') };
+// each wrap slot runs the Wrap Designer, or the Cross Wrap Designer when a saved cross wrap is picked
+const src = { main: 'taper', split: 'taper' };
+// a builder's customer link whose wrap link allows only cross wraps: the rod's wraps use the Cross Wrap Designer
+const crossOnly = () => { const t = window.WL && WL.cust && (WL.cust.wrapAllow || {}).types; return Array.isArray(t) && t.length > 0 && t.every(x => x === 'cross'); };
+const fk = k => (src[k] === 'cross' ? k + 'X' : k);
+let crossHtml = null;
+async function crossDoc() { if (crossHtml) return crossHtml; const r = await fetch('cross.html'); return crossHtml = await r.text(); }
+async function crossFrame(k) {
+  const key = k + 'X'; if (F[key]) return F[key];
+  const f = document.createElement('iframe'); f.title = 'Cross Wrap Designer'; F[key] = f; document.querySelector('.frames').appendChild(f);
+  f.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>.wrap>header{display:none!important}</style><script>window.WL={plan:"builder",cust:(parent.WL&&parent.WL.cust)?{sub:true,allow:parent.WL.cust.wrapAllow||{}}:null}<\/script></head><body>' + await crossDoc() + '</body></html>';
+  watch(key, async () => { await readWrap(k); build(); });
+  return f;
+}
+const ready = {};
+const whenReady = (k, test) => ready[k] || (ready[k] = new Promise(res => { const tick = () => { try { const w = F[k].contentWindow; if (w && test(w)) return res(w); } catch (e) {} setTimeout(tick, 120); }; tick(); }));
+const taperReady = k => whenReady(k, w => w.WL_unrolled && w.__wlRod);
+const guideReady = () => whenReady('guide', w => w.WL_guideWrap);
+function setField(w, id, v) { const el = w.document.getElementById(id); if (!el) return; el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }
+function press(w, sel) { const b = w.document.querySelector(sel); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); }
+// the wrap designers start sized to where the wrap sits on this blank
+async function fitTaper(k, at, lenIn) {
+  const w = await whenReady(fk(k), w => w.WL_unrolled && w.__wlRod);   // the wrap's designer, regular or cross wrap
+  if (w.__wlFitted) return; w.__wlFitted = true;
+  press(w, '#unit [data-v="in"]'); setField(w, 'len', lenIn.toFixed(2));
+  setField(w, 'dB', (2 * blankR(at) * IN).toFixed(1)); setField(w, 'dM', (2 * blankR(at + lenIn / 2) * IN).toFixed(1)); setField(w, 'dT', (2 * blankR(at + lenIn) * IN).toFixed(1));
+}
+const unrolled = {};
+async function readWrap(k) {
+  const w = await whenReady(fk(k), w => w.WL_unrolled && w.__wlRod); const r = w.WL_unrolled(900, 220); if (!r) return null;
+  unrolled[k] = r; drawPrev($(k + 'Prev'), r.canvas);
+  const box = $(k + 'Box').querySelector('b'); if (box) box.textContent = src[k] === 'cross' ? 'Cross Wrap Designer' : (k === 'split' ? 'Split wrap' : 'Wrap Designer');
+  if (src[k] === 'cross') $(k + 'Sum').textContent = `${r.label} · ${(r.lengthMM / IN).toFixed(2)} in`;
+  else { const d = w.document, ax = d.querySelector('#axes [aria-pressed="true"]'), pat = d.querySelector('#pattern [aria-pressed="true"]');
+    $(k + 'Sum').textContent = `${pat ? pat.textContent : 'Diamond'} · ${ax ? ax.textContent : ''} axis · ${(r.lengthMM / IN).toFixed(2)} in`; }
+  return r;
+}
+function drawPrev(c, src) { const x = c.getContext('2d'); x.clearRect(0, 0, c.width, c.height); x.drawImage(src, 0, 0, src.width, src.height / 2, 0, 0, c.width, c.height); }
+let gw = null, gwKL = null;
+async function readGuideWraps() {
+  const w = await guideReady(), g = guideDef();
+  // the Guide Wrap Designer follows the guide picked here: single foot for KL style frames, otherwise that model's double foot chart
+  press(w, `#gtype [data-v="${g.style === 'single' ? 'single' : 'double'}"]`);
+  await new Promise(r => setTimeout(r, 30));
+  press(w, `#model [data-v="${g.id}"]`);
+  const sizes = guideSizes(), out = {}, k0 = klFrom();
+  sizes.forEach((s, i) => { if (i < k0 && !out[s]) out[s] = w.WL_guideWrap(s); });
+  gw = out; gwKL = null;
+  if (k0 < sizes.length) {   // the KL running guides: the same foot wrap, sized from the first guide's wrap length (the designer stays on the first guide)
+    gwKL = {}; sizes.slice(k0).forEach(s => { if (!gwKL[s]) gwKL[s] = w.WL_guideWrapAs(KL_DEF().id, s); });
+  }
+  guideUI();
+  const one = out[sizes[0]], c = $('gwPrev'), x = c.getContext('2d'); x.clearRect(0, 0, c.width, c.height);
+  if (one) { const n = one.cols.length; one.cols.forEach((t, i) => { if (!t) return; x.fillStyle = t[0]; x.fillRect(Math.floor(i / n * c.width), 18, Math.ceil(c.width / n) + 1, 32); }); }
+  $('gwSum').textContent = `Fuji ${g.model} sizes`;
+  return out;
+}
+
+// ---------- guides, sized from the Fuji charts ----------
+// the first guide's size is picked in the guide drawer; the rest step down from it (fitted automatically), unless every guide is set by hand
+function guideSizes() { const g = guideDef(), n = st.gcount[st.type], base = g.heavy ? SIZES_HEAVY : SIZES[st.type];
+  const first = (st.gFirst && st.gFirst[st.type]) || base[0];
+  const auto = [first, ...base.filter(s => s < first)]; while (auto.length < n) auto.push(auto[auto.length - 1]);
+  let fit = auto.slice(0, n); const k0 = klFrom(); let hand = st.gEdit && st.gList && st.gList[st.type];
+  // with KL running guides: the double foots first, then Fuji KL up to the third guide, then Fuji KT from the fourth on
+  // (1 + KL: double, KL, KL, KT...; 2 + KL: double, double, KL, KT...; 3 + KL: three double foots, then KT). KL sizes are 12 and up, KT 10 and under.
+  if (k0 < n) { const rest = auto.slice(k0), big = rest.filter(s => s > 10).map(s => nearOf(KL_RUN, s)), small = rest.filter(s => s <= 10).map(s => nearOf(KT_RUN, s));
+    let b = 0, m = 0; fit = fit.map((s, i) => i < k0 ? s : i < 3 ? (big[b++] || big[big.length - 1] || 12) : (small[m++] || small[small.length - 1] || 5.5)); }
+  // sizes set by hand were for one double-foot/KL layout: switching to another (or back to all double foot) starts them over
+  st.gListK = st.gListK || {}; if (hand && st.gListK[st.type] !== k0) { st.gList = { ...st.gList, [st.type]: fit.slice() }; hand = st.gList[st.type]; }
+  if (st.gEdit) st.gListK[st.type] = k0;
+  return hand ? fit.map((s, i) => i === 0 ? first : (hand[i] != null ? hand[i] : s)) : fit; }
+// in the guide drawer: the first guide's size, and "Edit all Guides" to size each guide by hand
+function guideUI() {
+  let w, d; try { w = F.guide.contentWindow; d = w.document; } catch (e) { return; } if (!d || !d.querySelector('.gw1')) return;
+  const sizes = guideSizes(), g = guideDef(), kt = g.id === 'kl' || g.id === 'klh', val = s => kt && s <= 10 ? s + 'KT' : String(s);
+  const gs = d.getElementById('gsize');
+  if (gs && !gs.dataset.rod) { gs.dataset.rod = 1;
+    gs.addEventListener('change', () => { const v = parseFloat(gs.value); if (!isNaN(v)) { st.gFirst = { ...(st.gFirst || {}), [st.type]: v }; if (st.gEdit && st.gList[st.type]) st.gList[st.type][0] = v; } });
+    const lb = d.querySelector('#sizeBox'); if (lb && lb.firstChild && lb.firstChild.nodeType === 3) lb.firstChild.textContent = 'First guide size '; }
+  // the drawer shows the first guide (the nearest size this guide comes in)
+  const near = s => { const os = [...(gs ? gs.options : [])].map(o => o.value).filter(v => kt && s <= 10 ? /KT$/.test(v) : !/KT$/.test(v)); if (os.includes(val(s))) return val(s);
+    return os.reduce((a, v) => a == null || Math.abs(parseFloat(v) - s) < Math.abs(parseFloat(a) - s) ? v : a, null); };
+  const want = gs && near(sizes[0]);
+  if (want && gs.value !== want) { gs.value = want; gs.dispatchEvent(new w.Event('change', { bubbles: true })); }
+  let box = d.getElementById('rgBox');
+  if (!box) { box = d.createElement('div'); box.id = 'rgBox'; box.style.cssText = 'margin-top:14px;display:grid;gap:10px';
+    box.innerHTML = '<label style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0;font-weight:700;font-size:15px;color:var(--fg);cursor:pointer;text-transform:none;letter-spacing:0"><input type="checkbox" id="rgOn" style="width:18px;height:18px;margin:0">Edit all Guides<span style="font-weight:400;font-size:13px;color:var(--muted)">(Otherwise will be fitted automatically)</span></label><div class="opts" id="rgList" style="display:flex;flex-wrap:wrap;gap:10px"></div>';
+    (d.getElementById('sizePanel') || d.querySelector('.gw1')).append(box);
+    box.querySelector('#rgOn').addEventListener('change', e => { st.gEdit = e.target.checked; if (st.gEdit && !(st.gList[st.type] && st.gList[st.type].length)) st.gList = { ...st.gList, [st.type]: guideSizes().slice() }; guideUI(); });
+    box.querySelector('#rgList').addEventListener('change', e => { const s = e.target.closest('select'); if (!s) return; const i = +s.dataset.i, v = parseFloat(s.value);
+      const l = guideSizes().slice(); l[i] = v; st.gList = { ...st.gList, [st.type]: l };
+      if (i === 0) { st.gFirst = { ...(st.gFirst || {}), [st.type]: v }; gs.value = val(v); gs.dispatchEvent(new w.Event('change', { bubbles: true })); }
+      setTimeout(guideUI); }); }   // redraw the list so this guide's foot wrap and underwrap lengths follow its new size
+  box.querySelector('#rgOn').checked = !!st.gEdit;
+  const list = box.querySelector('#rgList'); list.hidden = !st.gEdit;
+  if (st.gEdit) { let opts = []; try { opts = [...new Set(w.eval('chartNow()').map(r => parseFloat(r[0])))].sort((a, b) => b - a); } catch (e) {}
+    const lab = s => kt && s <= 10 ? 'KT ' + s : String(s), k0r = klFrom();
+    // a KL running guide can be any Fuji KL or KT size (KL 12 and up, KT 10 and under), so a KT spot can be made a KL and back
+    const runOpts = s => `<optgroup label="Fuji KL">${KL_RUN.map(o => `<option value="${o}"${o === s ? ' selected' : ''}>KL ${o}</option>`).join('')}</optgroup><optgroup label="Fuji KT">${KT_RUN.map(o => `<option value="${o}"${o === s ? ' selected' : ''}>KT ${o}</option>`).join('')}</optgroup>`;
+    const html = sizes.map((s, i) => `<label class="f" style="min-width:96px">Guide ${i + 1}${i === 0 ? ' (butt)' : ''}${i >= k0r ? (s <= 10 ? ' · KT' : ' · KL') : ''}<select data-i="${i}">${i >= k0r ? runOpts(s) : (opts.includes(s) ? opts : [s, ...opts]).map(o => `<option value="${o}"${o === s ? ' selected' : ''}>${lab(o)}</option>`).join('')}</select><small data-fl="${i}" style="text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;line-height:1.35;color:var(--muted)"></small></label>`).join('');
+    // only redraw when something changed: replacing an open size dropdown closes it before a size can be picked
+    if (list.dataset.html !== html) { list.innerHTML = html; list.dataset.html = html; }
+    // under each guide: its feet wrap and underwrap lengths, worked out the same way the Guide Wrap Designer does
+    // (the same wraps the rod is built with: the KL running guides past a double-foot guide use their own foot wrap)
+    const k0 = klFrom(), lens = () => list.querySelectorAll('[data-fl]').forEach(el => { const i = +el.dataset.fl, s = sizes[i]; let W = null;
+      try { W = i < k0 ? w.WL_guideWrap(s) : w.WL_guideWrapAs(KL_DEF().id, s); } catch (e) {}
+      el.innerHTML = !W || W.foot == null ? '' : 'Foot wrap ' + W.foot.toFixed(1) + ' mm' + (W.single ? '' : '<br>Underwrap ' + W.under.toFixed(1) + ' mm'); });
+    lens();
+    if (!d.body.dataset.rgLens) { d.body.dataset.rgLens = 1; const re = () => setTimeout(() => { const l = d.getElementById('rgList'); if (l && !l.hidden) guideUI(); });
+      d.getElementById('fLen').addEventListener('input', re); d.getElementById('tsize') && d.getElementById('tsize').addEventListener('click', re); } }
+}
+// spacing like the Guide Wrap Designer's rod view: first guide about a quarter of the rod past the reel, gaps shrinking by 1.3 toward the tip
+function guideSpacing(n, reelX) { const L = st.len, first = L - reelX - 0.26 * L, R = 1.3, f = (Math.pow(R, n) - 1) / (R - 1), a0 = first / f, pos = []; let s = 0;
+  for (let k = 0; k < n; k++) { s += a0 * Math.pow(R, k); pos.unshift(L - s); } return pos; }  // x from the butt, stripper first
+
+// ---------- the whole rod ----------
+let buildN = 0, quick = null; const L = {};
+async function build() {
+  const n = ++buildN;
+  const sd = seatDef(), seatSrc = seatImg(sd, st.seatCol[sd.id]);
+  const lay = (st.style === 'split' ? ['grip_split-' + st.mat + '_0', 'grip_split-' + st.mat + '_1', 'grip_split-' + st.mat + '_2'] : ['grip_full-' + st.mat + '_0', 'grip_full-' + st.mat + '_1']).map(f => P + 'grips/' + f + '.webp');
+  let seatI, pieces, evaI = null;
+  const bdef = BUTTS.find(x => x.id === st.butt); let buttI = null;
+  try { [seatI, ...pieces] = await Promise.all([loadImg(seatSrc), ...lay.map(loadImg)]); if (st.mat === 'eva') evaI = await loadImg(P + 'eva/' + st.eva + '.webp'); if (bdef.side) buttI = await loadImg(P + 'butts/' + bdef.side + '.webp'); if (bdef.foam) evaTile = await loadImg(P + 'eva/black.webp'); }
+  catch (e) { console.error(e); return; }
+  if (n !== buildN) return;
+  const g = new THREE.Group(), D = 1.15; L.rings = {};
+  const blankMat = new THREE.MeshPhysicalMaterial({ color: GRIP ? '#141414' : st.blank, roughness: st.finish === 'gloss' ? 0.25 : 0.7, clearcoat: st.finish === 'gloss' ? 1 : 0, clearcoatRoughness: 0.12, metalness: 0.1 });
+  const tag = (m, s) => { m.userData.part = s; return m; };
+  // butts are the aluminum gimbal's length, except the short caps (rubberized cork, EVA, ALPS Aluminum Rubber)
+  const BUTT_LEN = 2.1, bg = new THREE.Group(); let bL = buttCap(bg, buttI);
+  if (!['rubberized-cork-butt', 'eva-butt', 'alps-aluminum-rubber-butt'].includes(st.butt) && Math.abs(bL - BUTT_LEN) > 0.01) { bg.scale.x = BUTT_LEN / bL; bL = BUTT_LEN; }
+  // the grips start at a fixed spot (where a standard 2.1 in butt ends); the butt hangs off the end of the grip,
+  // so changing the butt never changes the grip lengths or the seat position
+  const GRIP0 = BUTT_LEN - 0.15; bg.position.x = GRIP0 + 0.15 - bL; L.buttStart = bg.position.x;
+  g.add(bg);
+  const gripMesh = (img, len, dia, key) => {
+    if (len <= 0.05) return null;
+    // split pieces taper toward each other; the fore grip tapers toward the tip
+    const taper = key === 'butt' || key === 'fore' ? 1 : key === 'rear' ? -1 : 0;
+    if (key && st.cork.on && corkReady && evaRingReady) {
+      const rings = fitRings(key, len); L.rings[key] = rings;
+      const geo = smoothGrip(len, dia * 0.94, taper, 0.04), t = new THREE.CanvasTexture(corkCanvas(rings, len));   // small rounded edge so the end rings show in full
+      t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;   // custom cork: one solid tube, tapered like the regular grips
+            return tag(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: t, roughness: 0.95, metalness: 0, envMapIntensity: 0.6, bumpMap: t, bumpScale: 0.08, side: THREE.DoubleSide })), 's-grip'); }
+    if (st.mat === 'eva' && st.shrink !== 'none') {   // heat shrink over the EVA: same shape, the shrink tube's pattern and finish
+      const hs = shrinkCanvas(st.shrink, st.shrinkCol[st.shrink], len), geo = smoothGrip(len, dia * 0.95, taper), rt = new THREE.CanvasTexture(hs.rgh), bt = new THREE.CanvasTexture(hs.bmp);
+      rt.anisotropy = bt.anisotropy = 8;
+      return tag(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: canvasTex(hs.col), roughnessMap: rt, roughness: 1, metalness: 0, bumpMap: bt, bumpScale: st.shrink === 'fish' ? 0.35 : 0.6, side: THREE.DoubleSide })), 's-grip'); }
+    if (st.mat === 'eva') {   // EVA: a smooth foam tube with rounded edges and a soft matte dimple
+      const geo = smoothGrip(len, dia * 0.94, taper), mat = new THREE.MeshStandardMaterial({ map: canvasTex(evaCanvas(st.eva, evaI, len)), roughness: 0.95, metalness: 0, bumpMap: softBump(len), bumpScale: 0.6, side: THREE.DoubleSide });
+      return tag(new THREE.Mesh(geo, mat), 's-grip'); }
+    // regular cork: premium A-grade, smooth and pale with only a few small pores
+    const geo = smoothGrip(len, dia * 0.94, taper), tex = canvasTex(florCanvas(len));
+    const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.8, bumpMap: softBump(len), bumpScale: 0.3, side: THREE.DoubleSide });
+    return tag(new THREE.Mesh(geo, mat), 's-grip'); };
+  // seat at its distance from the butt; the rear grip(s) fill toward it from the butt cap
+  const seatModel = sd.model === 'alpsTriangle' ? alpsTriangleSeat(st.seatCol[sd.id], false) : sd.model === 'alpsTriangleIns' ? alpsTriangleSeat(st.seatCol[sd.id], true) : sd.model === 'alpsAlum' ? alpsTriangleSeat(st.seatCol[sd.id], false, true) : sd.model === 'alpsTrigger' ? alpsTriggerSeat(st.seatCol[sd.id]) : sd.model === 'atTrigger' ? alpsTriggerSeat(st.seatCol[sd.id], true) : sd.model === 'alpsMvt' ? alpsMvtSeat(st.seatCol[sd.id]) : sd.model === 'alpsVtg' ? alpsVtgSeat() : sd.model === 'fujiDT' ? fujiDTSeat(st.seatCol[sd.id]) : null;
+  // most seats are about 5.5 in long: every seat is set to that length (models are stretched to it, photos turned at it)
+  const SEAT_LEN = 5.5;
+  // the 3D seats are built hood-first from the butt; on Brett's rods the nuts and threads face the butt, so they're turned around
+  if (seatModel) { const k = SEAT_LEN / seatModel.userData.len; seatModel.scale.set(seatModel.userData.noFlip ? k : -k, 1.1, 1.1); seatModel.userData.len = SEAT_LEN; seatModel.traverse(o => { if (o.material) o.material.side = THREE.DoubleSide; }); }
+  const seatGeo = seatModel ? null : turned(seatI, SEAT_LEN, sd.p >= 6 ? 1.05 : 1.2, { p: sd.p || 2.5 }), seatLen = SEAT_LEN;
+  const seatX = Math.max(GRIP0 + 1, st.seatAt);
+  L.butt = GRIP0; L.seat = [seatX, seatX + seatLen];
+  let x = GRIP0, note = '';   // the grip's rounded end tucks 0.15 in into the butt
+  if (st.style === 'split') {
+    const a = Math.min(st.gButt, seatX - x - 0.5), b = Math.min(st.gRear, seatX - x - a);
+    const m1 = gripMesh(pieces[0], a, D, 'butt'); if (m1) { m1.position.x = x; g.add(m1); }
+    const m2 = gripMesh(pieces[1], b, D * 0.98, 'rear'); if (m2) { m2.position.x = seatX - b + 0.15; g.add(m2); }
+    L.split = [x + a, seatX - b + 0.15];
+    if (st.gButt + st.gRear > seatX - GRIP0) note = 'The rear pieces are longer than the room below the seat, so they were shortened to fit.';
+    else note = `${(L.split[1] - L.split[0]).toFixed(2)} in of bare blank between the rear pieces.`;
+  } else {
+    const a = seatX - x + 0.15, m1 = gripMesh(pieces[0], a, D, 'full'); if (m1) { m1.position.x = x; g.add(m1); } L.split = null;
+    note = `Rear grip runs ${a.toFixed(2)} in from the butt cap to the seat.`;
+  }
+  $('gripNote').textContent = note;
+  // fit the butt to the grip: its grip end takes the grip's radius just past the grip's rounded edge, so they read as one piece
+  const firstGrip = g.children.find(o => o.userData.part === 's-grip' && o.geometry && o.geometry.userData.rAt);
+  if (firstGrip) {
+    let endR = 0; const v = new THREE.Vector3();
+    bg.traverse(o => { if (!o.geometry || !o.geometry.attributes.position) return; const pa = o.geometry.attributes.position; o.updateMatrix();
+      for (let i = 0; i < pa.count; i++) { v.fromBufferAttribute(pa, i).applyMatrix4(o.matrix); if (v.x * bg.scale.x > bL - 0.06) endR = Math.max(endR, Math.hypot(v.y, v.z)); } });
+    const target = firstGrip.geometry.userData.rAt(0.15) + 0.004;
+    if (endR > 0.1) { bg.scale.y = bg.scale.z = target / endR; }
+  }
+  const seat = tag(seatModel || new THREE.Mesh(seatGeo, photoMat(photoTex(seatI), 0.35)), 's-seat');
+  if ((seatModel && !seatModel.userData.noFlip) || (!seatModel && sd.flip)) { seat.scale.x = -Math.abs(seat.scale.x); seat.position.x = seatX + seatLen; if (!seatModel) seat.material.side = THREE.DoubleSide; } else seat.position.x = seatX;
+  g.add(seat); x = seatX + seatLen - 0.15;
+  if (sd.lock && st.lockOn) {   // one knurled aluminum ring, on the threads just behind the seat's nut
+    // find where the threads end and the nut starts: the radius along the seat's butt end, in 0.04 in steps
+    seat.updateMatrixWorld(true); const v = new THREE.Vector3(), N = 60, rx = new Array(N).fill(0), xs = seatX + 0.15, step = 0.04;
+    seat.traverse(o => { if (!o.isMesh) return; const pa = o.geometry.attributes.position; for (let i = 0; i < pa.count; i += 2) { v.fromBufferAttribute(pa, i).applyMatrix4(o.matrixWorld); const k = Math.floor((v.x - xs) / step); if (k >= 0 && k < N) rx[k] = Math.max(rx[k], Math.hypot(v.y, v.z)); } });
+    const tr = Math.min(...rx.slice(0, 3).filter(r => r > 0.1).concat([0.45]));
+    let kn = 0; while (kn < N - 1 && !(rx[kn] > tr * 1.12)) kn++;   // first step clearly bigger than the threads
+    const w = 0.17, x0 = Math.max(xs + 0.02, xs + kn * step - w - 0.01);
+    if (!lockRib) { const c = document.createElement('canvas'); c.width = 16; c.height = 4; const k = c.getContext('2d'); k.fillStyle = '#fff'; k.fillRect(0, 0, 16, 4); k.fillStyle = '#555'; k.fillRect(0, 0, 6, 4);
+      lockRib = new THREE.CanvasTexture(c); lockRib.wrapS = lockRib.wrapT = THREE.RepeatWrapping; lockRib.repeat.set(90, 1); }
+    const r0 = Math.max(0.42, tr * 0.98), r1 = r0 + 0.06, lm = new THREE.MeshStandardMaterial({ color: MC[st.lockCol] || '#1a1a1a', metalness: 0.85, roughness: 0.3, bumpMap: lockRib, bumpScale: 1.2 });
+    const prof = [[0, r0], [0, r1 - 0.012], [0.012, r1], [w - 0.012, r1], [w, r1 - 0.012], [w, r0]];
+    const ln = tag(new THREE.Mesh(AXIS(new THREE.LatheGeometry(prof.map(([a, r]) => new THREE.Vector2(r, a)), 96)), lm), 's-seat'); ln.position.x = x0; g.add(ln); }
+  const f = gripMesh(pieces[pieces.length - 1], st.gFore, D * 0.92, 'fore'); if (f) { f.position.x = x; g.add(f); x += st.gFore; }
+  // winding checks (optional): a flared ring, wide side against the grip
+  // wide side against the grip; slim = a thin beveled ring, dimpled = a taller cone with drilled dimples, stepped = a lip with a narrower band
+  const CKP = { slim: [[0, 0], [0, 0.305], [0.015, 0.315], [0.1, 0.272], [0.12, 0.262], [0.12, 0]],
+    dimple: [[0, 0], [0, 0.325], [0.025, 0.335], [0.235, 0.272], [0.26, 0.262], [0.26, 0]],
+    step: [[0, 0], [0, 0.32], [0.012, 0.332], [0.05, 0.332], [0.058, 0.3], [0.155, 0.296], [0.17, 0.282], [0.17, 0]] };
+  const ckLen = CHECKS[st.checkType].len;
+  const wcheck = (x0, dir) => { const grp = new THREE.Group(), mat = metal(st.check, 0.22);
+    grp.add(new THREE.Mesh(AXIS(new THREE.LatheGeometry(CKP[st.checkType].map(([a, r]) => new THREE.Vector2(r, a)), 72)), mat));
+    if (st.checkType === 'dimple') {
+      if (!dimpleTex) { const c = document.createElement('canvas'); c.width = 1024; c.height = 256; const k = c.getContext('2d'); k.fillStyle = '#fff'; k.fillRect(0, 0, 1024, 256);
+        // lathe uv: u around, v per profile point; the cone face is the middle span (v 0.4 to 0.6)
+        for (let i = 0; i < 10; i++) { const cx = (i + 0.5) * 102.4, cy = 128, gr = k.createRadialGradient(cx, cy, 0, cx, cy, 13);
+          gr.addColorStop(0, '#3a3a3a'); gr.addColorStop(0.65, '#6a6a6a'); gr.addColorStop(1, '#fff'); k.save(); k.translate(cx, cy); k.scale(1, 0.43); k.translate(-cx, -cy);   // the cone face has fewer texture pixels per inch along the rod (234) than around it (543): squash so the dimple is round
+          k.fillStyle = gr; k.beginPath(); k.arc(cx, cy, 13, 0, 7); k.fill(); k.restore(); }
+        dimpleTex = new THREE.CanvasTexture(c); }
+      mat.map = dimpleTex; mat.bumpMap = dimpleTex; mat.bumpScale = 6; mat.needsUpdate = true; }
+    const m = tag(grp, 's-grip'); m.position.x = x0; if (dir < 0) { m.scale.x = -1; m.traverse(o => { if (o.material) o.material.side = THREE.DoubleSide; }); } g.add(m); };
+  if (st.chkFore) { wcheck(x - 0.02, 1); x += ckLen - 0.02; }
+  if (st.style === 'split' && st.chkSplit && L.split && L.split[1] - L.split[0] > 0.6) { wcheck(L.split[0] - 0.02, 1); wcheck(L.split[1] + 0.02, -1); }
+  L.handle1 = x;
+  const bEnd = RL(), blank = tag(new THREE.Mesh(AXIS(new THREE.CylinderGeometry(blankR(bEnd), blankR(L.buttStart + 0.3), bEnd - L.buttStart - 0.3, 48, 1)), blankMat), 's-blank');
+  blank.position.x = (bEnd + L.buttStart + 0.3) / 2; g.add(blank);
+  // wraps from the Wrap Designer
+  const putWrap = (k, at, maxLen = Infinity) => { const r = unrolled[k]; if (!r) return null; const lenIn = Math.min(r.lengthMM / IN, maxLen), flip = r.from === 'tip';
+    const m = tag(sleeve(at, at + lenIn, 0.011, wrapMat(r.canvas)), 's-wrap'); if (flip) { m.material.map.wrapS = THREE.RepeatWrapping; m.material.map.repeat.x = -1; } g.add(m); return [at, at + lenIn]; };
+  // with a trim band, the butt-side trim fills the space from the wrap down to the foregrip
+  L.wrap = st.mainOn && !GRIP ? putWrap('main', x + (unrolled.main && unrolled.main.trimMM ? 0.02 : 0.6)) : null;
+  if (!L.wrap) L.wrap = [x + 0.6, x + 4.6];
+  // split wrap: centered in the gap between the rear grips, never longer than the gap (an eighth of an inch clear at each end)
+  L.splitNote = '';
+  if (!GRIP && st.style === 'split' && st.splitOn && L.split && unrolled.split) { const gap = L.split[1] - L.split[0] - 0.25, sl0 = unrolled.split.lengthMM / IN, sl = Math.max(0.1, Math.min(sl0, gap)), mid = (L.split[0] + L.split[1]) / 2;
+    if (sl0 > gap + 0.01) L.splitNote = `Shortened to fit the ${gap.toFixed(2)} in gap between the grips. Set the length in the designer to ${gap.toFixed(2)} in or less.`;
+    putWrap('split', mid - sl / 2, sl); }
+  // guides and their wraps from the Guide Wrap Designer
+  const gd = guideDef(), sizes = guideSizes(), colHex = MC[isTi(gRing(gd)) && gd.id !== 'tihf' ? 'Titanium' : gColor(gd)] || '#4a4d52', ringHex = RINGC(gRing(gd));
+  const gx = guideSpacing(sizes.length, (L.seat[0] + L.seat[1]) / 2), side = st.type === 'spinning' ? -1 : 1;
+  const gg = new THREE.Group(); gg.rotation.x = side < 0 ? Math.PI : 0;
+  gx.forEach((px, i) => { const gdi = guideAt(i), m = tag(guideModel(gdi, sizes[i], colHex, ringHex), 's-guides'); m.position.set(px, blankR(px), 0); gg.add(m);
+    const ww = gdi === gd ? gw : gwKL; let wi = ww && ww[sizes[i]];
+    if (wi) gg.add(guideWrapMesh(wi, px, false, m.userData.spans || [])); });
+  // tip-top
+  const tt = new THREE.Group(), tr = 5.5 / IN, tm = metal(colHex);
+  const tube = new THREE.Mesh(AXIS(new THREE.CylinderGeometry(blankR(st.len) + 0.015, blankR(st.len) + 0.02, 0.45, 24)), tm); tube.position.x = -0.22; tt.add(tube);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(tr * 0.6, 0.02, 12, 36), new THREE.MeshStandardMaterial({ color: ringHex, metalness: 0.25, roughness: 0.15 }));
+  ring.rotation.y = Math.PI / 2; ring.position.set(0.02, tr * 0.8 + 0.05, 0); tt.add(ring);
+  const stem = new THREE.Mesh(new THREE.BoxGeometry(0.03, tr * 0.8, 0.03), tm); stem.position.set(0.02, tr * 0.4 + 0.02, 0); tt.add(stem);
+  tt.position.x = st.len; tag(tt, 's-guides'); gg.add(tt);
+  if (!GRIP) g.add(gg);
+  L.guides = gx[0]; L.gx = gx; L.sizes = sizes;
+  rod.remove(parts); parts.traverse(o => { if (o.geometry) o.geometry.dispose(); }); parts = g; rod.add(parts);
+  corkStrip(); $('splitNote').textContent = L.splitNote; $('splitNote').hidden = !L.splitNote || !(st.style === 'split' && st.splitOn);
+  rod.position.x = -RL() / 2;
+  $('load').hidden = true;
+  if (!camSet) { camSet = true; goView('handle', true); }
+  summary();
+}
+// a solid of revolution with flat faces cut into it: flats = [{a: angle, d: depth as a share of the radius}]
+function faceted(prof, flats, mat, seg = 96) {
+  const rAt = x => { for (let i = 1; i < prof.length; i++) if (x <= prof[i][0]) { const [x0, r0] = prof[i - 1], [x1, r1] = prof[i]; return r0 + (r1 - r0) * (x - x0) / Math.max(1e-6, x1 - x0); } return prof[prof.length - 1][1]; };
+  const x0 = prof[0][0], x1 = prof[prof.length - 1][0], cols = Math.max(8, Math.round((x1 - x0) / 0.03)), pos = [], uv = [], idx = [];
+  for (let i = 0; i <= cols; i++) { const x = x0 + (x1 - x0) * i / cols, r = rAt(x);
+    for (let j = 0; j <= seg; j++) { const th = j / seg * Math.PI * 2; let rr = r;
+      for (const f of flats) { const c = Math.cos(th - f.a); if (c > 0) rr = Math.min(rr, r * f.d / c); }
+      pos.push(x, rr * Math.cos(th), rr * Math.sin(th)); uv.push(i / cols, j / seg); } }
+  for (let i = 0; i < cols; i++) for (let j = 0; j < seg; j++) { const a = i * (seg + 1) + j, b = a + seg + 1; idx.push(a, a + 1, b, b, a + 1, b + 1); }
+  [0, cols].forEach((i, e) => { const c = pos.length / 3; pos.push(x0 + (x1 - x0) * i / cols, 0, 0); uv.push(i / cols, 0.5);
+    for (let j = 0; j < seg; j++) { const a = i * (seg + 1) + j; e ? idx.push(c, a + 1, a) : idx.push(c, a, a + 1); } });
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+  return new THREE.Mesh(g, mat);
+}
+// ALPS Triangle and Triangle INS reel seats, from the photos and the video of one on a rod. From the butt:
+// fixed hood (a cone opening toward the reel), triangular body with the flat reel-foot face, sliding hood,
+// two lock nuts (hex on the Triangle, knurled on the INS) with a black O-ring, then the long threads into the fore grip.
+// The INS body is perforated on the two lower faces, showing the dark core; the flat reel-foot face stays solid.
+let knurlTex = null;
+function alpsTriangleSeat(col, ins, round) {
+  const grp = new THREE.Group(), hex = MC[col] || '#888', matte = col === 'Black';
+  const m = new THREE.MeshStandardMaterial({ color: hex, metalness: matte ? 0.45 : 0.9, roughness: matte ? 0.4 : 0.2 });
+  const lat = (pts, mat, x0, seg = 64, rotA = 0) => { const me = new THREE.Mesh(AXIS(new THREE.LatheGeometry(pts.map(([x, r]) => new THREE.Vector2(r, x)), seg)), mat); me.position.x = x0; me.rotation.x = rotA; grp.add(me); };
+  // both hoods are widest on the side facing the reel foot and taper toward the ends of the seat (Brett confirmed on the Triangles)
+  const hoodOut = x => lat([[0, 0], [0, 0.5], [0.04, 0.53], [0.4, 0.61], [0.51, 0.63], [0.54, 0.62], [0.54, 0]], m, x, round ? 10 : 64, round ? Math.PI / 10 : 0);
+  const hoodIn = x => lat([[0, 0], [0, 0.62], [0.03, 0.63], [0.14, 0.61], [0.5, 0.53], [0.54, 0.5], [0.54, 0]], m, x);
+  let x = 0;
+  hoodOut(x); x += 0.52;
+  const bodyLen = 1.95, flats = [{ a: Math.PI / 2, d: 0.72 }, { a: Math.PI / 2 + 2.2, d: 0.86 }, { a: Math.PI / 2 - 2.2, d: 0.86 }];
+  if (ins) {
+    // holes on the lower faces only; the top flat (where the reel foot sits) and the ends stay solid
+    const W = 1024, H = 512, c = document.createElement('canvas'); c.width = W; c.height = H; const k = c.getContext('2d');
+    k.fillStyle = '#fff'; k.fillRect(0, 0, W, H); k.fillStyle = '#000';
+    const circ = 2 * Math.PI * 0.46, pitch = 0.085, cols = Math.floor((bodyLen - 0.3) / pitch), rows = Math.floor(circ / pitch);
+    for (let a = 0; a < cols; a++) for (let b = 0; b < rows; b++) {
+      const u = (0.15 + (a + 0.5) * pitch) / bodyLen, v = ((b + (a % 2) * 0.5) * pitch) / circ, th = v * Math.PI * 2;
+      if (Math.abs(Math.cos(th - Math.PI / 2)) > 0.62 && Math.sin(th) > 0) continue;   // keep the reel-foot face solid
+      k.beginPath(); k.ellipse(u * W, v * H, pitch * 0.32 / bodyLen * W, pitch * 0.32 / circ * H, 0, 0, 7); k.fill(); }
+    const at = new THREE.CanvasTexture(c);
+    const shell = faceted([[0, 0.5], [bodyLen, 0.5]], flats, new THREE.MeshStandardMaterial({ color: hex, metalness: matte ? 0.45 : 0.9, roughness: matte ? 0.4 : 0.22, alphaMap: at, alphaTest: 0.5, side: THREE.DoubleSide }));
+    shell.position.x = x; grp.add(shell);
+    const core = new THREE.Mesh(AXIS(new THREE.CylinderGeometry(0.33, 0.33, bodyLen, 32)), new THREE.MeshStandardMaterial({ color: 0x141517, roughness: 0.6 }));
+    core.position.x = x + bodyLen / 2; grp.add(core);
+  } else if (round) { lat([[0, 0], [0, 0.45], [bodyLen - 0.5, 0.45], [bodyLen - 0.5, 0.44]].concat(Array.from({ length: 8 }, (_, i) => [[bodyLen - 0.47 + i * 0.06, 0.455], [bodyLen - 0.44 + i * 0.06, 0.44]]).flat(), [[bodyLen, 0.44], [bodyLen, 0]]), m, x); }
+  else { const body = faceted([[0, 0.5], [bodyLen, 0.5]], flats, m); body.position.x = x; grp.add(body); }
+  x += bodyLen - 0.02;
+  hoodIn(x); x += 0.54;
+  // lock nuts: hex on the Triangle, knurled rounds on the INS
+  if (ins && !knurlTex) { const c = document.createElement('canvas'); c.width = c.height = 64; const k = c.getContext('2d'); k.fillStyle = '#888'; k.fillRect(0, 0, 64, 64);
+    k.strokeStyle = '#fff'; k.lineWidth = 2; for (let i = -64; i < 128; i += 8) { k.beginPath(); k.moveTo(i, 0); k.lineTo(i + 64, 64); k.stroke(); k.beginPath(); k.moveTo(i + 64, 0); k.lineTo(i, 64); k.stroke(); }
+    knurlTex = new THREE.CanvasTexture(c); knurlTex.wrapS = knurlTex.wrapT = THREE.RepeatWrapping; knurlTex.repeat.set(1, 12); }
+  const nutM = ins ? new THREE.MeshStandardMaterial({ color: hex, metalness: matte ? 0.45 : 0.9, roughness: 0.3, bumpMap: knurlTex, bumpScale: 1.5 }) : m;
+  const ring = () => { lat([[0, 0], [0, 0.42], [0.01, 0.45], [0.04, 0.45], [0.05, 0.42], [0.05, 0]], new THREE.MeshStandardMaterial({ color: 0x111113, roughness: 0.7 }), x); x += 0.05; };
+  const nut = (r, len) => { lat([[0, 0], [0, r - 0.03], [0.02, r], [len - 0.02, r], [len, r - 0.03], [len, 0]], nutM, x, ins || round ? 64 : 6, ins || round ? 0 : Math.PI / 6); x += len; };
+  if (round) ring();
+  nut(0.5, 0.24);
+  ring();
+  nut(0.47, 0.22);
+  // long threaded section running into the fore grip
+  const th = [[0, 0], [0, 0.4]]; for (let i = 0; i < 22; i++) th.push([0.03 + i * 0.06, 0.42], [0.06 + i * 0.06, 0.395]); th.push([1.35, 0.4], [1.35, 0]);
+  lat(th, m, x); x += 1.35;
+  grp.userData.len = x - 0.25;   // the threads show up to the fore grip, the last bit sits inside it
+  return grp;
+}
+// ALPS Rubber Gimbal, from the product photos: pebbled rubber widening toward the grip, with a cross-shaped
+// gimbal slot cut into the end (four rounded lobes). The end face and the side wall share one height function so they meet.
+// ALPS Rubber Gimbal: the ALPS Rubber Butt's bulb and waist, with the cross cuts in the end
+// built at the full butt length (2.1 in): a round bulb at the end, a pinched waist, then a flare into the grip
+// Brett's reference: a broad flat end with rounded corners, widest just behind the end, easing down to a soft waist
+// (it only tapers down into the grip, never flares back out)
+// like the photos: a domed end (rounded shoulders down to a small flat center with the pin hole), widest just behind the dome
+// from Brett's reference photo: a round dome on the end (small flat center), widest about a third of the way up,
+// then a long, slightly concave taper into the grip
+const RUBBER_PROF = (() => { const L = 2.1, h = 0.78, rw = 0.76, rf = 0.28, rg = 0.53, p = [];
+  for (let i = 0; i <= 16; i++) { const x = h * i / 16, c = 1 - x / h; p.push([x, rf + (rw - rf) * Math.sqrt(Math.max(0, 1 - c * c))]); }
+  for (let i = 1; i <= 14; i++) { const t = i / 14; p.push([h + (L - h) * t, rg + (rw - rg) * Math.pow(1 - t, 1.35)]); }
+  return p; })();
+const profR = (pr, x) => { for (let i = 1; i < pr.length; i++) if (x <= pr[i][0]) { const [x0, r0] = pr[i - 1], [x1, r1] = pr[i]; return r0 + (r1 - r0) * (x - x0) / (x1 - x0); } return pr[pr.length - 1][1]; };
+function alpsRubberGimbal(g) { return gimbalCap(g, pebbled(), { L: 2.1, R0: 0.5, R1: 0.56, w: 0.22, depth: 0.3, soft: 0.11, round: 0.06, radFn: x => profR(RUBBER_PROF, x) }); }
+// AT and ALPS aluminum gimbals, from the product photos: a straight anodized cylinder with a deep cross slot (U-shaped
+// bottoms) in the end and three grooves near the grip end. Same shape for both brands, no logo.
+function alumGimbal(g, col, lathe) {
+  const hex = MC[col] || '#888', matte = col === 'Black' || col === 'Matte';
+  const m = new THREE.MeshStandardMaterial({ color: hex, metalness: matte ? 0.45 : 0.9, roughness: matte ? 0.45 : 0.2 });
+  const L = gimbalCap(g, m, { L: 2.1, R0: 0.54, R1: 0.57, w: 0.26, depth: 0.42, soft: 0.05, round: 0.03 });
+  // cut lines: a pair near the grip end and a pair mid-body (thin dark rings just proud of the surface, with a bright edge)
+  const dark = new THREE.MeshStandardMaterial({ color: 0x0d0d0f, roughness: 0.6 });
+  [0.25, 0.35, L * 0.55, L * 0.55 + 0.1].forEach(t => { const r = 0.54 + 0.03 * Math.pow((L - t) / L, 0.8) + 0.002; lathe([[0, 0], [0, r], [0.014, r], [0.014, 0]], dark, L - t); lathe([[0, 0], [0, r - 0.0004], [0.006, r - 0.0004], [0.006, 0]], metal('#f0f2f5', 0.15), L - t + 0.014); });
+  return L;
+}
+function gimbalCap(g, mat, { L, R0, R1, w, depth, soft, round, radFn }) {
+  const seg = 160, rad = radFn || (x => R0 + (R1 - R0) * Math.pow(Math.min(1, x / L), 0.8));
+  const sm = t => t * t * (3 - 2 * t);
+  const endX = (y, z) => { const r = Math.hypot(y, z), d = Math.min(Math.abs(y), Math.abs(z)), t = sm(Math.min(1, Math.max(0, (d - w / 2) / soft)));
+    return depth * (1 - t) + round * Math.pow(Math.min(1, r / R0), 3); };
+  const pos = [], idx = [], rows = 48, cols = 30;
+  const edgeR = th => rad(endX(R0 * Math.cos(th), R0 * Math.sin(th)));
+  for (let i = 0; i <= rows; i++) { const f = i / rows; for (let j = 0; j <= seg; j++) { const th = j / seg * Math.PI * 2, c = Math.cos(th), sn = Math.sin(th), re = edgeR(th);
+    pos.push(endX(R0 * f * c, R0 * f * sn), re * f * c, re * f * sn); } }
+  for (let i = 0; i < rows; i++) for (let j = 0; j < seg; j++) { const a = i * (seg + 1) + j, b2 = a + seg + 1; idx.push(a, b2, a + 1, b2, b2 + 1, a + 1); }
+  const base = pos.length / 3;
+  for (let i = 0; i <= cols; i++) for (let j = 0; j <= seg; j++) { const th = j / seg * Math.PI * 2, e = endX(R0 * Math.cos(th), R0 * Math.sin(th)), x = e + (L - e) * i / cols, r = rad(x);
+    pos.push(x, r * Math.cos(th), r * Math.sin(th)); }
+  for (let i = 0; i < cols; i++) for (let j = 0; j < seg; j++) { const a = base + i * (seg + 1) + j, b2 = a + seg + 1; idx.push(a, a + 1, b2, b2, a + 1, b2 + 1); }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setIndex(idx); geo.computeVertexNormals();
+  mat.side = THREE.DoubleSide; const m = new THREE.Mesh(geo, mat); m.userData.part = 's-butt'; g.add(m);
+  return L;
+}
+// ALPS aluminum trigger seat, from Brett's photos (built butt-first, trigger at the butt end like on his rod):
+// faceted fixed hood, curved trigger under it, round body with a flat reel-foot face and diagonal flutes on the side,
+// faceted sliding hood, two knurled lock nuts, threads into the fore grip. All in the chosen anodized color.
+let fluteTex = null, knurl2 = null;
+// at = AT Aluminum Trigger: the same build as the ALPS, but a smooth body with a band of fine rings by the sliding hood
+function alpsTriggerSeat(col, at = false) {
+  const grp = new THREE.Group(), hex = MC[col] || '#888', matte = col === 'Black';
+  const m = new THREE.MeshStandardMaterial({ color: hex, metalness: matte ? 0.5 : 0.85, roughness: matte ? 0.35 : 0.16, envMapIntensity: col === 'Silver' ? 2 : 1.3 });
+  const lat = (pts, mat, x0, seg = 64, rot = 0) => { const me = new THREE.Mesh(AXIS(new THREE.LatheGeometry(pts.map(([x, r]) => new THREE.Vector2(r, x)), seg)), mat); me.position.x = x0; me.rotation.x = rot; grp.add(me); };
+  let x = 0;
+  lat([[0, 0], [0, 0.6], [0.04, 0.64], [0.42, 0.64], [0.5, 0.56], [0.56, 0.5], [0.56, 0]], m, x, 8, Math.PI / 8); x += 0.52;
+  if (!fluteTex) { const c = document.createElement('canvas'); c.width = 512; c.height = 256; const k = c.getContext('2d'); k.fillStyle = '#fff'; k.fillRect(0, 0, 512, 256);
+    k.strokeStyle = '#000'; k.lineWidth = 9; k.lineCap = 'round';
+    [[0.18, 0.62], [0.82, 0.38]].forEach(([v0, v1]) => { for (let i = 0; i < 5; i++) { const u = 0.12 + i * 0.13; k.beginPath(); k.moveTo(u * 512, v0 * 256); k.lineTo((u + 0.07) * 512, (v0 + (v1 - v0) * 0.25) * 256); k.stroke(); } });
+    fluteTex = new THREE.CanvasTexture(c); }
+  const bodyLen = 2.35, bm = m.clone(); if (!at) { bm.bumpMap = fluteTex; bm.bumpScale = 3; }
+  const body = faceted([[0, 0.47], [0.15, 0.46], [bodyLen - 0.15, 0.46], [bodyLen, 0.48]], [{ a: Math.PI / 2, d: 0.82 }], bm);
+  body.position.x = x; grp.add(body);
+  const tsh = new THREE.Shape(), t0 = 0.15;
+  tsh.moveTo(t0, -0.3); tsh.lineTo(t0 + 0.75, -0.3);
+  tsh.quadraticCurveTo(t0 + 0.42, -0.42, t0 + 0.3, -0.7);
+  tsh.quadraticCurveTo(t0 + 0.22, -1.05, t0 + 0.14, -1.2);
+  tsh.quadraticCurveTo(t0 + 0.04, -1.22, t0 + 0.04, -1.1);
+  tsh.quadraticCurveTo(t0 + 0.06, -0.7, t0, -0.42); tsh.closePath();
+  const tg = new THREE.ExtrudeGeometry(tsh, { depth: 0.22, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.04, bevelSegments: 4, curveSegments: 24 });
+  tg.translate(0, 0, -0.11); const tm = new THREE.Mesh(tg, m); tm.position.x = x; grp.add(tm);
+  if (at) { const rg = [[0, 0.46]]; for (let i = 0; i < 7; i++) rg.push([0.02 + i * 0.06, 0.478], [0.05 + i * 0.06, 0.462]); rg.push([0.44, 0.46], [0.44, 0]); rg.unshift([0, 0]); lat(rg, m, x + bodyLen - 0.5, 64); }
+  x += bodyLen - 0.02;
+  lat([[0, 0], [0, 0.6], [0.06, 0.64], [0.38, 0.64], [0.44, 0.58], [0.5, 0.55], [0.5, 0]], m, x, 8, Math.PI / 8); x += 0.5;
+  lat([[0, 0], [0, 0.55], [0.1, 0.55], [0.12, 0.5], [0.12, 0]], m, x); x += 0.12;
+  if (!knurl2) { const c = document.createElement('canvas'); c.width = c.height = 64; const k = c.getContext('2d'); k.fillStyle = '#888'; k.fillRect(0, 0, 64, 64);
+    k.strokeStyle = '#fff'; k.lineWidth = 2; for (let i = -64; i < 128; i += 6) { k.beginPath(); k.moveTo(i, 0); k.lineTo(i + 64, 64); k.stroke(); k.beginPath(); k.moveTo(i + 64, 0); k.lineTo(i, 64); k.stroke(); }
+    knurl2 = new THREE.CanvasTexture(c); knurl2.wrapS = knurl2.wrapT = THREE.RepeatWrapping; knurl2.repeat.set(1, 14); }
+  const nm = new THREE.MeshStandardMaterial({ color: hex, metalness: matte ? 0.5 : 0.92, roughness: 0.28, bumpMap: knurl2, bumpScale: 2 });
+  [0.3, 0.26].forEach(len => { lat([[0, 0], [0, 0.5], [0.03, 0.53], [len - 0.03, 0.53], [len, 0.5], [len, 0]], nm, x); x += len + 0.03; });
+  const th = [[0, 0], [0, 0.4]]; for (let i = 0; i < 10; i++) th.push([0.03 + i * 0.06, 0.425], [0.06 + i * 0.06, 0.4]); th.push([0.62, 0.4], [0.62, 0]);
+  lat(th, m, x); x += 0.62;
+  grp.userData.len = x - 0.2; grp.userData.noFlip = true;
+  return grp;
+}
+// ---------- sculpted seats ----------
+// a solid shaped by r(x, th) at every point: th = 0 is the reel-foot side (+y); the mesh seam runs underneath.
+// uv: u along x, v around (v = 0.5 on the reel-foot side)
+const SS = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const ANG = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
+function sculpt(x0, x1, rFn, mat, cols = 280, seg = 200) {
+  const pos = [], uv = [], idx = [];
+  for (let i = 0; i <= cols; i++) { const x = x0 + (x1 - x0) * i / cols;
+    for (let j = 0; j <= seg; j++) { const th = Math.PI + j / seg * Math.PI * 2, r = rFn(x, th); pos.push(x, r * Math.cos(th), r * Math.sin(th)); uv.push(i / cols, j / seg); } }
+  for (let i = 0; i < cols; i++) for (let j = 0; j < seg; j++) { const a = i * (seg + 1) + j, b = a + seg + 1; idx.push(a, a + 1, b, b, a + 1, b + 1); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+  return new THREE.Mesh(g, mat);
+}
+// paint a texture for a sculpt over [x0, x1]: fn(x, th, r) -> [r, g, b, roughness, metalness] (0-255 colors, 0-1 for the rest)
+function paintSculpt(W, H, x0, x1, fn) {
+  const c = document.createElement('canvas'), m = document.createElement('canvas'); c.width = m.width = W; c.height = m.height = H;
+  const cx = c.getContext('2d'), mx = m.getContext('2d'), ci = cx.createImageData(W, H), mi = mx.createImageData(W, H);
+  for (let py = 0; py < H; py++) { const th = Math.PI + (1 - (py + 0.5) / H) * Math.PI * 2;
+    for (let px = 0; px < W; px++) { const o = fn(x0 + (px + 0.5) / W * (x1 - x0), th), k = (py * W + px) * 4;
+      ci.data[k] = o[0]; ci.data[k + 1] = o[1]; ci.data[k + 2] = o[2]; ci.data[k + 3] = 255;
+      mi.data[k] = 0; mi.data[k + 1] = o[3] * 255; mi.data[k + 2] = o[4] * 255; mi.data[k + 3] = 255; } }
+  cx.putImageData(ci, 0, 0); mx.putImageData(mi, 0, 0);
+  // place text along the seat at (x, th), reading toward the front
+  // mirror: for a seat that's flipped when placed
+  const text = (str, x, th, size, col, font = 'italic 800', mirror = false) => { const v = ((th - Math.PI) / (Math.PI * 2) % 1 + 1) % 1;
+    cx.save(); cx.translate((x - x0) / (x1 - x0) * W, (1 - v) * H); cx.scale(mirror ? -1 : 1, -1); cx.fillStyle = col; cx.font = `${font} ${size}px Arial, sans-serif`; cx.textBaseline = 'middle'; cx.fillText(str, 0, 0); cx.restore(); };
+  return { c, m, text, done() { const map = new THREE.CanvasTexture(c), rm = new THREE.CanvasTexture(m); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = rm.anisotropy = 8; return { map, rm }; } };
+}
+// rubber ribbed threads at the butt end of the ALPS seats
+function seatThreads(grp, mat, len, ribs) {
+  const th = [[0, 0], [0, 0.36]], p = len / ribs; for (let i = 0; i < ribs; i++) th.push([i * p + p * 0.18, 0.41], [i * p + p * 0.62, 0.41], [i * p + p, 0.365]); th.push([len, 0.37], [len, 0]);
+  const me = new THREE.Mesh(AXIS(new THREE.LatheGeometry(th.map(([x, r]) => new THREE.Vector2(r, x)), 72)), mat); grp.add(me);
+}
+// Fuji Deluxe Trigger, from Brett's photo (built butt-first, threads at the butt, reel foot on top, trigger underneath):
+// ribbed threads; a ribbed lock nut a little bigger than everything else; the metal sliding hood (silver or grey) with
+// a darker cap ring at its front; the slim charcoal body with the reel-foot flat on top; the fixed hood rising in a
+// tall concave sweep into a squared head with its mouth open toward the butt; the trigger hanging under the head.
+let dtTex = null;
+const dtMouth = (x, th) => SS(0.3, 0.2, Math.abs(ANG(th, 0))) * SS(3.78, 3.88, x) * SS(4.45, 4.3, x);
+function dtR(x, th) {
+  const top = Math.cos(th);
+  let rb = 0.44 + 0.01 * SS(2.3, 3.2, x) + 0.05 * Math.max(0, -top) * SS(4.0, 5.2, x);               // body, a little fuller under the head
+  let r = rb;
+  if (top > 0 && x < 4.05) r = Math.min(r, 0.39 / top);                                               // reel-foot flat
+  // the head: a rounded oval rising out of the body in a concave sweep, centered above the rod, a touch flatter on top
+  const h = 0.3 * Math.pow(SS(3.55, 4.65, x), 1.4) - 0.03 * SS(4.65, 5.4, x);
+  if (h > 0.001) {
+    const yc = h * 0.5, ay = rb + h * 0.5, az = rb + 0.06 * SS(3.7, 4.6, x), c = top, sn = Math.sin(th);
+    const A = c * c / (ay * ay) + sn * sn / (az * az), B = -2 * c * yc / (ay * ay), C = yc * yc / (ay * ay) - 1;
+    let hr = (-B + Math.sqrt(B * B - 4 * A * C)) / (2 * A);
+    if (top > 0.6) hr = Math.min(hr, (0.39 + h) / top);
+    r += (Math.max(r, hr) - r) * SS(0, 0.06, h);
+  }
+  r += (Math.min(r, 0.37 / Math.max(0.4, top)) - r) * dtMouth(x, th);                                // hood mouth
+  r += (0.3 - r) * SS(5.43, 5.5, x);                                                                  // rounded nose
+  return r;
+}
+function fujiDTSeat(col) {
+  const grp = new THREE.Group();
+  const char = new THREE.MeshStandardMaterial({ color: 0x3b3c3f, roughness: 0.62, metalness: 0.05 }), dark = new THREE.MeshStandardMaterial({ color: 0x2a2b2e, roughness: 0.7, metalness: 0.05 });
+  const lat = (pts, mat, x0, seg = 96) => { const me = new THREE.Mesh(AXIS(new THREE.LatheGeometry(pts.map(([x, r]) => new THREE.Vector2(r, x)), seg)), mat); me.position.x = x0; grp.add(me); return me; };
+  // threads: big rounded ribs
+  const t = [[0, 0], [0, 0.46]]; for (let i = 0; i < 5; i++) { const a = i * 0.13; t.push([a + 0.015, 0.52], [a + 0.085, 0.52], [a + 0.13, 0.465]); } t.push([0.66, 0.47], [0.66, 0]); lat(t, dark, 0);
+  // lock nut: ribbed all the way round, bevelled at both ends
+  grp.add(sculpt(0.64, 1.36, (x, th) => { const f = ((th / (Math.PI * 2) * 22) % 1 + 1) % 1, rib = 0.5 - 0.5 * Math.cos(f * Math.PI * 2);
+    return 0.615 - 0.03 * (1 - SS(0.64, 0.7, x)) - 0.04 * (1 - SS(1.36, 1.28, x)) - 0.018 * rib * SS(0.7, 0.74, x) * SS(1.28, 1.24, x); }, dark, 80, 264));
+  // metal sliding hood with its darker cap ring
+  const hoodM = metal(col === 'Grey' ? '#6c7076' : '#b9bdc3', 0.28);
+  lat([[0, 0], [0, 0.56], [0.03, 0.585], [0.72, 0.585], [0.74, 0.57], [0.74, 0]], hoodM, 1.34);
+  lat([[0, 0], [0, 0.565], [0.1, 0.55], [0.13, 0.5], [0.13, 0]], metal(col === 'Grey' ? '#45484d' : '#7d8187', 0.3), 2.08);
+  // body + head
+  if (!dtTex) { const P = paintSculpt(1024, 512, 2.15, 5.5, (x, th) => { const v = 59 * (1 - 0.7 * dtMouth(x, th)); return [v, v + 1, v + 4, 0.62, 0.05]; }); P.text('Fuji', 3.0, Math.PI / 2 - 0.05, 30, '#8d9095', 'italic 800', true); P.text('Fuji', 3.0, -Math.PI / 2 + 0.2, 30, '#8d9095', 'italic 800', true); dtTex = P.done(); }
+  grp.add(sculpt(2.15, 5.5, dtR, new THREE.MeshStandardMaterial({ map: dtTex.map, roughnessMap: dtTex.rm, metalnessMap: dtTex.rm, roughness: 1, metalness: 1 })));
+  lat([[0, 0.31], [0.001, 0], [-0.05, 0]], new THREE.MeshStandardMaterial({ color: 0x1e1f21, roughness: 0.8 }), 5.5, 48);
+  // trigger: a curved finger hook under the head, thick at the root and rounded at the tip
+  const sh = new THREE.Shape(); sh.moveTo(4.36, -0.3); sh.lineTo(4.98, -0.3);
+  sh.bezierCurveTo(4.86, -0.6, 4.72, -0.95, 4.66, -1.42); sh.quadraticCurveTo(4.6, -1.56, 4.53, -1.45);
+  sh.bezierCurveTo(4.5, -1.05, 4.44, -0.62, 4.36, -0.3);
+  const tg = new THREE.ExtrudeGeometry(sh, { depth: 0.26, bevelEnabled: true, bevelThickness: 0.06, bevelSize: 0.05, bevelSegments: 5, curveSegments: 28 });
+  tg.translate(0, 0, -0.13); const trig = new THREE.Mesh(tg, char); grp.add(trig);
+  grp.userData.len = 5.5;   // flipped when placed: head and trigger at the butt end, threads toward the tip
+  return grp;
+}
+// ALPS VTG, from Brett's photos (built butt-first, threads at the butt). All soft-touch charcoal:
+// short ribbed threads; a rubber lock nut with a band of rings next to the threads and raised panels in recessed frames;
+// a sliding hood cup that reaches furthest along the reel-foot side with a U notch for the foot; a round body with the
+// reel-foot flat on top, shallow side scallops and two rings below the hood; the fixed hood rising in a concave sweep with
+// its mouth open toward the butt and wrapping down the sides; then the slim front tube with a bead at the open nose.
+let vtgTex = null;
+const vtgMouth = (x, th) => SS(0.34, 0.22, Math.abs(ANG(th, 0))) * SS(3.12, 3.22, x) * SS(3.74, 3.62, x);
+function vtgR(x, th) {
+  const top = Math.cos(th), at = Math.abs(ANG(th, 0)), side = Math.abs(Math.sin(th));
+  let rb = x < 3.0 ? 0.47 - 0.015 * SS(2.0, 3.0, x) : 0.455 - 0.012 * SS(4.2, 4.8, x);
+  rb -= 0.05 * SS(5.44, 5.5, x);
+  let r = rb;
+  if (top > 0 && x > 1.6 && x < 4.0) r = Math.min(r, 0.405 / top);                                  // reel-foot flat
+  r -= 0.011 * SS(0.55, 0.85, side) * SS(2.25, 2.45, x) * SS(3.15, 2.95, x);                         // side scallops
+  if (top < 0.5) [2.02, 2.1].forEach(g => { r -= 0.009 * SS(0.025, 0, Math.abs(x - g)) * SS(0.5, 0.2, top); });   // rings below the hood
+  // sliding hood: a cup over the nut end, furthest along the top, with a U notch at the top center for the reel foot
+  const e = 1.66 + 0.44 * Math.pow(Math.max(0, top), 1.4) - 0.3 * SS(0.3, 0.14, at);
+  const hoodR = 0.585 - 0.04 * (1 - SS(1.2, 1.27, x)) + 0.025 * Math.max(0, top) * SS(1.45, 1.9, x);
+  const inHood = SS(e + 0.06, e - 0.02, x);
+  r += (hoodR - r) * inHood;
+  r -= 0.008 * SS(0.02, 0, Math.abs(x - 1.34)) + 0.008 * SS(0.02, 0, Math.abs(x - 1.42));          // two fine rings on the hood
+  // fixed hood: concave rise from the butt side, crest, then falling into the front tube; wraps down the sides
+  const h = 0.15 * Math.pow(SS(3.0, 3.72, x), 1.6) * SS(4.6, 3.98, x), wrap = SS(0.0, 0.8, top);
+  if (h > 0) { let hr = rb + h * wrap; if (top > 0.2) hr = Math.min(hr, (0.405 + h * 1.1) / top); r += (Math.max(r, hr) - r) * SS(0, 0.03, h); }
+  // the hood mouth, open toward the butt where the reel foot slides in
+  r += (Math.min(r, 0.392 / Math.max(0.4, top)) - r) * vtgMouth(x, th);
+  return r;
+}
+function alpsVtgSeat() {
+  const grp = new THREE.Group();
+  const soft = new THREE.MeshStandardMaterial({ color: 0x2f3033, roughness: 0.74, metalness: 0.04 });
+  seatThreads(grp, soft, 0.46, 3);
+  // lock nut: ring band by the threads, then raised panels in recessed frames
+  grp.add(sculpt(0.42, 1.26, (x, th) => {
+    let r = 0.56 - 0.035 * (1 - SS(0.42, 0.48, x)) - 0.03 * (1 - SS(1.26, 1.2, x));
+    if (x < 0.69) { const k = 0.5 - 0.5 * Math.cos(2 * Math.PI * (x - 0.48) / 0.07); r -= 0.016 * SS(0.6, 0.95, k) * SS(0.47, 0.5, x); }
+    else { const f = ((th / (Math.PI * 2) * 13) % 1 + 1) % 1, e = Math.min(f, 1 - f), xin = SS(0.72, 0.76, x) * SS(1.18, 1.14, x);
+      r -= 0.028 * (1 - SS(0.045, 0.09, e)) * xin;
+      r -= 0.01 * SS(0.17, 0.21, e) * SS(0.8, 0.84, x) * SS(1.11, 1.07, x); }
+    return r; }, soft, 140, 240));
+  if (!vtgTex) { const P = paintSculpt(2048, 1024, 1.2, 5.5, (x, th) => { const d = 1 - 0.75 * vtgMouth(x, th); const v = 47 * d; return [v, v + 1, v + 3, 0.74, 0.04]; });
+    P.text('ALPS', 2.3, Math.PI / 2 - 0.1, 54, '#c4c6ca'); P.text('ALPS', 2.3, -Math.PI / 2 + 0.25, 54, '#c4c6ca'); vtgTex = P.done(); }
+  grp.add(sculpt(1.2, 5.5, vtgR, new THREE.MeshStandardMaterial({ map: vtgTex.map, roughnessMap: vtgTex.rm, metalnessMap: vtgTex.rm, roughness: 1, metalness: 1 })));
+  // dark inside of the open nose
+  const nose = new THREE.Mesh(AXIS(new THREE.LatheGeometry([[0, 0.395], [-0.04, 0.34], [-0.6, 0.34], [-0.6, 0]].map(([x, r]) => new THREE.Vector2(r, x)), 64)), new THREE.MeshStandardMaterial({ color: 0x0b0b0c, roughness: 0.9 }));
+  nose.position.x = 5.5; grp.add(nose);
+  grp.userData.len = 5.5; grp.userData.noFlip = true;
+  return grp;
+}
+// ALPS MVT, from Brett's photos (built butt-first, threads at the butt): ribbed black rubber threads, a knurled aluminum
+// lock nut (blue or silver) with bright cut edges, a matte black sliding hood with a slanted lip reaching furthest along
+// the reel-foot side, a body that pinches in at the waist with a long wavy silver-carbon window on each side, a bulbous
+// fixed hood that wraps most of the way around with its mouth open toward the butt, a small oval carbon window on each
+// side of the front tube, and the open nose.
+let mvtTex = null, mvtKnurl = null;
+const mvtMouth = (x, th) => SS(0.36, 0.24, Math.abs(ANG(th, 0))) * SS(3.38, 3.48, x) * SS(3.98, 3.86, x);
+// signed distance (in) into the nearest carbon window; positive inside
+function mvtWin(x, th) {
+  let best = -1;
+  for (const c of [1.32, -1.32]) {
+    const u = c > 0 ? c - ANG(th, 0) : ANG(th, 0) - c;          // radians toward the reel-foot side from the window's center line
+    if (x > 1.9 && x < 3.6) {
+      const env = Math.sqrt(Math.max(0, 1 - Math.pow((x - 2.74) / 0.72, 4)));
+      const up = (0.31 + 0.13 * Math.exp(-Math.pow((x - 3.18) / 0.13, 2)) - 0.04 * SS(2.6, 2.9, x)) * env;
+      const lo = (-0.31 + 0.17 * SS(2.82, 3.02, x)) * env;
+      best = Math.max(best, Math.min(up - u, u - lo) * 0.45);
+    }
+    const du = ANG(th, c * 0.95), dx = x - 5.02;
+    best = Math.max(best, (1 - Math.hypot(dx / 0.17, du / 0.33)) * 0.12);
+  }
+  return best;
+}
+function mvtR(x, th) {
+  const top = Math.cos(th), at = Math.abs(ANG(th, 0));
+  let rb = x < 2.1 ? 0.47 : x < 2.95 ? 0.47 - 0.045 * SS(2.1, 2.95, x) : x < 4.7 ? 0.425 + 0.02 * SS(2.95, 3.5, x) : 0.445;
+  if (x > 5.32) rb += 0.014 * SS(5.32, 5.38, x) - 0.06 * SS(5.42, 5.5, x);
+  let r = rb;
+  if (top > 0 && x > 1.6 && x < 4.2) r = Math.min(r, 0.39 / top);                                    // reel-foot flat
+  // sliding hood with a slanted lip, furthest along the reel-foot side
+  const e = 1.62 + 0.42 * (0.5 + 0.5 * top), hoodR = 0.6 - 0.045 * (1 - SS(1.2, 1.28, x)) + 0.02 * Math.max(0, top) * SS(1.5, 1.95, x);
+  r += (hoodR - r) * SS(e + 0.06, e - 0.02, x);
+  // bulbous fixed hood: biggest over the reel foot, wrapping most of the way around
+  const h = 0.16 * Math.pow(SS(3.2, 3.92, x), 1.6) * SS(4.8, 4.2, x), wrap = SS(0.0, 0.8, top);
+  if (h > 0) { let hr = rb + h * wrap; if (top > 0.2) hr = Math.min(hr, (0.39 + h * 1.1) / top); r += (Math.max(r, hr) - r) * SS(0, 0.03, h); }
+  r += (Math.min(r, 0.38 / Math.max(0.4, top)) - r) * mvtMouth(x, th);                              // hood mouth
+  r -= 0.013 * SS(0, 0.014, mvtWin(x, th));                                                          // carbon windows sit just below the surface
+  return r;
+}
+function alpsMvtSeat(col) {
+  const grp = new THREE.Group();
+  const black = new THREE.MeshStandardMaterial({ color: 0x17181b, roughness: 0.6, metalness: 0.05 });
+  seatThreads(grp, black, 0.64, 5);
+  if (!knurl2) { const c = document.createElement('canvas'); c.width = c.height = 64; const k = c.getContext('2d'); k.fillStyle = '#888'; k.fillRect(0, 0, 64, 64);
+    k.strokeStyle = '#fff'; k.lineWidth = 2; for (let i = -64; i < 128; i += 6) { k.beginPath(); k.moveTo(i, 0); k.lineTo(i + 64, 64); k.stroke(); k.beginPath(); k.moveTo(i + 64, 0); k.lineTo(i, 64); k.stroke(); }
+    knurl2 = new THREE.CanvasTexture(c); knurl2.wrapS = knurl2.wrapT = THREE.RepeatWrapping; knurl2.repeat.set(1, 14); }
+  const silver = col === 'Silver', lat = (pts, mat, x0) => { const me = new THREE.Mesh(AXIS(new THREE.LatheGeometry(pts.map(([x, r]) => new THREE.Vector2(r, x)), 96)), mat); me.position.x = x0; grp.add(me); };
+  if (!mvtKnurl) { const c = document.createElement('canvas'); c.width = c.height = 64; const k = c.getContext('2d');
+    // one diamond of a knurl: bright peak, falling off to the grooves
+    const im = k.createImageData(64, 64); for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++) { const v = 255 * Math.max(0, 1 - (Math.abs(x - 31.5) + Math.abs(y - 31.5)) / 32), o = (y * 64 + x) * 4; im.data[o] = im.data[o + 1] = im.data[o + 2] = v; im.data[o + 3] = 255; }
+    k.putImageData(im, 0, 0); mvtKnurl = new THREE.CanvasTexture(c); mvtKnurl.wrapS = mvtKnurl.wrapT = THREE.RepeatWrapping; }
+  const NUT = { Black: 0x1c1d21, Silver: 0xd5d8dd, Blue: 0x1d5ad6, Purple: 0x8a1fd0, Red: 0xc41a1a, Gold: 0xc9a038 }, nc = NUT[col] || NUT.Blue;
+  const anod = (rep) => { const t = mvtKnurl.clone(); t.needsUpdate = true; t.repeat.set(86, rep); return new THREE.MeshStandardMaterial({ color: nc, metalness: col === 'Black' ? 0.6 : 0.85, roughness: col === 'Black' ? 0.4 : 0.28, bumpMap: t, bumpScale: 1.6 }); };
+  const smooth = new THREE.MeshStandardMaterial({ color: nc, metalness: col === 'Black' ? 0.6 : 0.9, roughness: col === 'Black' ? 0.35 : 0.16 });
+  // knurled rings: side points only between the small chamfers, so the knurl lands on the side
+  const knurled = (x0, len) => lat([[0, 0], [0, 0.5], [0.02, 0.54], [len - 0.02, 0.54], [len, 0.5], [len, 0]], anod(Math.round(len / 0.035) * 5), x0);   // lathe v is per profile point: the side is 1 of 5 spans
+  knurled(0.62, 0.16);
+  const slot = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.04, 0.05), new THREE.MeshStandardMaterial({ color: 0x0c0c0e, roughness: 0.8 })); slot.position.set(0.7, 0.53, 0); grp.add(slot);
+  lat([[0, 0], [0, 0.49], [0.03, 0.49], [0.03, 0]], black, 0.78);
+  knurled(0.81, 0.27);
+  lat([[0, 0], [0, 0.535], [0.04, 0.535], [0.045, 0.52], [0.06, 0.52], [0.065, 0.535], [0.1, 0.535], [0.105, 0.52], [0.12, 0.52], [0.125, 0.535], [0.16, 0.535], [0.16, 0]], smooth, 1.08);
+  if (!mvtTex) {
+    const P = paintSculpt(2048, 1024, 1.2, 5.5, (x, th) => {
+      const d = mvtWin(x, th);
+      if (d > 0.012) { // silver carbon twill, about 0.04 in tows
+        const yi = (th / (Math.PI * 2)) * 2.9, a = Math.floor(x / 0.035), b = Math.floor(yi / 0.035), on = ((a + b) & 3) < 2;
+        const fx = (x / 0.035) % 1, fy = (yi / 0.035) % 1, sh = on ? 0.55 + 0.45 * Math.sin(fx * Math.PI) : 0.45 + 0.4 * Math.sin(fy * Math.PI);
+        const v = on ? 150 + 85 * sh : 95 + 70 * sh; return [v, v + 2, v + 6, 0.32, 0.55]; }
+      if (d > 0) return [12, 12, 13, 0.5, 0.1];                                                          // dark rim around each window
+      const m = 1 - 0.7 * mvtMouth(x, th), v = 26 * m; return [v, v + 1, v + 3, 0.6, 0.05]; });
+    P.text('ALPS', 2.1, 0.88, 42, '#e9eaec'); P.text('MVT', 2.62, 0.88, 24, '#c9cbcf', '700');
+    P.text('ALPS', 2.1, -0.88 + 0.14, 42, '#e9eaec'); mvtTex = P.done(); }
+  grp.add(sculpt(1.2, 5.5, mvtR, new THREE.MeshStandardMaterial({ map: mvtTex.map, roughnessMap: mvtTex.rm, metalnessMap: mvtTex.rm, roughness: 1, metalness: 1 })));
+  const nose = new THREE.Mesh(AXIS(new THREE.LatheGeometry([[0, 0.395], [-0.04, 0.34], [-0.6, 0.34], [-0.6, 0]].map(([x, r]) => new THREE.Vector2(r, x)), 64)), new THREE.MeshStandardMaterial({ color: 0x0b0b0c, roughness: 0.9 }));
+  nose.position.x = 5.5; grp.add(nose);
+  grp.userData.len = 5.5; grp.userData.noFlip = true;
+  return grp;
+}
+// pebbled black rubber, like the ALPS butts
+let pebTex = null;
+function pebbled() {
+  if (!pebTex) { const peb = document.createElement('canvas'); peb.width = peb.height = 128; const px = peb.getContext('2d');
+    px.fillStyle = '#808080'; px.fillRect(0, 0, 128, 128);
+    for (let i = 0; i < 2600; i++) { const v = 90 + Math.random() * 90 | 0; px.fillStyle = `rgb(${v},${v},${v})`; px.fillRect(Math.random() * 128, Math.random() * 128, 1.6, 1.6); }
+    pebTex = new THREE.CanvasTexture(peb); pebTex.wrapS = pebTex.wrapT = THREE.RepeatWrapping; pebTex.repeat.set(3, 6); }
+  return new THREE.MeshStandardMaterial({ color: 0x1e1f21, roughness: 0.92, bumpMap: pebTex, bumpScale: 0.6 });
+}
+// a flat rubber end face: recessed center disc with a pin hole (and the maker's ring text when given)
+function endFace(g, r, ring) {
+  const face = document.createElement('canvas'); face.width = face.height = 256; const f = face.getContext('2d');
+  f.fillStyle = '#1b1c1e'; f.fillRect(0, 0, 256, 256);
+  f.strokeStyle = '#2c2d30'; f.lineWidth = 6; f.beginPath(); f.arc(128, 128, ring ? 76 : 92, 0, 7); f.stroke();
+  f.fillStyle = '#151618'; f.beginPath(); f.arc(128, 128, ring ? 72 : 88, 0, 7); f.fill();
+  f.fillStyle = '#050506'; f.beginPath(); f.arc(128, 128, 5, 0, 7); f.fill();
+  if (ring) { f.fillStyle = '#2a2b2e'; f.font = '600 19px Arial, sans-serif'; f.textAlign = 'center'; const ch = [...ring];
+    ch.forEach((c, i) => { f.save(); f.translate(128, 128); f.rotate(i / ch.length * Math.PI * 2); f.fillText(c, 0, -94); f.restore(); }); }
+  const ft = new THREE.CanvasTexture(face); ft.colorSpace = THREE.SRGBColorSpace;
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(r, 64), new THREE.MeshStandardMaterial({ map: ft, roughness: 0.85, bumpMap: ft, bumpScale: 1.2 }));
+  disc.rotation.y = -Math.PI / 2; disc.position.x = -0.001; disc.userData.part = 's-butt'; g.add(disc);
+}
+// ALPS Rubber Butt, from the product photos: a big rounded end, a narrow waist, then a flare into the grip
+function alpsRubberButt(g, lathe) {
+  lathe([[0, 0], ...RUBBER_PROF, [2.1, 0]], pebbled(), 0); endFace(g, 0.28, null); return 2.1;
+}
+// ALPS Aluminum Rubber Butt, from the product photos: a short flat cap. Black rubber bumper around a brushed
+// aluminum face, then the anodized band with two bright cut lines; the threaded stem sits inside the grip.
+function alpsAlumRubberButt(g, col, lathe) {
+  const R = 0.64, hex = MC[col] || '#888', matte = col === 'Black';
+  lathe([[0.03, R * 0.7], [0.0, R * 0.74], [0.004, R * 0.86], [0.03, R * 0.97], [0.08, R], [0.2, R], [0.215, R * 0.985], [0.215, 0]], pebbled(), 0);
+  const brushed = document.createElement('canvas'); brushed.width = brushed.height = 256; const b = brushed.getContext('2d');
+  const gr = b.createRadialGradient(110, 100, 10, 128, 128, 130); gr.addColorStop(0, '#dcd8ce'); gr.addColorStop(1, '#a9a59c'); b.fillStyle = gr; b.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 160; i++) { b.strokeStyle = `rgba(255,255,255,${Math.random() * 0.08})`; b.beginPath(); b.arc(128, 128, Math.random() * 128, 0, 7); b.stroke(); }
+  const bt = new THREE.CanvasTexture(brushed); bt.colorSpace = THREE.SRGBColorSpace;
+  const face = new THREE.Mesh(new THREE.CircleGeometry(R * 0.73, 64), new THREE.MeshStandardMaterial({ map: bt, metalness: 0.75, roughness: 0.35 }));
+  face.rotation.y = -Math.PI / 2; face.position.x = 0.028; face.userData.part = 's-butt'; g.add(face);
+  const m = new THREE.MeshStandardMaterial({ color: hex, metalness: matte ? 0.35 : 0.9, roughness: matte ? 0.55 : 0.25 }), bright = metal('#e4e6ea', 0.18);
+  lathe([[0, 0], [0, R * 0.985], [0.2, R * 0.985], [0.215, R * 0.95], [0.215, 0]], m, 0.2);
+  [0.06, 0.13].forEach(t => lathe([[0, 0], [0, R * 0.99], [0.012, R * 0.99], [0.012, 0]], bright, 0.2 + t));
+  return 0.415;
+}
+// ALPS Triangle Weighted Butt, from the product photos: a rounded black head cut with three flats, a metal disc in
+// the end, then the colored metal collar into the grip with a lip ring and two bright lines
+function alpsTriButt(g, col, lathe) {
+  const hex = MC[col] || '#888', matte = col === 'Black', head = 0.9, hs = head / 0.78;
+  const prof = [[0, 0.4], [0.03, 0.47], [0.1, 0.55], [0.22, 0.61], [0.36, 0.63], [0.5, 0.62], [0.62, 0.58], [0.72, 0.53], [0.78, 0.5]].map(([x, r]) => [x * hs, r]);
+  const rAt = x => { for (let i = 1; i < prof.length; i++) if (x <= prof[i][0]) { const [x0, r0] = prof[i - 1], [x1, r1] = prof[i]; return r0 + (r1 - r0) * (x - x0) / (x1 - x0); } return prof[prof.length - 1][1]; };
+  const cols = 40, seg = 96, pos = [], idx = [];
+  for (let i = 0; i <= cols; i++) { const x = head * i / cols, r = rAt(x), d = r * 0.9;     // three flat faces cut 10% into the round
+    for (let j = 0; j <= seg; j++) { const th = j / seg * Math.PI * 2; let rr = r;
+      for (let k = 0; k < 3; k++) { const c = Math.cos(th - k * 2 * Math.PI / 3 - Math.PI / 2); if (c > 0) rr = Math.min(rr, d / c); }
+      pos.push(x, rr * Math.cos(th), rr * Math.sin(th)); } }
+  for (let i = 0; i < cols; i++) for (let j = 0; j < seg; j++) { const a = i * (seg + 1) + j, b = a + seg + 1; idx.push(a, a + 1, b, b, a + 1, b + 1); }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setIndex(idx); geo.computeVertexNormals();
+  const hm = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x1c1d20, roughness: 0.45, metalness: 0.1, side: THREE.DoubleSide })); hm.userData.part = 's-butt'; g.add(hm);
+  const capM = new THREE.Mesh(new THREE.CircleGeometry(0.41, 48), hm.material); capM.rotation.y = -Math.PI / 2; capM.position.x = 0.002; g.add(capM);
+  // end disc: brushed metal in the butt's color
+  const m = new THREE.MeshStandardMaterial({ color: hex, metalness: matte ? 0.35 : 0.9, roughness: matte ? 0.55 : 0.22 });
+  lathe([[0, 0], [0, 0.31], [0.01, 0.33], [0.03, 0.34], [0.03, 0]], m, -0.025);
+  // collar: lip ring against the head, then a slim waist into the grip with two bright lines
+  // longer colored collar (the whole butt is built at 2.1 in so nothing gets stretched)
+  lathe([[0, 0], [0, 0.5], [0.04, 0.51], [0.07, 0.49], [0.16, 0.44], [0.26, 0.42], [1.21, 0.43], [1.21, 0]], m, head - 0.01);
+  [0.3, 0.37].forEach(t => lathe([[0, 0], [0, 0.428], [0.012, 0.428], [0.012, 0]], metal('#e4e6ea', 0.18), head + t));
+  return 2.1;
+}
+// ALPS Aluminum Butt, from the product photos: pebbled rubber end with a raised rim and recessed center (with the dot),
+// then an anodized body that widens slightly toward the grip, with two grooves near the open end
+function alpsAlumButt(g, col, lathe) {
+  const R = 0.6, rubLen = 0.4, body = 0.66, hex = MC[col] || '#888', matte = col === 'Black';
+  const rub = pebbled();
+  // rubber band: short rounded shoulder at the end, then straight
+  lathe([[0, R * 0.9], [0.015, R * 0.965], [0.045, R * 0.99], [0.09, R], [rubLen, R], [rubLen, 0]], rub, 0);
+  endFace(g, R * 0.9, 'ALPS · QUALITY PRODUCTS · ');
+  // anodized body: flares from the rubber to the grip end, two grooves, small step at the lip
+  const m = new THREE.MeshStandardMaterial({ color: hex, metalness: matte ? 0.35 : 0.9, roughness: matte ? 0.6 : 0.24 });
+  const r0 = R * 1.0, r1 = R * 1.07, rr = t => r0 + (r1 - r0) * t, x0 = rubLen - 0.01;
+  const pts = [[0, 0], [0, r0 * 0.99], [0.02, r0]];
+  const gr = [0.66, 0.74];   // groove positions along the body (0..1)
+  gr.forEach(t => { pts.push([body * t - 0.012, rr(t)], [body * t, rr(t) * 0.985], [body * t + 0.012, rr(t)]); });
+  pts.push([body - 0.06, rr(0.91)], [body - 0.055, rr(0.91) * 0.99], [body, rr(0.92) * 0.99], [body, 0]);
+  lathe(pts, m, x0);
+  return x0 + body;
+}
+let evaTile = null;
+function buttCap(g, img) {
+  const b = BUTTS.find(x => x.id === st.butt), c = MC[st.buttCol[b.id]] || '#3a3d42', R = 0.6;
+  // butt caps with a side photo are turned from the photo itself, rounded end at the butt
+  if (img) { const foam = b.foam && evaTile;
+    const geo = turned(img, null, b.dia || 1.2, { p: 1, uvTile: !!foam }), m = new THREE.Mesh(geo, foam ? new THREE.MeshStandardMaterial({ map: canvasTex(evaCanvas('black', evaTile, geo.userData.len)), roughness: 0.9 }) : photoMat(photoTex(img), 0.9));
+    m.userData.part = 's-butt'; g.add(m); return geo.userData.len; }
+  const lathe = (pts, mat, x0) => { const m = new THREE.Mesh(AXIS(new THREE.LatheGeometry(pts.map(([x, r]) => new THREE.Vector2(r, x)), 56)), mat); m.position.x = x0; m.userData.part = 's-butt'; g.add(m); };
+  const dome = (len, r, k = 0.4) => { const p = [[0, 0]]; for (let i = 0; i <= 14; i++) { const t = i / 14; p.push([len * t, r * (k + (1 - k) * Math.sin(t * Math.PI / 2))]); } return p; };
+  if (b.id === 'alps-rubber') return alpsRubberButt(g, lathe);
+  if (b.id === 'rubberized-cork-butt') {   // from the photos: a short cap with a rounded shoulder, tapering a little toward the grip, dark speckled cork
+    const c = document.createElement('canvas'); c.width = c.height = 256; const k = c.getContext('2d'); k.fillStyle = '#3a2618'; k.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 5000; i++) { const t = Math.random(); k.fillStyle = t < 0.45 ? '#1c120c' : t < 0.8 ? '#6b4428' : '#9a6a44'; k.fillRect(Math.random() * 256, Math.random() * 256, 1 + Math.random() * 2.5, 1 + Math.random() * 2); }
+    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(3, 1);
+    lathe([[0, 0], [0, 0.42], [0.03, 0.5], [0.09, 0.565], [0.18, 0.6], [0.3, 0.6], [0.62, 0.565], [0.62, 0]], new THREE.MeshStandardMaterial({ map: tx, roughness: 0.95, bumpMap: tx, bumpScale: 1.5 }), 0);
+    return 0.62; }
+  if (b.id === 'eva-butt') { lathe([...dome(0.6, R, 0.7), [0.6, R]], new THREE.MeshStandardMaterial({ color: 0x1d1e20, roughness: 0.95 }), 0); return 0.6; }
+  if (b.id === 'alps-aluminum-rubber-butt') return alpsAlumRubberButt(g, st.buttCol[b.id], lathe);
+  if (b.id === 'alps-aluminum-butt') return alpsAlumButt(g, st.buttCol[b.id], lathe);
+  if (b.id === 'alps-rubber-gimbal') return alpsRubberGimbal(g);
+  if (b.id === 'at-gimbal' || b.id === 'alps-gimbal') return alumGimbal(g, st.buttCol[b.id], lathe);
+  if (/gimbal/.test(b.id)) { // a gimbal: slotted end that locks into a fighting belt, then a collar into the grip
+    const rub = b.id === 'alps-rubber-gimbal', mat = rub ? rubber() : metal(c);
+    lathe([[0, 0], [0, R * 0.72], [0.05, R * 0.8], [0.7, R * 0.8], [0.78, R * 0.95], [1.25, R], [1.25, 0]], mat, 0);
+    const slot = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.1, R * 1.7), new THREE.MeshStandardMaterial({ color: 0x0c0d0f, roughness: 0.9 }));
+    slot.position.x = 0.18; g.add(slot); const slot2 = slot.clone(); slot2.rotation.x = Math.PI / 2; g.add(slot2); return 1.25; }
+  if (b.id === 'alps-tri-butt') return alpsTriButt(g, st.buttCol[b.id], lathe);
+  if (b.id === 'at-weighted-butt') {   // from the product photos: rubber dome on the end, glossy anodized body narrowing toward the grip
+    const dome2 = []; for (let i = 0; i <= 16; i++) { const t = i / 16 * Math.PI / 2; dome2.push([0.48 * (1 - Math.cos(t)), 0.62 * Math.sin(t) + 0.0001]); }
+    lathe([[0, 0], ...dome2, [0.5, 0.62], [0.5, 0]], pebbled(), 0);
+    const m = new THREE.MeshStandardMaterial({ color: c, metalness: st.buttCol[b.id] === 'Black' ? 0.5 : 0.9, roughness: 0.16 });
+    lathe([[0, 0], [0, 0.62], [0.2, 0.6], [0.45, 0.56], [0.7, 0.53], [0.88, 0.52], [0.95, 0.53], [0.95, 0]], m, 0.49);
+    return 1.44; }
+  const coll = b.id === 'at-weighted-butt' ? 0.55 : 0.4, head = b.id === 'at-weighted-butt' ? 0.75 : 0.8;
+  lathe([...dome(head, R * 0.88, 0.35), [head, R * 0.88]], rubber(), 0); lathe([[0, 0], [0, R * 0.92], [0.06, R], [coll, R], [coll, 0]], metal(c), head - 0.02);
+  return head + coll - 0.02;
+}
+
+// ---------- camera ----------
+let camSet = false, anim = null, curView = 'handle';
+function viewSpan(v) { return { all: [GRIP ? L.buttStart - 0.3 : 0, RL()], butt: [L.buttStart - 0.6, L.butt + 3], handle: [0, L.handle1 + 1], wrap: [L.wrap[0] - 1.2, L.wrap[1] + 1.2],
+  guides: [L.guides - 3, L.guides + 14], tip: [st.len - 14, st.len + 0.6] }[v]; }
+function goView(v, now) {
+  curView = v; [...$('views').children].forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v));
+  const span = viewSpan(v), off = -RL() / 2, asp = camera.aspect || 1.5, fovT = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  const cx = (span[0] + span[1]) / 2 + off, w = span[1] - span[0];
+  const dist = Math.max(2.2, (w * (v === 'all' ? 0.42 : v === 'handle' ? 0.62 : 0.5)) / (fovT * Math.min(asp, 2.4)));
+  const target = new THREE.Vector3(cx, v === 'guides' || v === 'tip' ? 0.45 * (st.type === 'spinning' ? -1 : 1) : 0.1, 0);
+  // every view looks at the rod straight from the side, a little from above, so the rod lies level across the screen
+  const dir = { all: [0, 0.16, 1], butt: [0, 0.22, 1], handle: [0, 0.22, 1], wrap: [0, 0.24, 1], guides: [0, 0.2, 1], tip: [0, 0.2, 1] }[v];
+  rod.rotation.x = 0;   // undo any spin, so the rod is upright again
+  const pos = target.clone().add(new THREE.Vector3(...dir).normalize().multiplyScalar(dist));
+  $('along').value = Math.round((cx - off) / RL() * 1000);
+  if (now) { camera.position.copy(pos); controls.target.copy(target); controls.update(); return; }
+  anim = { t0: performance.now(), p0: camera.position.clone(), q0: controls.target.clone(), p1: pos, q1: target };
+}
+$('views').addEventListener('click', e => { const b = e.target.closest('button'); if (b) goView(b.dataset.v); });
+// moving on to another section flies the camera to that part of the rod, level and upright again; more picks in the
+// same section (another seat, another guide) leave the view where the user has it
+const SEC_VIEW = { 's-blank': 'all', 's-grip': 'handle', 's-seat': 'handle', 's-butt': 'butt', 's-wrap': 'wrap', 's-guides': 'guides', 's-gwrap': 'guides' };
+let lastSec = 's-grip';   // the builder opens on the handle
+const secGo = e => { const sec = e.target.closest('section.sec'); if (!sec || !SEC_VIEW[sec.id]) return;
+  if (e.type === 'click' && !e.target.closest('button, input[type=checkbox], .card')) return;
+  let v = SEC_VIEW[sec.id];
+  if (sec.id === 's-wrap') { const split = e.target.closest('#splitArea'); if (split) v = 'handle'; else if (!st.mainOn) return; }
+  const key = sec.id + (v === 'handle' && sec.id === 's-wrap' ? ':split' : '');
+  if (key === lastSec) return; lastSec = key;
+  setTimeout(() => goView(v), 80); };
+document.querySelector('aside').addEventListener('click', secGo, true);   // capture: the cards get redrawn by their own click handlers
+document.querySelector('aside').addEventListener('change', secGo);
+// slide the camera along the rod, keeping the same angle and distance
+$('along').addEventListener('input', () => { anim = null; const x = $('along').value / 1000 * RL() - RL() / 2, dx = x - controls.target.x;
+  controls.target.x += dx; camera.position.x += dx; [...$('views').children].forEach(b => b.setAttribute('aria-pressed', 'false')); });
+let spin = false;
+$('spin').addEventListener('click', () => { spin = !spin; $('spin').setAttribute('aria-pressed', spin); });
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function loop(t) {
+  if (anim) { const k = Math.min(1, (t - anim.t0) / (reduce ? 1 : 650)), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+    camera.position.lerpVectors(anim.p0, anim.p1, e); controls.target.lerpVectors(anim.q0, anim.q1, e); if (k >= 1) anim = null; }
+  if (spin) rod.rotation.x += 0.012;
+  controls.update(); renderer.render(scene, camera); requestAnimationFrame(loop);
+}
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(); let down = null;
+cv.addEventListener('pointerdown', e => down = [e.clientX, e.clientY]);
+cv.addEventListener('pointerup', e => {
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
+  const r = cv.getBoundingClientRect(); ptr.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+  ray.setFromCamera(ptr, camera); const hit = ray.intersectObjects(parts.children, true)[0]; if (!hit) return;
+  let o = hit.object; while (o && !o.userData.part) o = o.parent; if (!o) return;
+  const s = $(o.userData.part); s.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+  s.animate([{ boxShadow: '0 0 0 3px var(--accent)' }, { boxShadow: '0 0 0 0 transparent' }], { duration: 1200 });
+});
+
+// ---------- drawer ----------
+let openK = null;
+async function openDrawer(k) {
+  openK = k; Object.entries(F).forEach(([kk, f]) => f.classList.toggle('on', kk === (k === 'guide' ? k : fk(k))));
+  $('dTitle').firstChild.textContent = k === 'guide' ? 'Guide Wrap Designer' : (k === 'split' ? 'Split wrap' : 'Wrap above the fore grip') + (src[k] === 'cross' ? ' · cross wrap' : '');
+  $('drawer').classList.add('open'); $('drawer').setAttribute('aria-hidden', 'false');
+  goView(k === 'guide' ? 'guides' : k === 'split' ? 'handle' : 'wrap');
+  if (k === 'guide') guideUI();
+  syncDrawerPick();
+}
+function closeDrawer() { openK = null; $('drawer').classList.remove('open'); $('drawer').setAttribute('aria-hidden', 'true'); }
+document.addEventListener('click', e => { const b = e.target.closest('[data-open]'); if (b) openDrawer(b.dataset.open); });
+$('dDone').addEventListener('click', closeDrawer);
+// any change inside a designer updates the rod a moment later
+const pend = {};
+function watch(k, after) {
+  const hook = () => { clearTimeout(pend[k]); pend[k] = setTimeout(after, 260); };
+  // opening or stepping through a dropdown isn't an edit yet: only its change counts (redrawing mid-pick would close it)
+  const edit = e => { if (e.type !== 'change' && e.target && e.target.tagName === 'SELECT') return; hook(); };
+  const attach = () => { try { const d = F[k].contentDocument; ['input', 'change', 'click', 'keyup'].forEach(ev => d.addEventListener(ev, edit, true)); } catch (e) {} };
+  F[k].addEventListener('load', attach); attach();
+}
+watch('main', async () => { await readWrap('main'); build(); });
+watch('split', async () => { await readWrap('split'); build(); });
+watch('guide', async () => { await readGuideWraps(); build(); });
+
+// ---------- saved builds: pick one of the account's saved wraps ----------
+const PICKS = { mainSaved: { k: 'main', kinds: ['taper', 'cross'] }, splitSaved: { k: 'split', kinds: ['taper', 'cross'] }, guideSaved: { k: 'guide', kinds: ['guide'] } };
+const KIND_NAME = { taper: 'Wrap Designer', cross: 'Cross wrap', guide: 'Guide wrap' };
+function fillSaved() {
+  const all = window.__wlBuilds || [];
+  Object.entries(PICKS).forEach(([id, p]) => {
+    const list = all.filter(b => p.kinds.includes(b.kind) && b.setup && !(b.setup.wlTool === 'calc')), sel = $(id), cur = sel.value;
+    sel.closest('.savedPick').hidden = (id === 'mainSaved' && !st.mainOn) || (id === 'splitSaved' && !(st.style === 'split' && st.splitOn));
+    const opt = b => `<option value="${b.id}">${String(b.name || 'My build').replace(/[<&"]/g, '')}${b.summary ? ' · ' + String(b.summary).replace(/[<&"]/g, '') : ''}</option>`;
+    sel.innerHTML = '<option value="">Choose a saved build…</option>' + p.kinds.map(kd => { const g = list.filter(b => b.kind === kd); return g.length ? `<optgroup label="${KIND_NAME[kd]}">${g.map(opt).join('')}</optgroup>` : ''; }).join('');
+    if (!list.length) sel.innerHTML = `<option value="">${signedIn ? 'No saved ' + p.kinds.map(k => KIND_NAME[k].toLowerCase()).join(' or ') + ' builds yet' : 'Sign in on WrapLab to use your saved builds'}</option>`;
+    sel.disabled = !list.length;
+    if (list.some(b => b.id === cur)) sel.value = cur;
+  });
+  syncDrawerPick();
+}
+// the drawer shows the same list as the slot being designed
+let signedIn = false;
+window.addEventListener('wl-user', e => { signedIn = !!e.detail; fillSaved(); });
+function syncDrawerPick() {
+  if (!openK) return; const id = openK + 'Saved', from = $(id);
+  $('dSaved').innerHTML = from.innerHTML; $('dSaved').value = from.value; $('dSaved').disabled = from.disabled;
+}
+$('dSaved').addEventListener('change', () => { if (!openK) return; const sel = $(openK + 'Saved'); sel.value = $('dSaved').value; sel.dispatchEvent(new Event('change')); });
+window.addEventListener('wl-builds', fillSaved);
+Object.entries(PICKS).forEach(([id, p]) => $(id).addEventListener('change', async () => {
+  const b = (window.__wlBuilds || []).find(x => x.id === $(id).value); if (!b) return;
+  let w;
+  if (b.kind === 'guide') w = await guideReady();
+  else { src[p.k] = b.kind; if (b.kind === 'cross') await crossFrame(p.k); w = await whenReady(fk(p.k), w => w.WL_unrolled && w.__wlRod); }
+  w.__wlFitted = true;   // keep the saved build's own sizes
+  w.wlApply(b.setup);
+  setTimeout(async () => { if (b.kind === 'guide') await readGuideWraps(); else await readWrap(p.k); build(); }, 600);
+}));
+// ---------- controls ----------
+function seg(id, keyName, after, num) {
+  $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; st[keyName] = num ? +b.dataset.v : b.dataset.v;
+    [...$(id).children].forEach(x => x.setAttribute('aria-pressed', x === b)); after && after(); render(); });
+}
+function swatches(host, list, cur, pick, custom) {
+  host.innerHTML = list.map(([v, n, bg]) => `<span class="swi"><button type="button" data-v="${v}" title="${n}" aria-label="${n}" aria-pressed="${v === cur}" style="${bg}"></button><small>${n}</small></span>`).join('')
+    + (custom ? `<label class="${list.some(l => l[0] === cur) ? '' : 'on'}" title="Custom color"><input type="color" value="${cur}" aria-label="Custom color"></label>` : '');
+  host.onclick = e => { const b = e.target.closest('button'); if (b) { pick(b.dataset.v); render(); } };
+  const ci = host.querySelector('input[type=color]'); if (ci) { ci.addEventListener('input', () => { pick(ci.value); clearTimeout(quick); quick = setTimeout(build, 60); }); ci.addEventListener('change', () => render()); }
+}
+const mix = (h, t, k) => { const a = hexRGB(h), b = t === 'w' ? [255, 255, 255] : [0, 0, 0]; return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * k)).join(',')})`; };
+const metalBg = h => `background:linear-gradient(180deg,${mix(h, 'w', .45)},${h} 55%,${mix(h, 'b', .35)})`;
+const mcBg = c => c === 'Black+Gold' ? 'background:linear-gradient(135deg,#1a1a1a 50%,#b58a2a 50%)' : metalBg(MC[c] || '#888');
+const flat = h => `background:${h}`;
+const nameOf = (list, v) => (list.find(x => x[1] === v) || ['Custom ' + v.toUpperCase()])[0];
+const ftin = v => `${Math.floor(v / 12)} ft${v % 12 ? ' ' + v % 12 + ' in' : ''}`;
+$('len').innerHTML = Array.from({ length: 13 }, (_, i) => 72 + i * 3).map(v => `<option value="${v}"${v === 84 ? ' selected' : ''}>${ftin(v)}</option>`).join('');
+seg('rtype', 'type', () => { const b = BUTTS.find(x => x.id === st.butt); if (b && b.types && !b.types.includes(st.type)) st.butt = null; readGuideWraps().then(build); });
+seg('finish', 'finish'); seg('mat', 'mat', () => { const b = BUTTS.find(x => x.id === st.butt); if (b && b.only && b.only !== st.mat) st.butt = null; });
+seg('style', 'style');
+seg('shrink', 'shrink');
+$('lockOn').addEventListener('change', e => { st.lockOn = e.target.checked; render(); });
+seg('klRun', 'klRun', () => readGuideWraps().then(build), true);
+$('len').addEventListener('change', e => { st.len = +e.target.value; autoGuides(); readGuideWraps().then(() => render()); render(); requestAnimationFrame(() => goView(curView)); });
+['gButt', 'gRear', 'gFore', 'seatAt'].forEach(id => $(id).addEventListener('input', () => { const v = parseFloat($(id).value); if (!isNaN(v)) { st[id] = v; render(true); } }));
+$('gcount').addEventListener('change', e => { st.gcount[st.type] = +e.target.value; readGuideWraps().then(() => render()); });
+$('chkFore').addEventListener('change', () => { st.chkFore = $('chkFore').checked; render(); });
+$('chkSplit').addEventListener('change', () => { st.chkSplit = $('chkSplit').checked; render(); });
+$('mainOn').addEventListener('change', () => { st.mainOn = $('mainOn').checked; render(); });
+$('splitOn').addEventListener('change', () => { st.splitOn = $('splitOn').checked; render(); if (st.splitOn) readWrap('split').then(build); });
+// ---------- sharp grip textures: natural cork rings and EVA foam, drawn at 256 px per inch ----------
+const rng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const hashS = str => [...str].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619), 2166136261);
+const texCacheG = new Map();
+const GPX = 256, GH = Math.round(3.6 * 256);
+// regular cork grip: flor-grade natural cork rings, light tan with dark pores, a faint glue line every half inch
+function florCanvas(len) {
+  const k = 'flor' + len.toFixed(2); if (texCacheG.has(k)) return texCacheG.get(k);
+  const W = Math.max(8, Math.round(len * GPX)), c = document.createElement('canvas'); c.width = W; c.height = GH; const x = c.getContext('2d'), R = rng(hashS(k));
+  const rw = GPX / 2;
+  for (let u = 0, n = 0; u < W; u += rw, n++) {   // each ring a slightly different tone
+    const t = R(); x.fillStyle = `rgb(${192 + t * 8 | 0},${150 + t * 8 | 0},${92 + t * 8 | 0})`; x.fillRect(u, 0, rw, GH); }
+  const id = x.getImageData(0, 0, W, GH), d = id.data;   // fine grain
+  for (let i = 0; i < d.length; i += 4) { const v = (R() - 0.5) * 8; d[i] += v; d[i + 1] += v; d[i + 2] += v * 0.8; }
+  x.putImageData(id, 0, 0);
+  for (let i = 0; i < W * GH / 2500; i++) {   // soft mottling
+    x.fillStyle = `rgba(${150 + R() * 40 | 0},${110 + R() * 30 | 0},${70 + R() * 20 | 0},${0.08 + R() * 0.1})`;
+    x.beginPath(); x.ellipse(R() * W, R() * GH, 4 + R() * 14, 3 + R() * 10, R() * 3, 0, 7); x.fill(); }
+  for (let i = 0; i < W * GH / 5000; i++) {   // pores (A-grade: few) (lenticels): small dark flecks, a few larger
+    const big = R() < 0.08, px = R() * W, py = R() * GH;
+    x.fillStyle = `rgba(${130 + R() * 40 | 0},${100 + R() * 25 | 0},${60 + R() * 15 | 0},${0.35 + R() * 0.3})`;
+    x.beginPath(); x.ellipse(px, py, big ? 3 + R() * 6 : 0.8 + R() * 2, big ? 1.5 + R() * 3 : 0.6 + R() * 1.2, (R() - 0.5) * 0.8 + Math.PI / 2, 0, 7); x.fill(); }
+  for (let u = rw; u < W; u += rw) { x.fillStyle = 'rgba(120,90,50,.1)'; x.fillRect(u - 1, 0, 1, GH); }   // glue lines, barely there
+  texCacheG.set(k, c); return c;
+}
+// EVA foam in the chosen color: colors come from the SFSW swatch, the foam grain is drawn fresh
+const evaPal = {};
+function evaPalette(img, id) {
+  if (evaPal[id]) return evaPal[id];
+  const c = document.createElement('canvas'); c.width = 64; c.height = 8; const x = c.getContext('2d'); x.drawImage(img, 0, 0, 64, 8);
+  const d = x.getImageData(0, 0, 64, 8).data, px = []; for (let i = 0; i < d.length; i += 4) px.push([d[i], d[i + 1], d[i + 2]]);
+  px.sort((a, b) => (a[0] + a[1] + a[2]) - (b[0] + b[1] + b[2])); const at = f => px[Math.min(px.length - 1, Math.floor(px.length * f))];
+  return evaPal[id] = { lo: at(0.12), mid: at(0.5), hi: at(0.88) };
+}
+// heat shrink grips that go over EVA: X-Tube, Fish Scale and Honeycomb, each a two-tone print of one color
+// aluminum locking nut for the Fuji Deluxe, Deluxe Trigger, TVS and ALPS VTG
+const LOCK_COLS = ['Black', 'Blue', 'Gold', 'Silver', 'Gunmetal', 'Red', 'Purple', 'SeaFoam'];
+let lockRib = null;
+const SHRINK = {
+  // X-Tube: two tones of one color too: glossy darker X lines | soft lighter flock diamonds
+  xflock: { name: 'X-Tube', colors: { Black: '#141416|#2e2f33', Blue: '#2c3d98|#6096d0', Red: '#cf2530|#f06a6c', Purple: '#6a41b5|#a68edc', Green: '#0f3d27|#1d573b', Yellow: '#d9ad22|#f3d66a' } },
+  // fish scale is printed in two tones of one color: dark lines | lighter scales
+  fish: { name: 'Fish Scale', colors: { Black: '#141416|#3f4044', Grey: '#717378|#a8aaae', Blue: '#2343b8|#5b78dc', Red: '#c81f2c|#e65f68', Purple: '#5b3db0|#9a82de', Yellow: '#f0a51a|#ffc95a', Green: '#124a1b|#256530', Gold: '#8b8350|#ada16b' } },
+  // honeycomb: lighter hexagons in a net of thick darker lines
+  honey: { name: 'Honeycomb', colors: { Black: '#111113|#2b2c2f', Blue: '#24399a|#5a86d4', Red: '#c81a2a|#f2404f', Purple: '#6b2fbf|#ad88e4', Green: '#103d22|#215737', Yellow: '#d9ad22|#f3d66a', Brown: '#3f2412|#a5663a' } } };
+function shrinkCanvas(kind, colKey, len) {
+  const k = 'hs' + kind + colKey + len.toFixed(2); if (texCacheG.has(k)) return texCacheG.get(k);
+  const W = Math.max(8, Math.round(len * GPX)), H = GH, PX = GPX;
+  const mk = () => { const c = document.createElement('canvas'); c.width = W; c.height = H; return c; };
+  const col = mk(), rgh = mk(), bmp = mk(), x = col.getContext('2d'), xr = rgh.getContext('2d'), xb = bmp.getContext('2d'), R = rng(hashS(k));
+  const [base, rim] = SHRINK[kind].colors[colKey].split('|'), rgb = hexRGB(base), sh = (f, a = 1) => `rgba(${rgb.map(v => Math.max(0, Math.min(255, Math.round(v * f + (f > 1 ? (f - 1) * 40 : 0))))).join(',')},${a})`;
+  if (kind === 'xflock') {
+    // from Brett's photos: lighter flock diamonds, wider around the grip than they are long, in a net of thick darker
+    // glossy lines crossing in tight X's; four diamonds around
+    const [dk, lt] = SHRINK.xflock.colors[colKey].split('|'), Pv = H / 4, Lx = 0.55 * PX, lw = 0.13 * PX;
+    x.fillStyle = lt; x.fillRect(0, 0, W, H); xr.fillStyle = 'rgb(0,240,0)'; xr.fillRect(0, 0, W, H); xb.fillStyle = '#ddd'; xb.fillRect(0, 0, W, H);
+    for (let i = 0; i < W * H / 40; i++) { x.fillStyle = R() < 0.5 ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.06)'; x.fillRect(R() * W, R() * H, 1.5, 1.5); }   // flock nap
+    [x, xr, xb].forEach((ctx, n) => { ctx.lineWidth = lw; ctx.strokeStyle = n === 0 ? dk : n === 1 ? 'rgb(0,95,0)' : '#888';
+      for (const sgn of [1, -1]) for (let c = -Math.ceil(H / Pv) - 2; c <= Math.ceil(W / Lx) + Math.ceil(H / Pv) + 2; c++) {
+        // the line u/Lx = c + sgn * v/Pv across the whole height, so it wraps seamlessly (Pv divides H)
+        ctx.beginPath(); ctx.moveTo(c * Lx, 0); ctx.lineTo((c + sgn * H / Pv) * Lx, H); ctx.stroke(); } });
+  } else if (kind === 'honey') {
+    // honeycomb, from Brett's photo: even, regular hexagons, eight around. The texture's height covers 3.6 in but the
+    // grip's real circumference is a bit less, so spacing along the grip is scaled by the same amount to keep them even
+    const [dk, lt] = SHRINK.honey.colors[colKey].split('|'), n = 8, a = H / (1.5 * n), kU = Math.PI * 1.15 * 0.95 / 3.6, lw = a * 0.24;
+    const du = Math.sqrt(3) * a * kU;
+    x.fillStyle = dk; x.fillRect(0, 0, W, H); xr.fillStyle = 'rgb(0,110,0)'; xr.fillRect(0, 0, W, H); xb.fillStyle = '#888'; xb.fillRect(0, 0, W, H);
+    const hex = (ctx, cu, cv, rad) => { ctx.beginPath(); for (let k = 0; k < 6; k++) { const t = Math.PI / 6 + k * Math.PI / 3; ctx[k ? 'lineTo' : 'moveTo'](cu + rad * Math.cos(t) * kU, cv + rad * Math.sin(t)); } ctx.closePath(); ctx.fill(); };
+    const ri = a - lw / Math.sqrt(3);   // inset so the lines between neighbors are lw thick
+    for (let j = -1; j <= n; j++) for (let c = -1; c <= Math.ceil(W / du) + 1; c++) { const cv = j * 1.5 * a, cu = c * du + ((j & 1) ? du / 2 : 0);
+      x.fillStyle = lt; hex(x, cu, cv, ri); xr.fillStyle = 'rgb(0,235,0)'; hex(xr, cu, cv, ri); xb.fillStyle = '#ddd'; hex(xb, cu, cv, ri); }
+    for (let i = 0; i < W * H / 40; i++) { x.fillStyle = R() < 0.5 ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.06)'; x.fillRect(R() * W, R() * H, 1.5, 1.5); }
+  } else {
+    // fish scale, from Brett's close-up: a flat two-tone print. Lighter fan-shaped scales sit in a net of thick darker
+    // lines; each scale's round edge faces the tip, the rows are offset by half a scale, about nine scales around
+    const [dk, lt] = SHRINK.fish.colors[colKey].split('|'), nAround = 9, sw = H / nAround, row = sw * 0.62, rr = sw * 0.6, lw = sw * 0.17;
+    x.fillStyle = dk; x.fillRect(0, 0, W, H); xr.fillStyle = 'rgb(0,200,0)'; xr.fillRect(0, 0, W, H); xb.fillStyle = '#666'; xb.fillRect(0, 0, W, H);
+    // rows from the tip end back toward the butt, so each row covers the butt side of the row before it
+    for (let r = Math.ceil(W / row) + 2; r >= -2; r--) { const u = r * row, off = (r & 1) ? sw / 2 : 0;
+      for (let j = -1; j <= nAround; j++) { const v = j * sw + off;
+        x.fillStyle = dk; x.beginPath(); x.arc(u, v, rr, 0, 7); x.fill();
+        x.fillStyle = lt; x.beginPath(); x.arc(u, v, rr - lw, 0, 7); x.fill();
+        xb.fillStyle = '#666'; xb.beginPath(); xb.arc(u, v, rr, 0, 7); xb.fill(); xb.fillStyle = '#d8d8d8'; xb.beginPath(); xb.arc(u, v, rr - lw, 0, 7); xb.fill(); } }
+    // a little print grain
+    for (let i = 0; i < W * H / 50; i++) { x.fillStyle = R() < 0.5 ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.05)'; x.fillRect(R() * W, R() * H, 1.5, 1.5); }
+  }
+  const out = { col, rgh, bmp }; texCacheG.set(k, out); return out;
+}
+function evaCanvas(id, img, len) {
+  const k = 'eva' + id + len.toFixed(2); if (texCacheG.has(k)) return texCacheG.get(k);
+  const W = Math.max(8, Math.round(len * GPX)), c = document.createElement('canvas'); c.width = W; c.height = GH; const x = c.getContext('2d'), R = rng(hashS(k));
+  const P3 = evaPalette(img, id), rgb = (a, al = 1) => `rgba(${a[0]},${a[1]},${a[2]},${al})`;
+  x.fillStyle = rgb(P3.mid); x.fillRect(0, 0, W, GH);
+  if (/camo/.test(id)) {   // camo: overlapping blobs of the light and dark tones
+    [P3.lo, P3.hi, P3.lo].forEach(col => { x.fillStyle = rgb(col); for (let i = 0; i < W * GH / 6000; i++) { const cx = R() * W, cy = R() * GH;
+      for (let j = 0; j < 4; j++) { x.beginPath(); x.ellipse(cx + (R() - 0.5) * 50, cy + (R() - 0.5) * 50, 14 + R() * 26, 10 + R() * 18, R() * 3, 0, 7); x.fill(); } } });
+  } else if (/grain/.test(id)) {   // grain: wavy wood-grain bands of the dark and light tones running along the grip
+    const gw = 48, gh = 32, grid = Array.from({ length: (gw + 1) * (gh + 1) }, () => R());
+    const sm = t => t * t * (3 - 2 * t), noise = (u, v) => { u = (u % 1 + 1) % 1 * gw; v = (v % 1 + 1) % 1 * gh; const i = Math.floor(u), j = Math.floor(v), fu = sm(u - i), fv = sm(v - j);
+      const g = (a, b) => grid[(b % (gh + 1)) * (gw + 1) + (a % (gw + 1))]; return (g(i, j) * (1 - fu) + g(i + 1, j) * fu) * (1 - fv) + (g(i, j + 1) * (1 - fu) + g(i + 1, j + 1) * fu) * fv; };
+    const fbm = (u, v) => noise(u, v) * 0.6 + noise(u * 2.1 + 0.3, v * 2.1) * 0.3 + noise(u * 4.3, v * 4.3 + 0.5) * 0.1;
+    const dark = [18, 19, 21], light = P3.hi.map(c => c * 0.88), bands = 15, im = x.getImageData(0, 0, W, GH), d = im.data, Lx = W / GPX;
+    for (let py = 0; py < GH; py++) for (let px = 0; px < W; px++) {
+      const u = px / W * Lx / 6, v = py / GH;   // the pattern scale stays the same whatever the grip length
+      // bands run along the grip; a slow wander bends them, a little extra makes some thicker or thinner
+      const w = Math.sin((v + (fbm(u * 0.35, v * 0.5) - 0.5) * 0.16) * bands * Math.PI * 2) + (fbm(u * 0.9 + 0.4, v * 1.5) - 0.5) * 0.55;
+      const t = Math.min(1, Math.max(0, (w - 0.1) * 5));   // crisp edge between the two tones, a bit more dark than light
+      const o = (py * W + px) * 4; for (let k = 0; k < 3; k++) d[o + k] = dark[k] + (light[k] - dark[k]) * t; }
+    x.putImageData(im, 0, 0);
+  }
+  const im = x.getImageData(0, 0, W, GH), d = im.data;   // smooth foam: only the faintest variation
+  for (let i = 0; i < d.length; i += 4) { const v = (R() - 0.5) * 4; d[i] += v; d[i + 1] += v; d[i + 2] += v; }
+  x.putImageData(im, 0, 0);
+  texCacheG.set(k, c); return c;
+}
+// smooth grip tube: straight, with rounded edges at both ends (u along the grip, v around)
+function smoothGrip(len, dia, taper = 0, edge = 0.12) {
+  // taper: +1 narrows toward the tip end, -1 toward the butt end (about 14% smaller across the grip, eased)
+  const R0 = dia / 2, e = Math.min(edge, len / 4), Rof = x => { if (!taper) return R0; const t = taper > 0 ? x / len : 1 - x / len; return R0 * (1 - 0.14 * Math.pow(t, 1.3)); };
+  const prof = [], Re0 = Rof(0), Re1 = Rof(len);
+  prof.push([0, Re0 - e]); for (let i = 1; i <= 8; i++) { const a = i / 8 * Math.PI / 2; prof.push([e * (1 - Math.cos(a)), Re0 - e + e * Math.sin(a)]); }
+  for (let i = 1; i < 24; i++) { const x = e + (len - 2 * e) * i / 24; prof.push([x, Rof(x)]); }
+  prof.push([len - e, Rof(len - e)]); for (let i = 1; i <= 8; i++) { const a = i / 8 * Math.PI / 2; prof.push([len - e + e * Math.sin(a), Re1 - e + e * Math.cos(a)]); }
+  const seg = 72, pos = [], uv = [], idx = [];
+  prof.forEach(([x, r]) => { for (let j = 0; j <= seg; j++) { const th = j / seg * Math.PI * 2; pos.push(x, r * Math.cos(th), r * Math.sin(th)); uv.push(x / len, j / seg); } });
+  for (let i = 0; i < prof.length - 1; i++) for (let j = 0; j < seg; j++) { const a = i * (seg + 1) + j, b = a + seg + 1; idx.push(a, a + 1, b, b, a + 1, b + 1); }
+  [0, prof.length - 1].forEach((i, k) => { const c = pos.length / 3; pos.push(prof[i][0], 0, 0); uv.push(i ? 1 : 0, 0.5); for (let j = 0; j < seg; j++) { const a = i * (seg + 1) + j; k ? idx.push(c, a + 1, a) : idx.push(c, a, a + 1); } });
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+  g.userData.len = len; g.userData.rAt = d => d < e ? Re0 - e + Math.sqrt(Math.max(0, e * e - (e - d) * (e - d))) : Rof(d);
+  return g;
+}
+// a soft, low dimple for matte foam: coarse noise smoothed out, no sharp grain
+function softBump(len) {
+  const k = 'bump' + len.toFixed(2); if (texCacheG.has(k)) return texCacheG.get(k);
+  const sw = Math.max(4, Math.round(len * 24)), sh = Math.round(3.6 * 24), small = document.createElement('canvas'); small.width = sw; small.height = sh;
+  const sx = small.getContext('2d'), R = rng(hashS(k)), id = sx.createImageData(sw, sh);
+  for (let i = 0; i < id.data.length; i += 4) { const v = 118 + R() * 20; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; }
+  sx.putImageData(id, 0, 0);
+  const c = document.createElement('canvas'); c.width = sw * 8; c.height = sh * 8; const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.filter = 'blur(6px)'; x.drawImage(small, 0, 0, c.width, c.height);
+  const t = new THREE.CanvasTexture(c); texCacheG.set(k, t); return t;
+}
+const canvasTex = c => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+// ---------- custom cork ----------
+const corkImg = {}; let corkReady = false; const evaRingImg = {}; let evaRingReady = false;
+// the custom-grip textures (about 1 MB) load only once Custom grips is turned on
+let ringTexStarted = false;
+function loadRingTex() { if (ringTexStarted) return; ringTexStarted = true;
+Promise.all(CORK.map(([id]) => loadImg(P + 'cork/' + id + '.webp').then(i => {
+  // the photo's side runs around the disc; turn it so that runs around the rod (down the texture)
+  const c = document.createElement('canvas'); c.width = i.naturalHeight; c.height = i.naturalWidth; const x = c.getContext('2d');
+  x.translate(c.width / 2, c.height / 2); x.rotate(Math.PI / 2); x.drawImage(i, -i.naturalWidth / 2, -i.naturalHeight / 2); corkImg[id] = c; }))).then(() => { corkReady = true; if (st.cork.on) render(); });
+Promise.all(EVA.map(([id]) => loadImg(P + 'eva/' + id + '.webp').then(i => { evaRingImg[id] = i; }))).then(() => { evaRingReady = true; if (st.cork.on) render(); }); }
+const PX = 256;   // texture pixels per inch (high enough to show the cork grain up close)
+const pieceKeys = () => st.style === 'split' ? [['butt', 'Butt piece'], ['rear', 'Rear piece'], ['fore', 'Fore grip']] : [['full', 'Rear grip'], ['fore', 'Fore grip']];
+const lenKey = { butt: 'gButt', rear: 'gRear', fore: 'gFore' };
+const q = v => Math.round(v * 4) / 4;
+// rings fit to a length: trim from the seat end, or add rings of the last ring's cork
+function fitRings(key, len) {
+  const want = q(len), src = (st.cork.g[key] || []).map(r => ({ ...r })), out = []; let tot = 0;
+  for (const r of src) { if (tot + 1e-6 >= want) break; const t = Math.min(r.t, want - tot); out.push({ m: r.m, t }); tot += t; }
+  const fillM = (out[out.length - 1] || src[src.length - 1] || { m: st.cork.m }).m;
+  while (tot + 1e-6 < want) { const t = want - tot >= 0.5 ? 0.5 : 0.25; out.push({ m: fillM, t }); tot += t; }
+  return out;
+}
+function corkCanvas(rings, len) {
+  // 512 px per inch (less on very long grips, to stay inside the GPU's texture size)
+  const ppi = Math.min(512, Math.floor(4096 / Math.max(len, 0.25))), k = ppi / 512;
+  const W = Math.max(8, Math.round(len * ppi)), H = Math.round(3.6 * ppi), c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  x.imageSmoothingQuality = 'high';
+  let u = 0; rings.forEach((r, n) => { const zm = 1;
+    if (isEva(r.m)) {   // EVA ring: the same smooth foam as the EVA grips
+      const id = r.m.slice(4), w = r.t * ppi; x.drawImage(evaCanvas(id, evaRingImg[id], r.t), u, 0, w, H);
+      x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(u + w - 1, 0, 1.5, H); u += w; return; }
+    const w = r.t * ppi, im = corkImg[r.m === 'sandwich' ? 'rubber' : r.m], sw = Math.min(im.width, w / k * zm), th = im.height * k / zm;
+    // each ring starts at its own place along the strip, so neighbouring rings of the same cork don't match
+    // every repeat around the ring takes a different window of the photo strip, so the grain never repeats in a row
+    const room = Math.max(0, im.width - sw), y0 = -(((n * 619) % 997) / 997) * th;
+    for (let y = y0, row = 0; y < H; y += th, row++) { const sx = (((n * 53 + row * 29) % 11) / 11) * room; x.drawImage(im, sx, 0, sw, im.height, u, y, w, th); }
+    if (r.m === 'sandwich') {   // burnt sandwich: burnt cork on both faces, natural cork in the middle
+      const m2 = corkImg.composite, mw = w * 0.56, msw = Math.min(m2.width, mw / k), mth = m2.height * k;
+      for (let y = y0, row = 0; y < H; y += mth, row++) x.drawImage(m2, (((n * 31 + row * 17) % 9) / 9) * Math.max(0, m2.width - msw), 0, msw, m2.height, u + (w - mw) / 2, y, mw, mth); }
+    x.fillStyle = 'rgba(0,0,0,.22)'; x.fillRect(u + w - 1, 0, 1.5, H);   // glue line between rings
+    u += w; });
+  return c;
+}
+function pieceLen(key) { return key === 'full' ? (L.rings && L.rings.full ? L.rings.full.reduce((a, r) => a + r.t, 0) : 6) : st[lenKey[key]]; }
+function ensureRings() { pieceKeys().forEach(([k]) => { if (!st.cork.g[k] || !st.cork.g[k].length) st.cork.g[k] = fitRings(k, pieceLen(k)); }); }
+function corkPanel() {
+  $('corkBox').hidden = !st.cork.on;
+  if ($('corkBox').hidden) return;
+  ensureRings();
+  if (!pieceKeys().some(([k]) => k === st.cork.piece)) st.cork.piece = pieceKeys()[0][0];
+  $('corkPiece').innerHTML = pieceKeys().map(([k, n]) => `<button type="button" data-v="${k}" aria-pressed="${k === st.cork.piece}">${n}</button>`).join('');
+  const list = st.cork.tab === 'eva' ? EVA.map(([id]) => 'eva:' + id) : CORK.map(([id]) => id);
+  [...$('corkTab').children].forEach(b => b.setAttribute('aria-pressed', b.dataset.v === st.cork.tab));
+  $('corkKind').textContent = isEva(st.cork.m) ? 'EVA' : 'Cork';
+  if (isEva(st.cork.m)) $('corkName').textContent = corkName(st.cork.m).slice(4);
+  $('corkChips').innerHTML = list.map(id => `<button type="button" data-v="${id}" aria-pressed="${id === st.cork.m}"><span>${isEva(id) ? corkName(id).slice(4) : corkName(id)}</span><img src="${ringChip(id)}" alt="" draggable="false" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=this.src.replace('-chip.webp','.webp')}"></button>`).join('');
+  $('corkName').textContent = isEva(st.cork.m) ? corkName(st.cork.m).slice(4) : corkName(st.cork.m);
+  [...$('corkSize').children].forEach(b => b.setAttribute('aria-pressed', +b.dataset.v === st.cork.t));
+  corkStrip();
+}
+// the strip shows each ring the way it looks on the rod: the grip's own texture, lit like a round grip
+function stripPaint(cv, rings, len, ppi) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1), W = Math.round(len * ppi * dpr), H = Math.round(52 * dpr); cv.width = W; cv.height = H;
+  const x = cv.getContext('2d'), src = corkCanvas(rings, len), band = src.height * (0.9 / 3.6);   // about the visible face of a 0.9 in grip
+  x.imageSmoothingQuality = 'high'; x.drawImage(src, 0, src.height * 0.3, src.width, band, 0, 0, W, H);
+  // round-grip lighting: soft highlight near the top, falling into shadow at both edges
+  const g = x.createLinearGradient(0, 0, 0, H);
+  [[0, 'rgba(0,0,0,.55)'], [0.1, 'rgba(0,0,0,.18)'], [0.28, 'rgba(255,255,255,.22)'], [0.4, 'rgba(255,255,255,.06)'], [0.7, 'rgba(0,0,0,.12)'], [0.92, 'rgba(0,0,0,.42)'], [1, 'rgba(0,0,0,.65)']].forEach(([o, c]) => g.addColorStop(o, c));
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  // glue line between rings
+  let u = 0; rings.forEach(r => { u += r.t * ppi * dpr; x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(Math.round(u) - 1, 0, 1, H); });
+}
+function corkStrip() {
+  if ($('corkBox').hidden) return;
+  const k = st.cork.piece, rings = (L.rings && L.rings[k]) || st.cork.g[k] || [];
+  const len = rings.reduce((a, r) => a + r.t, 0) || 1, ppi = Math.max(24, Math.min(160, ($('ringStrip').clientWidth - 2) / len));
+  const real = corkReady && evaRingReady;
+  $('ringStrip').innerHTML = '<div class="rings' + (real ? '' : ' flat') + '">' + (real ? '<canvas></canvas>' : '') + rings.map((r, i) => `<button type="button" data-i="${i}" title="${corkName(r.m)}, ${r.t} in" style="width:${r.t * ppi}px${real ? '' : `;background-image:url(${ringChip(r.m)})`}"></button>`).join('') + '</div>';
+  if (real) stripPaint($('ringStrip').querySelector('canvas'), rings, len, ppi);
+  const tot = rings.reduce((a, r) => a + r.t, 0);
+  $('corkLen').textContent = `${rings.length} rings · ${tot.toFixed(2)} in`;
+  $('corkPieceNow').textContent = `${(pieceKeys().find(([kk]) => kk === k) || ['', 'Grip'])[1]} · ${tot.toFixed(2)} in`;
+}
+function setRings(k, rings) {
+  st.cork.g[k] = rings;
+  if (lenKey[k]) { const tot = rings.reduce((a, r) => a + r.t, 0); st[lenKey[k]] = tot; $(lenKey[k]).value = tot; }
+  render(true);
+}
+const curRings = () => { const k = st.cork.piece; return ((L.rings && L.rings[k]) || st.cork.g[k] || []).map(r => ({ ...r })); };
+$('corkOn').addEventListener('change', () => { st.cork.on = $('corkOn').checked; if (st.cork.on) loadRingTex(); render(); });
+$('corkPiece').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { st.cork.piece = b.dataset.v; corkPanel(); } });
+$('corkTab').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { st.cork.tab = b.dataset.v; corkPanel(); } });
+$('corkChips').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { st.cork.m = b.dataset.v; corkPanel(); } });
+$('corkSize').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { st.cork.t = +b.dataset.v; corkPanel(); } });
+// painting a ring keeps the grip's length: a thin ring on a thick one leaves the rest of the old ring; a thick ring takes from the next one
+$('ringStrip').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const r = curRings(), i = +b.dataset.i, old = r[i], t = st.cork.t;
+  if (t < old.t) r.splice(i, 1, { m: st.cork.m, t }, { m: old.m, t: old.t - t });
+  else if (t > old.t && r[i + 1]) { r[i] = { m: st.cork.m, t }; const nx = r[i + 1]; if (nx.t > t - old.t) nx.t -= t - old.t; else r.splice(i + 1, 1); }
+  else r[i] = { m: st.cork.m, t: old.t };
+  setRings(st.cork.piece, r); });
+$('corkFill').addEventListener('click', () => setRings(st.cork.piece, curRings().map(r => ({ m: st.cork.m, t: r.t }))));
+$('corkAdd').addEventListener('click', () => { const r = curRings(); r.push({ m: st.cork.m, t: st.cork.t }); setRings(st.cork.piece, r); });
+$('corkDel').addEventListener('click', () => { const r = curRings(); if (r.length > 1) { r.pop(); setRings(st.cork.piece, r); } });
+// typing a grip length keeps the rings and trims or adds at the seat end
+['gButt', 'gRear', 'gFore'].forEach(id => $(id).addEventListener('change', () => { const k = Object.keys(lenKey).find(k => lenKey[k] === id); if (st.cork.g[k]) st.cork.g[k] = fitRings(k, st[id]); }));
+function corkSummary() {
+  const n = {}; Object.entries(L.rings || {}).forEach(([k, rs]) => rs.forEach(r => { const key = corkName(r.m) + ' ' + r.t + '"'; n[key] = (n[key] || 0) + 1; }));
+  return Object.entries(n).map(([k, v]) => v + ' × ' + k).join(', ');
+}
+function render(fast) {
+  if (st.cork.on) loadRingTex();   // e.g. a saved build reopened with custom grips
+  const sp = st.type === 'spinning';
+  $('typeNote').textContent = { spinning: 'Spinning seats and guides. The guides hang under the rod with the reel.', baitcaster: 'Trigger seats and casting guides. The guides sit on top with the reel.', conventional: 'Screw-down seats, conventional guides and gimbal butts. The guides sit on top with the reel.' }[st.type];
+  swatches($('blankSw'), BLANK.map(([n, c]) => [c, n, flat(c)]), st.blank, v => st.blank = v, true);
+  $('blankNow').textContent = `${ftin(st.len)} · ${nameOf(BLANK, st.blank)}`;
+  $('evaBox').hidden = st.mat !== 'eva' || st.shrink !== 'none';
+  $('shrinkBox').hidden = st.mat !== 'eva' || st.cork.on;
+  [...$('shrink').children].forEach(b => b.setAttribute('aria-pressed', b.dataset.v === st.shrink));
+  $('shrinkColLbl').hidden = $('shrinkSw').hidden = st.shrink === 'none';
+  if (st.shrink !== 'none') { const S = SHRINK[st.shrink]; swatches($('shrinkSw'), Object.entries(S.colors).map(([n, h]) => { const [a, b] = h.split('|'); return [n, n, b ? `background:linear-gradient(135deg,${a} 50%,${b} 50%)` : flat(a)]; }), st.shrinkCol[st.shrink], v => st.shrinkCol[st.shrink] = v); $('shrinkName').textContent = st.shrinkCol[st.shrink]; }
+  swatches($('evaSw'), EVA.map(([v, n]) => [v, n, `background-image:url(${P}eva/${v}.webp)`]), st.eva, v => st.eva = v);
+  $('gripNow').textContent = (st.style === 'split' ? 'Split ' : 'Full ') + (st.cork.on ? 'custom' : st.mat === 'cork' ? 'cork' : st.shrink !== 'none' ? 'EVA · ' + SHRINK[st.shrink].name + ' ' + st.shrinkCol[st.shrink] : 'EVA · ' + EVA.find(e => e[0] === st.eva)[1]);
+  corkPanel();
+  $('gButtLbl').hidden = $('gRearLbl').hidden = st.style !== 'split';
+  // seats for this rod type, grouped
+  const seats = SEATS[st.type]; let lastG = '';
+  $('seats').innerHTML = seats.map(s => { const head = s.grp && s.grp !== lastG ? `<div class="grouplbl">${s.grp}</div>` : ''; lastG = s.grp || lastG;
+    return head + `<button type="button" class="card" data-v="${s.id}" aria-pressed="${s.id === st.seat[st.type]}"><span class="ph"><img src="${seatImg(s, st.seatCol[s.id])}" alt="" loading="lazy"></span><b>${s.name}</b><small>${s.colors ? s.colors.length + ' colors' : 'One color'}</small></button>`; }).join('');
+  $('seats').onclick = e => { const b = e.target.closest('.card'); if (b) { st.seat[st.type] = b.dataset.v; render(); } };
+  const sd = seatDef();
+  $('seatColBox').hidden = !sd.colors;
+  $('lockBox').hidden = !sd.lock; $('lockOn').checked = st.lockOn; $('lockSw').hidden = !st.lockOn;
+  if (sd.lock && st.lockOn) swatches($('lockSw'), LOCK_COLS.map(c => [c, c === 'SeaFoam' ? 'Seafoam' : c, mcBg(c)]), st.lockCol, v => st.lockCol = v);
+  if (sd.colors) swatches($('seatSw'), sd.colors.map(c => [c, c, mcBg(c)]), st.seatCol[sd.id], v => st.seatCol[sd.id] = v);
+  $('seatNow').textContent = sd.name + (sd.colors ? ' · ' + st.seatCol[sd.id] : '');
+  const butts = BUTTS.filter(b => (!b.only || b.only === st.mat) && (!b.types || b.types.includes(st.type)));
+  if (!butts.some(b => b.id === st.butt)) st.butt = butts[0].id;
+  $('butts').innerHTML = butts.map(b => `<button type="button" class="card" data-v="${b.id}" aria-pressed="${b.id === st.butt}"><span class="ph"><img src="${P}butts/${b.img || b.id}.webp" alt="" loading="lazy"></span><b>${b.name}</b><small>${b.colors ? b.colors.length + ' colors' : 'One color'}</small></button>`).join('');
+  $('butts').onclick = e => { const b = e.target.closest('.card'); if (b) { st.butt = b.dataset.v; render(); } };
+  const bd = BUTTS.find(b => b.id === st.butt);
+  $('buttColBox').hidden = !bd.colors;
+  if (bd.colors) swatches($('buttSw'), bd.colors.map(c => [c, c, mcBg(c)]), st.buttCol[bd.id], v => st.buttCol[bd.id] = v);
+  const ct = CHECKS[st.checkType]; if (!ct.colors.some(n => CK[n] === st.check)) st.check = CK[ct.colors[0]];
+  $('checkType').innerHTML = Object.entries(CHECKS).map(([k, c]) => `<button type="button" data-v="${k}" aria-pressed="${k === st.checkType}">${c.name}</button>`).join('');
+  $('checkType').onclick = e => { const b = e.target.closest('button'); if (b) { st.checkType = b.dataset.v; render(); } };
+  swatches($('checkSw'), ct.colors.map(n => [CK[n], n, metalBg(CK[n])]), st.check, v => st.check = v);
+  $('checkName').textContent = ct.colors.find(n => CK[n] === st.check) || '';
+  $('chkSplitLbl').hidden = st.style !== 'split';
+  $('checkBox').hidden = !(st.chkFore || (st.chkSplit && st.style === 'split'));
+  $('buttNow').textContent = bd.name.replace(/^(ALPS|AT) /, '') + (bd.colors ? ' · ' + st.buttCol[bd.id] : '');
+  // guides for this rod type
+  $('guides').innerHTML = GUIDES[st.type].map(g => `<button type="button" class="card tall" data-v="${g.id}" aria-pressed="${g.id === st.guide[st.type]}"><span class="ph"><img src="${guideImg(g, gColor(g), gRing(g))}" alt="" loading="lazy"></span><b>${g.name}</b><small>${g.sub}</small></button>`).join('');
+  $('guides').onclick = e => { const b = e.target.closest('.card'); if (b) { st.guide[st.type] = b.dataset.v; render(); readGuideWraps().then(build); } };
+  const gd = guideDef();
+  const ti = isTi(gRing(gd)) && gd.id !== 'tihf';
+  $('gColBox').hidden = ti || gd.colors.length < 2;
+  if (!ti) swatches($('gColSw'), gd.colors.map(c => [c, c, mcBg(c)]), gColor(gd), v => st.gCol[st.type + gd.id] = v);
+  $('klRunBox').hidden = !klOk();
+  [...$('klRun').children].forEach(b => b.setAttribute('aria-pressed', +b.dataset.v === st.klRun));
+  $('gcount').innerHTML = [6, 7, 8, 9, 10, 11, 12].map(v => `<option${v === st.gcount[st.type] ? ' selected' : ''}>${v}</option>`).join('');
+  $('guideNow').textContent = `${gd.name}${klFrom() < 99 ? ' + KL' : ''} · ${ti ? 'Titanium' : gColor(gd)}`;
+  $('gwrapNow').textContent = `${st.gcount[st.type]} guides + tip-top`;
+  $('splitArea').hidden = st.style !== 'split';
+  $('splitBox').hidden = $('splitEdit').hidden = !st.splitOn;
+  $('mainBox').hidden = $('mainEdit').hidden = !st.mainOn;
+  fillSaved();
+  $('wrapNow').textContent = [st.mainOn ? 'Above the fore grip' : '', st.style === 'split' && st.splitOn ? 'split' : ''].filter(Boolean).join(' + ') || 'None';
+  if (fast) { clearTimeout(quick); quick = setTimeout(build, 60); } else build();
+}
+function summary() {
+  const sd = seatDef(), bd = BUTTS.find(b => b.id === st.butt), gd = guideDef();
+  const rows = [
+    ['Rod type', { spinning: 'Spinning', baitcaster: 'Baitcaster', conventional: 'Conventional' }[st.type]],
+    ['Blank', `${ftin(st.len)}, ${nameOf(BLANK, st.blank).toLowerCase()} ${st.finish}`],
+    ['Grips', $('gripNow').textContent + (st.style === 'split' ? `, ${st.gButt} in + ${st.gRear} in rear` : '') + `, ${st.gFore} in fore`],
+    ...(st.cork.on ? [['Grip rings', corkSummary()]] : []),
+    ['Reel seat', $('seatNow').textContent + `, ${L.seat[0].toFixed(2)} in from the butt`],
+    ...(sd.lock && st.lockOn ? [['Locking nut', `Aluminum, ${(st.lockCol === 'SeaFoam' ? 'seafoam' : st.lockCol.toLowerCase())}`]] : []),
+    ['Butt cap', bd.name + (bd.colors ? ' · ' + st.buttCol[bd.id] : '')],
+    ...(st.chkFore || (st.chkSplit && st.style === 'split') ? [['Winding checks', [st.chkFore ? 'fore grip' : '', st.chkSplit && st.style === 'split' ? 'split grips (2)' : ''].filter(Boolean).join(' + ') + ', ' + CHECKS[st.checkType].name.toLowerCase() + ' ' + nameOf(CHECK, st.check).toLowerCase()]] : []),
+    ['Guides', (klFrom() < L.sizes.length ? `${klFrom()} ${gd.name}, then Fuji KL` : gd.name) + ` · ${L.sizes.length} guides + tip-top`],
+    ['Wrap', st.mainOn && unrolled.main ? $('mainSum').textContent : 'None'],
+    ...(st.style === 'split' && st.splitOn && unrolled.split ? [['Split wrap', $('splitSum').textContent]] : []),
+    ['Guide wraps', $('gwSum').textContent]];
+  $('parts').innerHTML = rows.map(([a, b]) => `<div><span>${a}</span><span>${b}</span></div>`).join('');
+}
+// ---------- save and reopen a whole rod build ----------
+const gripName = () => `Grip · ${$('gripNow').textContent} · ${seatDef().name}`;
+const rodName = () => `${ftin(st.len)} ${{ spinning: 'spinning', baitcaster: 'baitcaster', conventional: 'conventional' }[st.type]} · ${seatDef().name}`;
+async function wrapSetup(k) { try { const w = await Promise.race([whenReady(fk(k), w => w.wlCapture), new Promise(r => setTimeout(r, 3000))]); return w ? { kind: src[k], setup: w.wlCapture() } : null; } catch (e) { return null; } }
+// Download picture, styled like the wrap designers' pictures: the butt through the end of the wrap on top, the same length of
+// rod at the guides underneath (so both are the same scale), centered on a dark card with rodwraplab.com
+function rodShot(x0, x1, ty, PH = 600) {
+  const PW = 2400, keep = { p: camera.position.clone(), q: controls.target.clone(), a: camera.aspect, rx: rod.rotation.x, pr: renderer.getPixelRatio() };
+  renderer.setPixelRatio(1); renderer.setSize(PW, PH, false); camera.aspect = PW / PH; camera.updateProjectionMatrix(); rod.rotation.x = 0;
+  const off = -RL() / 2, fovT = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), w = x1 - x0, dist = (w / 2) / (fovT * camera.aspect);
+  const target = new THREE.Vector3((x0 + x1) / 2 + off, ty, 0), dir = new THREE.Vector3(0, 0.18, 1).normalize();
+  camera.position.copy(target).addScaledVector(dir, dist); camera.lookAt(target); renderer.render(scene, camera);
+  const c = document.createElement('canvas'); c.width = PW; c.height = PH; c.getContext('2d').drawImage(cv, 0, 0);
+  renderer.setPixelRatio(keep.pr); camera.position.copy(keep.p); controls.target.copy(keep.q); rod.rotation.x = keep.rx; resize(); controls.update(); renderer.render(scene, camera);
+  // trim to the rod's top and bottom (the 3D canvas is see-through around it)
+  const k = 4, sw = PW / k, sh = PH / k, sm = document.createElement('canvas'); sm.width = sw; sm.height = sh; const sg = sm.getContext('2d'); sg.drawImage(c, 0, 0, sw, sh);
+  const d = sg.getImageData(0, 0, sw, sh).data; let t = sh, b = -1;
+  for (let y = 0; y < sh; y++) { for (let x = 0; x < sw; x++) if (d[(y * sw + x) * 4 + 3] > 20) { if (y < t) t = y; b = y; break; } }
+  if (b < t) return c; const m = 10, top = Math.max(0, t * k - m), bot = Math.min(PH, (b + 1) * k + m);
+  const o = document.createElement('canvas'); o.width = PW; o.height = bot - top; o.getContext('2d').drawImage(c, 0, top, PW, bot - top, 0, 0, PW, bot - top); return o;
+}
+function rodPicture() {
+  // the butt through the end of the wrap, and the same length of rod at the guides (same scale), stood up on end side by side
+  const wrapEnd = (L.wrap ? L.wrap[1] : L.handle1 + 4) + 0.8, len = wrapEnd + 0.4, hang = st.type === 'spinning' ? -0.45 : 0.45;
+  const one = GRIP ? rodShot(L.buttStart - 0.4, RL() + 0.6, 0.1) : rodShot(-0.4, wrapEnd, 0.1), two = GRIP ? null : rodShot(L.guides - 3, L.guides - 3 + len, hang);
+  const W = 1080, H = 1920, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  const DISP = '"Barlow Condensed","Arial Narrow",sans-serif', BODY = '"IBM Plex Sans",system-ui,sans-serif';
+  const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#223246'); bg.addColorStop(1, '#111a24'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  // each picture turned upright (butt at the bottom, toward the tip at the top), both the same height so the scale matches
+  const sh = 1240, top = 120, k = sh / one.width, w1 = one.height * k, w2 = two ? two.height * k : 0, gap = two ? 150 : 0, x1 = (W - (w1 + gap + w2)) / 2, x2 = x1 + w1 + gap;
+  const upright = (im, x, w) => { g.save(); g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 24; g.shadowOffsetX = 10; g.translate(x, top + sh); g.rotate(-Math.PI / 2); g.drawImage(im, 0, 0, sh, w); g.restore(); };
+  upright(one, x1, w1); if (two) upright(two, x2, w2);
+  // faint watermark standing up between them
+  g.save(); g.globalAlpha = .22; g.fillStyle = '#fff'; g.font = '600 30px ' + BODY; g.textAlign = 'center'; g.textBaseline = 'middle'; g.translate(two ? x1 + w1 + gap / 2 : Math.min(W - 60, x1 + w1 + 70), top + sh / 2); g.rotate(-Math.PI / 2); g.fillText('rodwraplab.com', 0, 0); g.restore();
+  // WrapLab mark + rodwraplab.com at the bottom
+  const dia = (x, cy, r, lw, col) => { g.save(); g.strokeStyle = col; g.lineWidth = lw; g.beginPath(); g.moveTo(x, cy - r); g.lineTo(x + r, cy); g.lineTo(x, cy + r); g.lineTo(x - r, cy); g.closePath(); g.stroke(); g.restore(); };
+  g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(70, H - 470, W - 140, 2);
+  g.font = '700 76px ' + DISP; const site = 'rodwraplab.com', tw = g.measureText(site).width, iw = 64, bx = (W - (iw + 24 + tw)) / 2, by = H - 370;
+  dia(bx + iw / 2, by - 27, 30, 8, '#fff'); dia(bx + iw / 2, by - 27, 14, 4, '#e5585e');
+  g.textAlign = 'left'; g.fillStyle = '#fff'; g.fillText(site, bx + iw + 24, by);
+  return c;
+}
+window.WL_rodPicture = rodPicture;
+$('dlBtn').onclick = () => { try { const c = rodPicture(), a = document.createElement('a'), nm = (($('saveName').value || '').trim() || 'rod-build').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') || 'rod-build';
+  a.download = 'wraplab-' + nm + '.jpg'; a.href = c.toDataURL('image/jpeg', 0.92); document.body.append(a); a.click(); a.remove(); } catch (e) { const m = $('saveMsg'); if (m) m.textContent = 'The picture couldn\u2019t be made. Try again.'; } };
+function rodThumb() { try { const c = document.createElement('canvas'); c.width = 480; c.height = Math.round(480 * cv.height / cv.width); c.getContext('2d').drawImage(cv, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', 0.8); } catch (e) { return null; } }
+$('saveBtn').addEventListener('click', async () => {
+  const msg = $('saveMsg'), btn = $('saveBtn'), say = (t, c = '') => { msg.className = 'note ' + c; msg.innerHTML = t; };
+  const A = window.WLA;
+  if (!A || !A.saveBuild) { say('Saving isn’t switched on here yet.', 'bad'); return; }
+  if (!A.user) { say('Sign in on <a href="/saved-builds">WrapLab</a> to save builds, then press Save build again.', 'bad'); return; }
+  const name = ($('saveName').value.trim() || (GRIP ? gripName() : rodName())).slice(0, 60);
+  btn.disabled = true; say('Saving…');
+  const g = await Promise.race([guideReady(), new Promise(r => setTimeout(r, 3000))]);
+  const setup = { v: 1, grip: GRIP || undefined, st: JSON.parse(JSON.stringify(st)), main: st.mainOn ? await wrapSetup('main') : null,
+    split: st.style === 'split' && st.splitOn ? await wrapSetup('split') : null, guide: g && g.wlCapture ? g.wlCapture() : null };
+  try {
+    await A.saveBuild({ kind: 'rod', name, summary: (GRIP ? gripName() : rodName()).slice(0, 80), setup, thumb: rodThumb(), when: Date.now() });
+    say(`Saved as “${name.replace(/[<&]/g, '')}”. Find it in <a href="/saved-builds">Saved Builds</a>.`, 'ok'); $('saveName').value = '';
+  } catch (e) { console.warn(e); say('That didn’t save. Check your connection and try again.', 'bad'); }
+  btn.disabled = false;
+});
+// for customer links: the whole rod as one setup, and putting a setup back
+window.WL_rodName = () => rodName();
+window.WL_rodSetup = async () => { const g = await Promise.race([guideReady(), new Promise(r => setTimeout(r, 3000))]);
+  return { v: 1, st: JSON.parse(JSON.stringify(st)), main: st.mainOn ? await wrapSetup('main') : null,
+    split: st.style === 'split' && st.splitOn ? await wrapSetup('split') : null, guide: g && g.wlCapture ? g.wlCapture() : null }; };
+window.WL_rodApply = setup => applyRod({ setup });
+// reopen: /tools/rod.html?build=<id> once the signed-in builds arrive
+const openId = new URLSearchParams(location.search).get('build');
+async function applyRod(b) {
+  const sv = b.setup && b.setup.st; if (!sv) return;
+  Object.keys(sv).forEach(k => { st[k] = sv[k]; });
+  $('len').value = st.len; ['gButt', 'gRear', 'gFore', 'seatAt'].forEach(id => { $(id).value = st[id]; });
+  [['mainOn', st.mainOn], ['splitOn', st.splitOn], ['corkOn', st.cork.on], ['chkFore', st.chkFore], ['chkSplit', st.chkSplit]].forEach(([id, v]) => { $(id).checked = !!v; });
+  [['rtype', 'type'], ['finish', 'finish'], ['mat', 'mat'], ['style', 'style']].forEach(([id, k]) => [...$(id).children].forEach(x => x.setAttribute('aria-pressed', x.dataset.v === st[k])));
+  render();
+  for (const k of ['main', 'split']) { const w0 = b.setup[k]; if (!w0) continue; src[k] = w0.kind; if (w0.kind === 'cross') await crossFrame(k);
+    const w = await whenReady(fk(k), w => w.WL_unrolled && w.__wlRod); w.__wlFitted = true; w.wlApply(w0.setup); }
+  if (b.setup.guide) { const w = await guideReady(); w.wlApply(b.setup.guide); }
+  setTimeout(async () => { await readWrap('main'); if (b.setup.split) await readWrap('split'); await readGuideWraps(); build(); }, 800);
+  $('saveName').value = b.name || '';
+}
+// ---------- a saved grip into this rod: the grips (and, on a paid plan, the reel seat and butt cap) from a Grip Designer save or another rod build ----------
+const GRIP_KEYS = ['mat', 'style', 'eva', 'shrink', 'shrinkCol', 'cork', 'gButt', 'gRear', 'gFore', 'chkFore', 'chkSplit', 'check', 'checkType'];
+const HANDLE_KEYS = ['seatAt', 'seat', 'seatCol', 'lockOn', 'lockCol', 'butt', 'buttCol'];
+function fillGripPick() {
+  const sel = $('gripSaved'); if (!sel || GRIP) return; const cur = sel.value;
+  const all = (window.__wlBuilds || []).filter(b => b.kind === 'rod' && b.setup && b.setup.st);
+  const opt = b => `<option value="${b.id}">${String(b.name || 'My grip').replace(/[<&"]/g, '')}</option>`;
+  const grips = all.filter(b => b.setup.grip), rods = all.filter(b => !b.setup.grip);
+  sel.innerHTML = all.length ? '<option value="">Choose a saved grip…</option>' + (grips.length ? `<optgroup label="Grip Designer">${grips.map(opt).join('')}</optgroup>` : '') + (rods.length ? `<optgroup label="Grips from rod builds">${rods.map(opt).join('')}</optgroup>` : '')
+    : `<option value="">${signedIn ? 'No saved grips yet. Design one in the Grip Designer.' : 'Sign in on WrapLab to use your saved grips'}</option>`;
+  sel.disabled = !all.length; if (all.some(b => b.id === cur)) sel.value = cur;
+}
+window.addEventListener('wl-builds', fillGripPick); window.addEventListener('wl-user', () => setTimeout(fillGripPick, 0));
+$('gripSaved').addEventListener('change', () => {
+  const b = (window.__wlBuilds || []).find(x => x.id === $('gripSaved').value); if (!b) return; const sv = b.setup.st, paid = WL_rodPaid();
+  const keys = paid ? GRIP_KEYS.concat(HANDLE_KEYS) : GRIP_KEYS;
+  keys.forEach(k => { if (sv[k] !== undefined) st[k] = JSON.parse(JSON.stringify(sv[k])); });
+  if (paid && sv.seat) { const want = sv.seat[sv.type]; if (want && SEATS[st.type].some(x => x.id === want)) st.seat[st.type] = want; }   // the saved seat, when it fits this rod type
+  ['gButt', 'gRear', 'gFore', 'seatAt'].forEach(id => { $(id).value = st[id]; });
+  [['corkOn', st.cork.on], ['chkFore', st.chkFore], ['chkSplit', st.chkSplit]].forEach(([id, v]) => { $(id).checked = !!v; });
+  [['mat', 'mat'], ['style', 'style']].forEach(([id, k]) => [...$(id).children].forEach(x => x.setAttribute('aria-pressed', x.dataset.v === st[k])));
+  $('gripSavedNote').textContent = paid ? 'Grips, reel seat and butt cap loaded.' : 'Grips loaded. The reel seat and butt cap come with the Builder and Commercial plans.';
+  render(); requestAnimationFrame(() => goView('handle'));
+});
+fillGripPick();
+if (openId) { let done = false; const tryOpen = () => { if (done) return; const b = (window.__wlBuilds || []).find(x => x.id === openId && x.kind === 'rod'); if (b) { done = true; applyRod(b); } };
+  window.addEventListener('wl-builds', tryOpen); tryOpen(); }
+resize(); render(); requestAnimationFrame(loop);
+// pull the starting designs in once the designers have loaded
+const sfswBoot = (async () => {
+  if (crossOnly()) for (const k of ['main', 'split']) { src[k] = 'cross'; await crossFrame(k); }
+  await fitTaper('main', 16, 4); await readWrap('main'); build();
+  await fitTaper('split', 6, L.split ? Math.max(0.5, Math.round((L.split[1] - L.split[0] - 0.25) * 4) / 4) : 2.5); await readWrap('split');
+  await readGuideWraps(); build();
+})();
+
+// ---------- SFSW: the builder page around this frame sets the rod ----------
+// parent calls SFSW_rod.set({...}) with the parts the customer picked; the newest call wins.
+{
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const last = { main: null, split: null, gw: null, guideKey: null };
+  let want = null, busy = false;
+  const firstFit = { main: null, split: null };
+  async function setWrap(k, spec) {
+    const key = JSON.stringify(spec); if (last[k] === key) return false; last[k] = key;
+    if (spec.full) {   // a design from the SFSW Wrap Designer, exactly as the customer made it (regular or cross wrap)
+      src[k] = spec.kind === 'cross' ? 'cross' : 'taper'; if (src[k] === 'cross') await crossFrame(k);
+      const w = await whenReady(fk(k), w => w.WL_unrolled && w.__wlRod); w.__wlFitted = true;
+      try { w.wlApply(clone(spec.full)); } catch (e) { console.warn('design', k, e); }
+      await wait(150); await readWrap(k); return true;
+    }
+    if (src[k] !== 'taper') src[k] = 'taper';
+    const w = await taperReady(k);
+    if (!firstFit[k]) firstFit[k] = w.wlCapture();   // the size this wrap was fitted to on this blank
+    const o = clone(firstFit[k]);
+    const from = spec.setup && Array.isArray(spec.setup.stripes) && spec.setup.stripes.length ? spec.setup : null;
+    if (from) ['pattern', 'dragon', 'axes', 'angle', 'tsize', 'arms', 'fillC', 'stripes', 'center', 'chevTo', 'trims', 'inner', 'nOverride'].forEach(f => { if (from[f] !== undefined) o[f] = clone(from[f]); });
+    else {
+      o.pattern = spec.pattern || 'diamond'; o.axes = spec.axes || 2; o.nOverride = null; o.chevTo = null;
+      o.stripes = spec.stripes; o.center = { on: false, c: spec.stripes[0].c, t: 1 }; o.inner = { on: false, pattern: 'diamond', place: 'center', auto: true, stripes: [] };
+      o.dragon = spec.dragon || { line: '#1a1a1a', metal: '#b9bec4', over: { on: false, pattern: 'chevron', axes: 2 } };
+      o.trims = spec.trims !== undefined ? spec.trims : o.trims;
+    }
+    if (spec.blank) o.blankC = spec.blank;
+    try { w.wlApply(o); } catch (e) { console.warn('wrap', k, e); }
+    await wait(120); await readWrap(k); return true;
+  }
+  async function setGuideWrap(spec) {
+    const key = JSON.stringify(spec); if (last.gw === key) return false; last.gw = key;
+    const w = await guideReady(); if (!w.wlCapture) return false;
+    const o = w.wlCapture(); o.uOn = !!spec.under; o.vals = o.vals || {};
+    o.vals.uC = spec.underC; o.vals.fC = spec.footC; if (spec.blank) o.vals.blankC = spec.blank;
+    o.st.bands = spec.bands; o.st.trims = spec.trims;
+    try { w.wlApply(o); } catch (e) { console.warn('guide wrap', e); }
+    await wait(120); return true;
+  }
+  async function apply(p) {
+    await sfswBoot;
+    const T = SEATS[p.type] ? p.type : 'spinning'; st.type = T;
+    let reguide = false;
+    if (p.len && p.len !== st.len) { st.len = p.len; autoGuides(); reguide = true; }
+    if (p.gcount) st.gcount[T] = p.gcount;
+    ['finish', 'blank', 'mat', 'style', 'eva', 'shrink', 'lockOn', 'lockCol', 'chkFore', 'chkSplit', 'checkType', 'mainOn', 'splitOn', 'gButt', 'gRear', 'gFore', 'seatAt'].forEach(k => { if (p[k] !== undefined && p[k] !== null) st[k] = p[k]; });
+    if (!SHRINK[st.shrink]) st.shrink = 'none';
+    if (st.shrink !== 'none' && p.shrinkCol && SHRINK[st.shrink].colors[p.shrinkCol]) st.shrinkCol[st.shrink] = p.shrinkCol;
+    if (!EVA.some(e => e[0] === st.eva)) st.eva = 'black';
+    const sd = SEATS[T].find(x => x.id === p.seat);
+    if (sd) { st.seat[T] = sd.id; if (sd.colors && sd.colors.includes(p.seatCol)) st.seatCol[sd.id] = p.seatCol; }
+    const bd = BUTTS.find(x => x.id === p.butt);
+    if (bd) { st.butt = bd.id; if (bd.colors && bd.colors.includes(p.buttCol)) st.buttCol[bd.id] = p.buttCol; }
+    const gd = GUIDES[T].find(x => x.id === p.guide);
+    if (gd) { st.guide[T] = gd.id; const gc = gd.colors.includes(p.gCol) ? p.gCol : ({ Grey: 'Gunmetal', Gunmetal: 'Grey' })[p.gCol]; if (gd.colors.includes(gc)) st.gCol[T + gd.id] = gc; if (gd.rings.includes(p.ring)) st.ring[T + gd.id] = p.ring; }
+    st.klRun = 0;
+    if (p.check && CK[p.check]) st.check = CK[p.check];
+    if (p.cork) { st.cork.on = true; st.cork.g = clone(p.cork); } else { st.cork.on = false; st.cork.g = {}; }
+    $('len').value = st.len; ['gButt', 'gRear', 'gFore', 'seatAt'].forEach(id => { $(id).value = st[id]; });
+    [['mainOn', st.mainOn], ['splitOn', st.splitOn], ['corkOn', st.cork.on], ['chkFore', st.chkFore], ['chkSplit', st.chkSplit]].forEach(([id, v]) => { $(id).checked = !!v; });
+    [['rtype', 'type'], ['finish', 'finish'], ['mat', 'mat'], ['style', 'style']].forEach(([id, k]) => [...$(id).children].forEach(x => x.setAttribute('aria-pressed', x.dataset.v === st[k])));
+    const gk = T + '|' + st.guide[T] + '|' + st.len + '|' + st.gcount[T];
+    if (gk !== last.guideKey) { last.guideKey = gk; reguide = true; }
+    render();
+    if (p.main && st.mainOn) await setWrap('main', p.main);
+    if (p.split && st.splitOn && st.style === 'split') await setWrap('split', p.split);
+    if (p.gw && await setGuideWrap(p.gw)) reguide = true;
+    if (reguide) await readGuideWraps();
+    build();
+  }
+  async function pump() { if (busy) return; busy = true; try { while (want) { const p = want; want = null; try { await apply(p); } catch (e) { console.error(e); } } } finally { busy = false; } }
+  // the size the wrap above the fore grip was fitted to on this blank, for the page's Wrap Designer
+  const fit = async () => { await sfswBoot; const w = await taperReady('main'); const c = firstFit.main || w.wlCapture(); return { unit: c.unit, len: c.len, dB: c.dB, dM: c.dM, dT: c.dT }; };
+  window.SFSW_rod = { set(p) { want = p; return pump(); }, fit, view(v, now) { try { goView(v, now); } catch (e) {} }, state: () => clone(st), ready: sfswBoot };
+  try { parent.postMessage({ sfswRod: 'ready' }, location.origin); } catch (e) {}
+}
+
+</script>
+</body>
+</html>
