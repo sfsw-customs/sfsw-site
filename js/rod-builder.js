@@ -147,8 +147,10 @@
   var STEPS = [
     { title: 'Blank', sub: 'Pick the blank, then its length and power.', view: 'all',
       parts: [secOf('sec-blank')] },
-    { title: 'Grips <em>&amp;</em> Reel Seat', tab: 'Grips & Seat', sub: 'Grips, reel seat and butt cap, plus heat shrink and trim rings if you want them.', view: 'handle',
-      parts: [secOf('sec-grip'), accCard('acc-heatshrink-options', 'Heat Shrink', 'heatshrink'), secOf('sec-seat'), secOf('sec-butt'), accCard('acc-trim-options', 'Trim Rings', 'trim')] },
+    { title: 'Grips', sub: 'Grips and butt cap, plus heat shrink and trim rings if you want them.', view: 'handle',
+      parts: [secOf('sec-grip'), accCard('acc-heatshrink-options', 'Heat Shrink', 'heatshrink'), secOf('sec-butt'), accCard('acc-trim-options', 'Trim Rings', 'trim')] },
+    { title: 'Reel <em>Seat</em>', tab: 'Reel Seat', sub: 'The reel seat and its color.', view: 'handle',
+      parts: [secOf('sec-seat')] },
     { title: 'Guides', sub: 'Frame, ring material and frame color.', view: 'guides',
       parts: [secOf('sec-guides'), accCard('acc-hookkeeper-options', 'Hook Keeper', 'hookkeeper')] },
     { title: 'Wrap', sub: 'Pick one of our wraps, then make it yours in the Wrap Designer: thread colors, counts and angle. Split grips can add a wrap between the rear grips.', view: 'wrap',
