@@ -28,6 +28,7 @@
   var css = [
     '.rb-page,.rb-page body{overflow-x:clip!important;overflow-y:visible!important}',   // overflow-x:hidden on the page stops the 3D rod staying at the top
     '.rb-on .build-strip{display:none!important}',
+    '.rb-on .grip-photo-wrap,.rb-on .seat-photo-wrap,.rb-on .guide-photo-wrap{display:none!important}',   // the 3D rod shows these parts
     '.rb-on.configurator-layout{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"steps"!important}',   // the 3D rod and the picks take the full width
     '.rb-build .config-sidebar{position:static;width:auto;max-width:640px;margin:0 auto;grid-area:auto}',
     '.rb-stage{height:clamp(240px,42vh,440px)}',
@@ -103,7 +104,10 @@
     '.rb-bl-name{font-family:var(--font-cond);font-size:16px;font-weight:600;letter-spacing:.03em;line-height:1.15}',
     '.rb-bl-usa{font-family:var(--font-cond);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--c-teal-light)}',
     '.rb-bl-desc{font-size:11.5px;line-height:1.45;color:var(--c-muted);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;flex:0 0 auto}',
-    '.rb-t1 .rb-bl-desc{-webkit-line-clamp:3}.rb-t2 .rb-bl-desc{-webkit-line-clamp:2}.rb-t3 .rb-bl-desc{-webkit-line-clamp:1}',
+    '.rb-bl .rb-bl-desc{-webkit-line-clamp:3}.rb-t1 .rb-bl-desc{-webkit-line-clamp:2}.rb-t2 .rb-bl-desc,.rb-t3 .rb-bl-desc{-webkit-line-clamp:1}',
+    '.rb-bl-more{align-self:flex-start;background:none;border:0;padding:0;margin-top:-2px;color:var(--c-gold);font-family:var(--font-cond);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}',
+    '.rb-bl-more:hover{text-decoration:underline}',
+    '.rb-bl.open{aspect-ratio:auto;min-height:0}.rb-bl.open .rb-bl-desc{display:block!important;-webkit-line-clamp:unset!important;overflow:visible}',
     '.rb-bl-foot{margin-top:auto;width:100%;display:flex;justify-content:space-between;align-items:flex-end;gap:6px}',
     '.rb-bl-len{font-size:11px;color:var(--c-muted);line-height:1.3}.rb-bl.selected .rb-bl-len{color:var(--c-text)}',
     '.rb-bl-price{font-family:var(--font-cond);font-size:17px;font-weight:600;color:var(--c-gold);white-space:nowrap}',
@@ -113,7 +117,7 @@
     '.rb-bl-var::after{content:"";position:absolute;top:-7px;left:calc(var(--caret,24px) + 1px);border:8px solid transparent;border-top:0;border-bottom-color:var(--c-dark3)}',
     '@keyframes rbpop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}',
     '.rb-bl-var-h{font-family:var(--font-cond);font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--c-gold);padding:2px 12px 4px}',
-    '@media (max-width:560px){.rb-bl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rb-bl{padding:11px}.rb-bl .rb-bl-desc{-webkit-line-clamp:3}.rb-bl.rb-t1 .rb-bl-desc{-webkit-line-clamp:2}.rb-bl.rb-t2 .rb-bl-desc,.rb-bl.rb-t3 .rb-bl-desc{display:none}}',
+    '@media (max-width:560px){.rb-bl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rb-bl{padding:11px}.rb-bl .rb-bl-desc{-webkit-line-clamp:2}.rb-bl.rb-t1 .rb-bl-desc{-webkit-line-clamp:1}.rb-bl.rb-t2 .rb-bl-desc,.rb-bl.rb-t3 .rb-bl-desc{display:none}}',
     '@keyframes rbflash{0%,60%{box-shadow:0 0 0 2px var(--c-gold)}100%{box-shadow:0 0 0 2px transparent}}'
   ].join('\n');
   document.head.appendChild(el('style', null, css));
@@ -217,6 +221,7 @@
       s.tabEl.classList.toggle('done', k < reached && k !== cur || (k < cur)); s.tabEl.setAttribute('aria-selected', k === cur);
     });
     lastView = null; view(STEPS[cur].view);
+    if (typeof placeLengths === 'function') { placeLengths(); moreLinks(); }
     if (scroll) { var y = top.getBoundingClientRect().top + scrollY - navH() - 6; if (Math.abs(scrollY - y) > 4) scrollTo({ top: y, behavior: 'smooth' }); }
     if (typeof window.sfswTrack === 'function') { try { window.sfswTrack('rod_builder_step', STEPS[cur].tab || STEPS[cur].title.replace(/<[^>]+>/g, '')); } catch (e) {} }
   }
@@ -731,7 +736,8 @@
 
   // ───────────────────────── Blanks: square cards ─────────────────────────
   // The blanks sit in a grid of square cards; the picked blank's lengths and powers open underneath the grid.
-  var _blanks = window.renderBlankCards;
+  var _blanks = window.renderBlankCards, blOpen = {};
+  window.SFSW_blMore = function (id) { blOpen[id] = !blOpen[id]; call('renderBlankCards'); };
   if (typeof _blanks === 'function' && val('BLANKS')) window.renderBlankCards = function () {
     var host = $('blank-cards'); if (!host) return _blanks.apply(this, arguments);
     var B = val('BLANKS') || [], perf = !!S.performanceOnly, esc = function (t) { return String(t == null ? '' : t); };
@@ -739,12 +745,12 @@
     var cards = B.map(function (b) {
       var sel = b.id === S.blankId, v = sel ? b.variants[S.variantIdx] : null;
       var tight = (b.madeInUSA ? 1 : 0) + (b.name.length > 16 ? 1 : 0) + (b.name.length > 30 ? 1 : 0);   // fewer description lines when the name or badge takes room
-      return '<button type="button" class="rb-bl rb-t' + tight + (sel ? ' selected' : '') + '" onclick="pickBlank(\'' + b.id + '\')">' +
+      return '<div role="button" tabindex="0" class="rb-bl rb-t' + tight + (sel ? ' selected' : '') + (blOpen[b.id] ? ' open' : '') + '" data-id="' + b.id + '" onclick="pickBlank(\'' + b.id + '\')">' +
         '<span class="rb-bl-name">' + esc(b.name) + '</span>' +
         (b.madeInUSA ? '<span class="rb-bl-usa">★ Made in USA</span>' : '') +
-        (b.desc ? '<span class="rb-bl-desc">' + esc(b.desc) + '</span>' : '') +
+        (b.desc ? '<span class="rb-bl-desc">' + esc(b.desc) + '</span><button type="button" class="rb-bl-more" onclick="event.stopPropagation();SFSW_blMore(\'' + b.id + '\')">' + (blOpen[b.id] ? 'Show less' : 'Read more') + '</button>' : '') +
         '<span class="rb-bl-foot"><span class="rb-bl-len">' + (v ? esc(v.length) + ' · ' + esc(v.lineWt) : b.variants.length + ' length' + (b.variants.length > 1 ? 's' : '')) + '</span>' +
-        '<span class="rb-bl-price">' + price(b) + '</span></span></button>';
+        '<span class="rb-bl-price">' + price(b) + '</span></span></div>';
     }).join('');
     var sb = B.find(function (b) { return b.id === S.blankId; }), rows = '';
     if (sb) rows = '<div class="rb-bl-var"><div class="rb-bl-var-h">' + esc(sb.name) + ' · pick the length and power</div>' +
@@ -754,19 +760,25 @@
           '<td>' + esc(v.length) + ' — ' + esc(v.lineWt) + (v.adder ? ' <span class="variant-adder">+$' + v.adder + '</span>' : '') + '</td><td>' + esc(v.lureWt) + '</td><td>' + esc(v.blankWt) + '</td></tr>'; }).join('') +
       '</tbody></table></div>';
     host.className = 'rb-blanks'; host.innerHTML = '<div class="rb-bl-grid">' + cards + rows + '</div>';
-    placeLengths();
+    placeLengths(); moreLinks();
   };
+  // "Read more" only where the description is cut off (always on an open card, to close it)
+  function moreLinks() { if (!document.querySelector('.rb-bl-grid') || !document.querySelector('.rb-bl-grid').offsetParent) return; [].forEach.call(document.querySelectorAll('.rb-bl'), function (c) {
+    var d = c.querySelector('.rb-bl-desc'), m = c.querySelector('.rb-bl-more'); if (!d || !m) return;
+    var cut = c.classList.contains('open') || getComputedStyle(d).display === 'none' || d.scrollHeight > d.clientHeight + 2;
+    m.style.display = cut ? '' : 'none'; }); }
   // the lengths open right under the row of the picked blank, pointing at it
   function placeLengths() {
     var grid = document.querySelector('.rb-bl-grid'), pan = grid && grid.querySelector('.rb-bl-var'); if (!pan) return;
     var cards = [].slice.call(grid.querySelectorAll('.rb-bl')), i = cards.findIndex(function (c) { return c.classList.contains('selected'); }); if (i < 0) return;
-    var cols = Math.max(1, getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length);
+    if (!grid.offsetParent) return;   // step not on screen yet: placed again when it opens
+    var cols = cards.filter(function (c) { return c.offsetTop === cards[0].offsetTop; }).length || 1;
     var last = Math.min(cards.length, Math.ceil((i + 1) / cols) * cols) - 1;
     cards[last].insertAdjacentElement('afterend', pan);
     var c = cards[i], gx = grid.getBoundingClientRect().left;
     pan.style.setProperty('--caret', Math.round(c.getBoundingClientRect().left - gx + c.offsetWidth / 2 - 9) + 'px');
   }
-  addEventListener('resize', function () { clearTimeout(placeLengths.t); placeLengths.t = setTimeout(placeLengths, 80); });
+  addEventListener('resize', function () { clearTimeout(placeLengths.t); placeLengths.t = setTimeout(function () { placeLengths(); moreLinks(); }, 80); });
   call('renderBlankCards');
 
   go(0, false);
