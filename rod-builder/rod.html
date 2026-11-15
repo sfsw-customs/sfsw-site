@@ -762,7 +762,7 @@ async function build() {
     if (sl0 > gap + 0.01) L.splitNote = `Shortened to fit the ${gap.toFixed(2)} in gap between the grips. Set the length in the designer to ${gap.toFixed(2)} in or less.`;
     putWrap('split', mid - sl / 2, sl); }
   // guides and their wraps from the Guide Wrap Designer
-  const gd = guideDef(), sizes = guideSizes(), colHex = MC[isTi(gRing(gd)) && gd.id !== 'tihf' ? 'Titanium' : gColor(gd)] || '#4a4d52', ringHex = RINGC(gRing(gd));
+  const gd = guideDef(), sizes = guideSizes(), colHex = gd.id === 'tidf' ? MC.Black : !(isTi(gRing(gd)) && gd.id !== 'tihf') && gColor(gd) === 'Gunmetal' && gd.slug.startsWith('fuji') ? '#8f939a' /* SFSW: lit metal reads darker, this shows as the Grey swatch */ : MC[isTi(gRing(gd)) && gd.id !== 'tihf' ? 'Titanium' : gColor(gd)] || '#4a4d52', ringHex = RINGC(gRing(gd));
   const gx = guideSpacing(sizes.length, (L.seat[0] + L.seat[1]) / 2), side = st.type === 'spinning' ? -1 : 1;
   const gg = new THREE.Group(); gg.rotation.x = side < 0 ? Math.PI : 0;
   gx.forEach((px, i) => { const gdi = guideAt(i), m = tag(guideModel(gdi, sizes[i], colHex, ringHex), 's-guides'); m.position.set(px, blankR(px), 0); gg.add(m);

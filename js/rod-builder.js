@@ -864,7 +864,7 @@
           ? '<div class="rb-gd-row"><span class="rb-gd-k">Frame color</span><span class="rb-gd-sw">' + cols.map(function (c, i) {
               return '<button type="button" title="' + c.name + '" class="' + (i === ci ? 'on' : '') + '" style="background:' + c.hex + '" onclick="pickGuideColor(' + i + ')"></button>'; }).join('') +
               '</span><span class="rb-gd-v">' + cols[ci].name + '</span></div>'
-          : (cols.length === 1 ? '<div class="rb-gd-row"><span class="rb-gd-k">Frame color</span><span class="rb-gd-sw"><button type="button" class="on" style="background:' + cols[0].hex + '"></button></span><span class="rb-gd-v">' + cols[0].name + (picked.titanium ? ' only (titanium frames come in silver)' : '') + '</span></div>' : '');
+          : (cols.length === 1 ? '<div class="rb-gd-row"><span class="rb-gd-k">Frame color</span><span class="rb-gd-sw"><button type="button" class="on" style="background:' + cols[0].hex + '"></button></span><span class="rb-gd-v">' + cols[0].name + ' only' + '</span></div>' : '');
         var tipHtml = ups.length ? '<div class="rb-gd-row"><span class="rb-gd-k">Upgrade the tip</span><span class="rb-gd-tips">' + ups.map(function (k) {
             return '<button type="button" class="' + (S.tipUpgrade === k ? 'on' : '') + '" onclick="pickTipUpgrade(event,\'' + k + '\')"><span class="rb-gd-box"></span>' + TIP_NAMES[k] + ' <b>+$' + fee[k] + '</b></button>'; }).join('') + '</span></div>' : '';
         det = '<div class="rb-gd-det"><div class="rb-gd-det-h">' + picked.name + ' <span>' + money(picked.adder) + '</span></div>' +
