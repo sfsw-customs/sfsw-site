@@ -371,7 +371,7 @@ const guideImg = (g, c, r) => P + 'guides/' + (g.id === 'foul' ? 'foulproof-guid
 // card photos by color: Fuji's shiny dark grey matches the darkest card and its gunmetal the grey one
 const cardCol = (g, c) => c === 'Shiny Dark Grey' ? 'black' : c === 'Gunmetal' && g.slug.startsWith('fuji') ? 'grey' : slug(c);
 const RINGC = () => '#141518';
-const guideModel = (g, size, colHex, ringHex) => guideModel3(g, size, colHex, ringHex, { ti: isTi(gRing(g)) });
+const guideModel = (g, size, colHex, ringHex) => guideModel3(g, size, colHex, ringHex, { ti: isTi(gRing(g)), fin: globalThis.__sfswGFin });
 const guideWrapMesh = (info, px, flip, spans) => guideWrapMesh3(info, px, flip, spans, blankR);   // inserts are black on every guide
 const SIZES = { spinning:[30,20,16,12,10,8,8,7,7,6,6,5.5], baitcaster:[16,12,10,8,8,7,7,6,6,6,5.5,5.5], conventional:[20,16,12,10,10,8,8,8,7,7,6,6] };
 const SIZES_HEAVY = [25,20,16,12,12,10,10,8,8,8,8,8];
@@ -762,7 +762,12 @@ async function build() {
     if (sl0 > gap + 0.01) L.splitNote = `Shortened to fit the ${gap.toFixed(2)} in gap between the grips. Set the length in the designer to ${gap.toFixed(2)} in or less.`;
     putWrap('split', mid - sl / 2, sl); }
   // guides and their wraps from the Guide Wrap Designer
-  const gd = guideDef(), sizes = guideSizes(), colHex = gd.id === 'tidf' ? MC.Black : !(isTi(gRing(gd)) && gd.id !== 'tihf') && gColor(gd) === 'Gunmetal' && gd.slug.startsWith('fuji') ? '#8f939a' /* SFSW: lit metal reads darker, this shows as the Grey swatch */ : MC[isTi(gRing(gd)) && gd.id !== 'tihf' ? 'Titanium' : gColor(gd)] || '#4a4d52', ringHex = RINGC(gRing(gd));
+  const gd = guideDef(), sizes = guideSizes(), colHex = (() => { const ti = isTi(gRing(gd)) && gd.id !== 'tihf', fuji = gd.slug.startsWith('fuji');   /* SFSW frame finishes */
+    globalThis.__sfswGFin = null;
+    if (gd.id === 'tidf') return MC.Black;
+    if (ti && fuji) { globalThis.__sfswGFin = [1, 0.08]; return '#f0f2f5'; }   /* titanium SiC / Torzite: shiny silver */
+    if (fuji && gColor(gd) === 'Gunmetal') { globalThis.__sfswGFin = [0.3, 0.62]; return '#3c3f45'; }   /* regular Fuji grey: matte, like the swatch */
+    return MC[ti ? 'Titanium' : gColor(gd)] || '#4a4d52'; })(), ringHex = RINGC(gRing(gd));
   const gx = guideSpacing(sizes.length, (L.seat[0] + L.seat[1]) / 2), side = st.type === 'spinning' ? -1 : 1;
   const gg = new THREE.Group(); gg.rotation.x = side < 0 ? Math.PI : 0;
   gx.forEach((px, i) => { const gdi = guideAt(i), m = tag(guideModel(gdi, sizes[i], colHex, ringHex), 's-guides'); m.position.set(px, blankR(px), 0); gg.add(m);

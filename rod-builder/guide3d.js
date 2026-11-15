@@ -48,7 +48,7 @@ export function guideModel(g, size, colHex, ringHex, opts = {}) {
   const grp = new THREE.Group(), [Hm, L1c, L2c, Ltc] = opts.dims || chartFor(g, size).slice(1), s = 1 / IN;
   const LK = g.id === 'foul' ? 2 : 1, L1 = L1c * LK, L2 = L2c * LK, Lt = Ltc * LK;   // the Foulproof is a long guide: twice the chart's spread
   const H = Hm * s * (g.low ? 0.86 : 1), od = size * s, id = od * 0.7, ringY = H - od / 2;
-  const fm = metal(colHex, opts.ti ? 0.45 : 0.28), wire = Math.max(0.018, od * 0.07);
+  const fm = metal(colHex, opts.ti ? 0.45 : 0.28); if (opts.fin) { fm.metalness = opts.fin[0]; fm.roughness = opts.fin[1]; } const wire = Math.max(0.018, od * 0.07);
   const insert = new THREE.Mesh(new THREE.TorusGeometry((od + id) / 4, (od - id) / 4, 16, 48), new THREE.MeshStandardMaterial({ color: ringHex, metalness: 0.25, roughness: 0.15 }));
   const band = new THREE.Mesh(new THREE.TorusGeometry(od / 2 + wire * 0.35, wire * 0.55, 10, 48), fm);
   [insert, band].forEach(m => { m.rotation.y = Math.PI / 2; m.position.set(0, ringY, 0); grp.add(m); });
