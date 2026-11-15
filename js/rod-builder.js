@@ -124,6 +124,23 @@
     '@keyframes rbpop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}',
     '.rb-bl-var-h{font-family:var(--font-cond);font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--c-gold);padding:2px 12px 4px}',
     '@media (max-width:560px){.rb-bl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rb-bl{padding:11px}.rb-bl .rb-bl-desc{-webkit-line-clamp:2}.rb-bl.rb-t1 .rb-bl-desc{-webkit-line-clamp:1}.rb-bl.rb-t2 .rb-bl-desc,.rb-bl.rb-t3 .rb-bl-desc{display:none}}',
+    '.rb-on .guide-preview{display:none!important}',
+    '.rb-gd-group{margin-bottom:16px}.rb-gd-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}',
+    '.rb-gd-head b{font-family:var(--font-cond);font-size:13px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--c-gold)}.rb-gd-head span{font-size:12.5px;color:var(--c-muted)}',
+    '.rb-gd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}',
+    '.rb-gd{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:11px 12px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius-md);color:var(--c-text);cursor:pointer;text-align:left;transition:border-color .15s,background .15s}',
+    '.rb-gd:hover{border-color:var(--c-border2)}.rb-gd.selected{border-color:var(--c-gold);background:rgba(201,148,26,.07);box-shadow:0 0 0 1px var(--c-gold)}',
+    '.rb-gd-name{font-family:var(--font-cond);font-size:14.5px;font-weight:600;letter-spacing:.03em}.rb-gd-price{font-family:var(--font-cond);font-size:13px;font-weight:600;color:var(--c-gold)}',
+    '.rb-gd-det{margin-top:10px;padding:12px 14px;background:var(--c-dark3);border:1px solid var(--c-gold);border-radius:var(--radius-md);display:grid;gap:10px}',
+    '.rb-gd-det-h{font-family:var(--font-cond);font-size:15px;font-weight:600}.rb-gd-det-h span{color:var(--c-gold);margin-left:6px}',
+    '.rb-gd-desc{font-size:12.5px;line-height:1.5;color:var(--c-muted)}',
+    '.rb-gd-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.rb-gd-k{font:600 10.5px var(--font-cond);letter-spacing:.16em;text-transform:uppercase;color:var(--c-muted);min-width:112px}',
+    '.rb-gd-v{font-size:12.5px;color:var(--c-text)}',
+    '.rb-gd-sw{display:flex;gap:6px}.rb-gd-sw button{width:26px;height:26px;border-radius:50%;border:2px solid var(--c-border2);cursor:pointer;padding:0}.rb-gd-sw button.on{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.35)}',
+    '.rb-gd-tips{display:flex;gap:6px;flex-wrap:wrap}.rb-gd-tips button{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;background:var(--c-dark2);border:1px solid var(--c-border2);border-radius:999px;color:var(--c-text);font-size:12.5px;cursor:pointer}',
+    '.rb-gd-tips button b{color:var(--c-gold);font-weight:600}.rb-gd-tips button.on{border-color:var(--c-gold);background:rgba(201,148,26,.1)}',
+    '.rb-gd-box{width:13px;height:13px;border-radius:3px;border:1.5px solid var(--c-muted);display:inline-block;position:relative}.rb-gd-tips button.on .rb-gd-box{border-color:var(--c-gold);background:var(--c-gold)}',
+    '.rb-gd-tips button.on .rb-gd-box::after{content:"";position:absolute;left:3px;top:0;width:4px;height:8px;border:solid #0a0e12;border-width:0 2px 2px 0;transform:rotate(45deg)}',
     '@keyframes rbflash{0%,60%{box-shadow:0 0 0 2px var(--c-gold)}100%{box-shadow:0 0 0 2px transparent}}'
   ].join('\n');
   document.head.appendChild(el('style', null, css));
@@ -824,6 +841,41 @@
     return r;
   };
   call('renderSeats');
+
+  // ───────────────────────── Guides: compact ring picker ─────────────────────────
+  // Each frame is a row of small ring cards (name + price). The picked ring's details open under its frame:
+  // what it is, frame color (titanium comes in silver only) and the tip upgrades it allows.
+  var TIP_NAMES = { sic: 'SiC', titaniumSic: 'Titanium SiC', torzite: 'Titanium Torzite', titTorzite: 'Titanium Torzite' };
+  var _guides = window.renderGuides;
+  if (typeof _guides === 'function' && val('GUIDES')) window.renderGuides = function () {
+    var host = $('guide-groups'); if (!host) return _guides.apply(this, arguments);
+    var fee = val('TIP_UPGRADE_FEES') || {}, money = function (n) { return n ? '+$' + n : 'Included'; };
+    host.innerHTML = val('GUIDES').map(function (g) {
+      var picked = g.items.find(function (it) { return it.id === S.guideId; });
+      var cards = g.items.map(function (it) {
+        return '<button type="button" class="rb-gd' + (it.id === S.guideId ? ' selected' : '') + '" onclick="pickGuide(\'' + it.id + '\')">' +
+          '<span class="rb-gd-name">' + it.name + '</span><span class="rb-gd-price">' + money(it.adder) + '</span></button>'; }).join('');
+      var det = '';
+      if (picked) {
+        var cols = call('guideColorList') || [], ups = call('tipUpgradeEligibleOptions') || [];
+        var ci = Math.min(S.guideColorIdx || 0, Math.max(0, cols.length - 1));
+        var colorHtml = cols.length > 1
+          ? '<div class="rb-gd-row"><span class="rb-gd-k">Frame color</span><span class="rb-gd-sw">' + cols.map(function (c, i) {
+              return '<button type="button" title="' + c.name + '" class="' + (i === ci ? 'on' : '') + '" style="background:' + c.hex + '" onclick="pickGuideColor(' + i + ')"></button>'; }).join('') +
+              '</span><span class="rb-gd-v">' + cols[ci].name + '</span></div>'
+          : (cols.length === 1 ? '<div class="rb-gd-row"><span class="rb-gd-k">Frame color</span><span class="rb-gd-sw"><button type="button" class="on" style="background:' + cols[0].hex + '"></button></span><span class="rb-gd-v">' + cols[0].name + (picked.titanium ? ' only (titanium frames come in silver)' : '') + '</span></div>' : '');
+        var tipHtml = ups.length ? '<div class="rb-gd-row"><span class="rb-gd-k">Upgrade the tip</span><span class="rb-gd-tips">' + ups.map(function (k) {
+            return '<button type="button" class="' + (S.tipUpgrade === k ? 'on' : '') + '" onclick="pickTipUpgrade(event,\'' + k + '\')"><span class="rb-gd-box"></span>' + TIP_NAMES[k] + ' <b>+$' + fee[k] + '</b></button>'; }).join('') + '</span></div>' : '';
+        det = '<div class="rb-gd-det"><div class="rb-gd-det-h">' + picked.name + ' <span>' + money(picked.adder) + '</span></div>' +
+          (picked.desc ? '<div class="rb-gd-desc">' + picked.desc + '</div>' : '') + colorHtml + tipHtml + '</div>';
+      }
+      return '<div class="rb-gd-group"><div class="rb-gd-head"><b>' + g.group + '</b>' + (g.desc ? '<span>' + g.desc + '</span>' : '') + '</div>' +
+        '<div class="rb-gd-grid">' + cards + '</div>' + det + '</div>';
+    }).join('');
+  };
+  var _gPrev = window.renderGuidePreview;
+  if (typeof _gPrev === 'function') window.renderGuidePreview = function () { var r = _gPrev.apply(this, arguments); call('renderGuides'); return r; };
+  call('renderGuides');
 
   go(0, false);
   window.updateAll();
