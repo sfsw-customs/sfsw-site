@@ -84,6 +84,10 @@
     '.rb-seg button{background:var(--c-dark2);color:var(--c-muted);border:0;border-right:1px solid var(--c-border);padding:7px 12px;font:600 12px var(--font-cond);letter-spacing:.08em;text-transform:uppercase;cursor:pointer}',
     '.rb-seg button:last-child{border-right:0}.rb-seg button[aria-pressed="true"]{background:var(--c-gold);color:#0a0e12}',
     '.rb-seg.rb-big button{padding:9px 16px}',
+    '.rb-rg-tabs{display:flex;align-items:center;gap:12px;flex-wrap:wrap}',
+    '.rb-tp{font-family:var(--font-body,inherit);text-transform:none;letter-spacing:0;font-weight:600;font-size:11.5px;color:var(--c-gold-light);margin-left:6px}',
+    '.rb-seg button[aria-pressed="true"] .rb-tp{color:#0a0e12}',
+    '.rb-rg-price{font-size:13px;color:var(--c-text)}.rb-rg-price b{color:var(--c-gold);font-weight:700}',
     '.rb-chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px;max-height:236px;overflow:auto;padding-right:2px}',
     '.rb-chips button{display:grid;gap:4px;justify-items:center;padding:6px 4px;background:var(--c-dark2);border:1px solid var(--c-border);border-radius:8px;color:var(--c-text);font-size:11px;line-height:1.2;cursor:pointer}',
     '.rb-chips button img{width:100%;height:34px;object-fit:cover;border-radius:4px;display:block}',
@@ -607,7 +611,7 @@
   function rgBuild() {
     rgEl = el('div', 'rb-rg');
     rgEl.innerHTML = '<div class="rb-rg-lbl">Grip to design</div><div class="rb-seg rb-big" data-k="piece"></div>' +
-      '<div class="rb-rg-lbl"><span class="rb-rg-kind"></span>: <b class="rb-rg-name"></b></div><div class="rb-seg" data-k="tab"><button type="button" data-v="cork">Cork</button><button type="button" data-v="eva">EVA</button></div>' +
+      '<div class="rb-rg-lbl"><span class="rb-rg-kind"></span>: <b class="rb-rg-name"></b></div><div class="rb-rg-tabs"><div class="rb-seg" data-k="tab"><button type="button" data-v="cork">Cork <span class="rb-tp">+$2.50 per 0.5 in added</span></button><button type="button" data-v="eva">EVA <span class="rb-tp">+$10 per color</span></button></div><span class="rb-rg-price"></span></div>' +
       '<div class="rb-chips"></div>' +
       '<div class="rb-rg-row">Ring size <div class="rb-seg" data-k="size"><button type="button" data-v="0.25">0.25 in</button><button type="button" data-v="0.5">0.5 in</button></div></div>' +
       '<div class="rb-rg-lbl"><b class="rb-rg-now"></b> · tap a ring to give it this material and size</div><div class="rb-strip"></div>' +
@@ -650,6 +654,8 @@
     var evaOnly = RG_KIND[S.gripId] === 'eva';   // custom EVA grips are EVA rings only; custom cork grips can mix in EVA
     if (evaOnly) { rgUi.tab = 'eva'; if (!rgIsEva(rgUi.m)) rgUi.m = 'eva:black'; }
     seg('tab').style.display = evaOnly ? 'none' : '';
+    rgEl.querySelector('.rb-rg-price').innerHTML = evaOnly ? '<b>+$10</b> for each color after the first · any length, no extra cost'
+      : (rgUi.tab === 'eva' ? '<b>+$10</b> for each EVA color in the grip' : '<b>+$2.50</b> for every 0.5 in added past 2.5 in' + (S.gripRings && S.gripRings.g.full ? ' (fore grip)' : ''));
     [].forEach.call(seg('tab').children, function (b) { b.setAttribute('aria-pressed', b.dataset.v === rgUi.tab); });
     [].forEach.call(seg('size').children, function (b) { b.setAttribute('aria-pressed', +b.dataset.v === rgUi.t); });
     rgEl.querySelector('.rb-rg-kind').textContent = rgIsEva(rgUi.m) ? 'EVA' : 'Cork';
