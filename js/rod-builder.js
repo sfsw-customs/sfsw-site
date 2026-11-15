@@ -363,6 +363,11 @@
   // every pick on the page ends in updateAll(): follow it
   var _update = window.updateAll;
   window.updateAll = function () {
+    try {   // heat shrink only goes on foam (EVA) grips: hidden, and taken off the build, for cork grips
+      var foam = (call('getGrip') || {}).mat === 'eva', hs = document.querySelector('.rb-acc[data-rb="heatshrink"]');
+      if (hs) hs.style.display = foam ? '' : 'none';
+      if (!foam && S.heatShrinkId) { S.heatShrinkId = null; call('renderAccessories'); }
+    } catch (e) {}
     try { rgPrice(); } catch (e) {}
     var r = _update.apply(this, arguments);
     try {
