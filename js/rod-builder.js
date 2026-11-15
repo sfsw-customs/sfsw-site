@@ -158,9 +158,8 @@
     card.lastChild.appendChild(g);
     return card;
   }
-  var perfBanner = col.querySelector('.perf-only-banner'), perfNote = $('perf-active-note');
+  S.performanceOnly = false;   // Performance Only mode removed from the builder
   var perfBox = null;
-  if (perfBanner) { perfBox = el('div'); perfBox.appendChild(perfBanner); if (perfNote) perfBox.appendChild(perfNote); }
   var gwPerf = el('div', 'rb-perf-note', 'Performance builds come with blacked-out guide wraps, so there is nothing to pick here.');
 
   var STEPS = [
