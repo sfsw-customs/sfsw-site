@@ -108,7 +108,10 @@
     '.rb-bl-len{font-size:11px;color:var(--c-muted);line-height:1.3}.rb-bl.selected .rb-bl-len{color:var(--c-text)}',
     '.rb-bl-price{font-family:var(--font-cond);font-size:17px;font-weight:600;color:var(--c-gold);white-space:nowrap}',
     '.rb-bl-orig{font-size:12px;color:var(--c-muted);text-decoration:line-through;margin-right:4px}',
-    '.rb-bl-var{margin-top:14px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius-md);padding:10px 4px 4px}',
+    '.rb-bl-var{grid-column:1/-1;position:relative;margin-top:2px;background:var(--c-dark3);border:1px solid var(--c-gold);border-radius:var(--radius-md);padding:10px 4px 4px;animation:rbpop .25s ease}',
+    '.rb-bl-var::before{content:"";position:absolute;top:-9px;left:var(--caret,24px);border:9px solid transparent;border-top:0;border-bottom-color:var(--c-gold)}',
+    '.rb-bl-var::after{content:"";position:absolute;top:-7px;left:calc(var(--caret,24px) + 1px);border:8px solid transparent;border-top:0;border-bottom-color:var(--c-dark3)}',
+    '@keyframes rbpop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}',
     '.rb-bl-var-h{font-family:var(--font-cond);font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--c-gold);padding:2px 12px 4px}',
     '@media (max-width:560px){.rb-bl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rb-bl{padding:11px}.rb-bl .rb-bl-desc{-webkit-line-clamp:3}.rb-bl.rb-t1 .rb-bl-desc{-webkit-line-clamp:2}.rb-bl.rb-t2 .rb-bl-desc,.rb-bl.rb-t3 .rb-bl-desc{display:none}}',
     '@keyframes rbflash{0%,60%{box-shadow:0 0 0 2px var(--c-gold)}100%{box-shadow:0 0 0 2px transparent}}'
@@ -750,8 +753,20 @@
         return '<tr class="variant-row ' + (c ? 'checked' : '') + '" onclick="pickVariant(\'' + sb.id + '\',' + i + ',' + (v.adder || 0) + ')"><td class="radio-cell"><span class="radio-dot"></span></td>' +
           '<td>' + esc(v.length) + ' — ' + esc(v.lineWt) + (v.adder ? ' <span class="variant-adder">+$' + v.adder + '</span>' : '') + '</td><td>' + esc(v.lureWt) + '</td><td>' + esc(v.blankWt) + '</td></tr>'; }).join('') +
       '</tbody></table></div>';
-    host.className = 'rb-blanks'; host.innerHTML = '<div class="rb-bl-grid">' + cards + '</div>' + rows;
+    host.className = 'rb-blanks'; host.innerHTML = '<div class="rb-bl-grid">' + cards + rows + '</div>';
+    placeLengths();
   };
+  // the lengths open right under the row of the picked blank, pointing at it
+  function placeLengths() {
+    var grid = document.querySelector('.rb-bl-grid'), pan = grid && grid.querySelector('.rb-bl-var'); if (!pan) return;
+    var cards = [].slice.call(grid.querySelectorAll('.rb-bl')), i = cards.findIndex(function (c) { return c.classList.contains('selected'); }); if (i < 0) return;
+    var cols = Math.max(1, getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length);
+    var last = Math.min(cards.length, Math.ceil((i + 1) / cols) * cols) - 1;
+    cards[last].insertAdjacentElement('afterend', pan);
+    var c = cards[i], gx = grid.getBoundingClientRect().left;
+    pan.style.setProperty('--caret', Math.round(c.getBoundingClientRect().left - gx + c.offsetWidth / 2 - 9) + 'px');
+  }
+  addEventListener('resize', function () { clearTimeout(placeLengths.t); placeLengths.t = setTimeout(placeLengths, 80); });
   call('renderBlankCards');
 
   go(0, false);
