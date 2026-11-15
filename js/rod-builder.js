@@ -97,6 +97,20 @@
     '.rb-rg-prev{display:grid;gap:10px;padding:18px 10px;justify-items:center}',
     '.rb-rg-prow{display:grid;gap:4px;justify-items:center}.rb-rg-plbl{font:600 11px var(--font-cond);letter-spacing:.14em;text-transform:uppercase;color:var(--c-gold)}',
     '.rb-rg-prev .rb-rings button{pointer-events:none}',
+    '.rb-bl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}',
+    '.rb-bl{aspect-ratio:1/1;display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;padding:14px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius-md);color:var(--c-text);cursor:pointer;overflow:hidden;transition:border-color .15s,background .15s}',
+    '.rb-bl:hover{border-color:var(--c-border2)}.rb-bl.selected{border-color:var(--c-gold);background:rgba(201,148,26,.07);box-shadow:0 0 0 1px var(--c-gold)}',
+    '.rb-bl-name{font-family:var(--font-cond);font-size:16px;font-weight:600;letter-spacing:.03em;line-height:1.15}',
+    '.rb-bl-usa{font-family:var(--font-cond);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--c-teal-light)}',
+    '.rb-bl-desc{font-size:11.5px;line-height:1.45;color:var(--c-muted);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;flex:0 0 auto}',
+    '.rb-t1 .rb-bl-desc{-webkit-line-clamp:3}.rb-t2 .rb-bl-desc{-webkit-line-clamp:2}.rb-t3 .rb-bl-desc{-webkit-line-clamp:1}',
+    '.rb-bl-foot{margin-top:auto;width:100%;display:flex;justify-content:space-between;align-items:flex-end;gap:6px}',
+    '.rb-bl-len{font-size:11px;color:var(--c-muted);line-height:1.3}.rb-bl.selected .rb-bl-len{color:var(--c-text)}',
+    '.rb-bl-price{font-family:var(--font-cond);font-size:17px;font-weight:600;color:var(--c-gold);white-space:nowrap}',
+    '.rb-bl-orig{font-size:12px;color:var(--c-muted);text-decoration:line-through;margin-right:4px}',
+    '.rb-bl-var{margin-top:14px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius-md);padding:10px 4px 4px}',
+    '.rb-bl-var-h{font-family:var(--font-cond);font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--c-gold);padding:2px 12px 4px}',
+    '@media (max-width:560px){.rb-bl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rb-bl{padding:11px}.rb-bl .rb-bl-desc{-webkit-line-clamp:3}.rb-bl.rb-t1 .rb-bl-desc{-webkit-line-clamp:2}.rb-bl.rb-t2 .rb-bl-desc,.rb-bl.rb-t3 .rb-bl-desc{display:none}}',
     '@keyframes rbflash{0%,60%{box-shadow:0 0 0 2px var(--c-gold)}100%{box-shadow:0 0 0 2px transparent}}'
   ].join('\n');
   document.head.appendChild(el('style', null, css));
@@ -711,6 +725,34 @@
   // once the rod's textures are in, the strips look like the real rings
   (function waitKit() { if (!rod || !rod.ringKit) return setTimeout(waitKit, 500);
     rod.ringKit().then(function (ok) { rgReal = !!ok; if (rgOn()) { rgRender(); call('renderGripPreview'); } }); })();
+
+  // ───────────────────────── Blanks: square cards ─────────────────────────
+  // The blanks sit in a grid of square cards; the picked blank's lengths and powers open underneath the grid.
+  var _blanks = window.renderBlankCards;
+  if (typeof _blanks === 'function' && val('BLANKS')) window.renderBlankCards = function () {
+    var host = $('blank-cards'); if (!host) return _blanks.apply(this, arguments);
+    var B = val('BLANKS') || [], perf = !!S.performanceOnly, esc = function (t) { return String(t == null ? '' : t); };
+    var price = function (b) { return perf ? '<span class="rb-bl-orig">$' + b.price + '</span>$' + (b.price - 50) : '$' + b.price; };
+    var cards = B.map(function (b) {
+      var sel = b.id === S.blankId, v = sel ? b.variants[S.variantIdx] : null;
+      var tight = (b.madeInUSA ? 1 : 0) + (b.name.length > 16 ? 1 : 0) + (b.name.length > 30 ? 1 : 0);   // fewer description lines when the name or badge takes room
+      return '<button type="button" class="rb-bl rb-t' + tight + (sel ? ' selected' : '') + '" onclick="pickBlank(\'' + b.id + '\')">' +
+        '<span class="rb-bl-name">' + esc(b.name) + '</span>' +
+        (b.madeInUSA ? '<span class="rb-bl-usa">★ Made in USA</span>' : '') +
+        (b.desc ? '<span class="rb-bl-desc">' + esc(b.desc) + '</span>' : '') +
+        '<span class="rb-bl-foot"><span class="rb-bl-len">' + (v ? esc(v.length) + ' · ' + esc(v.lineWt) : b.variants.length + ' length' + (b.variants.length > 1 ? 's' : '')) + '</span>' +
+        '<span class="rb-bl-price">' + price(b) + '</span></span></button>';
+    }).join('');
+    var sb = B.find(function (b) { return b.id === S.blankId; }), rows = '';
+    if (sb) rows = '<div class="rb-bl-var"><div class="rb-bl-var-h">' + esc(sb.name) + ' · pick the length and power</div>' +
+      '<table class="variant-table"><thead><tr><th class="radio-th"></th><th>Length / Line WT</th><th>Lure WT</th><th>Blank WT</th></tr></thead><tbody>' +
+      sb.variants.map(function (v, i) { var c = i === S.variantIdx;
+        return '<tr class="variant-row ' + (c ? 'checked' : '') + '" onclick="pickVariant(\'' + sb.id + '\',' + i + ',' + (v.adder || 0) + ')"><td class="radio-cell"><span class="radio-dot"></span></td>' +
+          '<td>' + esc(v.length) + ' — ' + esc(v.lineWt) + (v.adder ? ' <span class="variant-adder">+$' + v.adder + '</span>' : '') + '</td><td>' + esc(v.lureWt) + '</td><td>' + esc(v.blankWt) + '</td></tr>'; }).join('') +
+      '</tbody></table></div>';
+    host.className = 'rb-blanks'; host.innerHTML = '<div class="rb-bl-grid">' + cards + '</div>' + rows;
+  };
+  call('renderBlankCards');
 
   go(0, false);
   window.updateAll();
