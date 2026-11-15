@@ -426,8 +426,11 @@ const gRing = g => st.ring[st.type + g.id] || g.rings[0];
 
 // ---------- scene ----------
 const cv = $('cv'), stage = $('stage');
-const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, preserveDrawingBuffer: true });
-renderer.setPixelRatio(Math.min(1.5, devicePixelRatio || 1));
+const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, preserveDrawingBuffer: false, powerPreference: 'low-power' });
+// SFSW: if the graphics chip drops the 3D, stop drawing and let the page show its note (no retry loop that crashes it again)
+cv.addEventListener('webglcontextlost', e => { e.preventDefault(); window.__sfswLost = true; try { parent.postMessage({ sfswRod: 'lost' }, location.origin); } catch (x) {} });
+const sfswLow = (navigator.hardwareConcurrency || 4) <= 4 || (navigator.deviceMemory || 8) <= 4;   // SFSW: older / smaller computers draw at 1x
+renderer.setPixelRatio(Math.min(sfswLow ? 1 : 1.5, devicePixelRatio || 1));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
 const scene = new THREE.Scene();
@@ -774,7 +777,7 @@ async function build() {
   tt.position.x = st.len; tag(tt, 's-guides'); gg.add(tt);
   if (!GRIP) g.add(gg);
   L.guides = gx[0]; L.gx = gx; L.sizes = sizes;
-  rod.remove(parts); { const keep = new Set(texCache.values()); parts.traverse(o => { if (o.geometry) o.geometry.dispose(); [].concat(o.material || []).forEach(m => { ['map', 'emissiveMap', 'roughnessMap', 'metalnessMap', 'normalMap', 'bumpMap', 'alphaMap'].forEach(k => { const x = m[k]; if (x && !keep.has(x)) x.dispose(); }); m.dispose(); }); }); } /* SFSW: free the old rod's graphics memory */ parts = g; rod.add(parts);
+  window.__sfswDirty = 12; rod.remove(parts); { const keep = new Set(texCache.values()); parts.traverse(o => { if (o.geometry) o.geometry.dispose(); [].concat(o.material || []).forEach(m => { ['map', 'emissiveMap', 'roughnessMap', 'metalnessMap', 'normalMap', 'bumpMap', 'alphaMap'].forEach(k => { const x = m[k]; if (x && !keep.has(x)) x.dispose(); }); m.dispose(); }); }); } /* SFSW: free the old rod's graphics memory */ parts = g; rod.add(parts);
   corkStrip(); $('splitNote').textContent = L.splitNote; $('splitNote').hidden = !L.splitNote || !(st.style === 'split' && st.splitOn);
   rod.position.x = -RL() / 2;
   $('load').hidden = true;
@@ -1303,7 +1306,11 @@ function loop(t) {
   if (anim) { const k = Math.min(1, (t - anim.t0) / (reduce ? 1 : 650)), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
     camera.position.lerpVectors(anim.p0, anim.p1, e); controls.target.lerpVectors(anim.q0, anim.q1, e); if (k >= 1) anim = null; }
   if (spin) rod.rotation.x += 0.012;
-  controls.update(); renderer.render(scene, camera); requestAnimationFrame(loop);
+  controls.update(); requestAnimationFrame(loop);
+  // SFSW: only draw when something changed (camera, spin, glide, a new build) or twice a second for late textures; never while hidden or lost
+  if (window.__sfswLost || document.hidden) return;
+  const sig = camera.position.x.toFixed(4) + camera.position.y.toFixed(4) + camera.position.z.toFixed(4) + controls.target.x.toFixed(4) + controls.target.y.toFixed(4) + controls.target.z.toFixed(4) + rod.rotation.x.toFixed(4) + cv.width + 'x' + cv.height;
+  if (sig !== loop.sig || anim || spin || (window.__sfswDirty || 0) > 0 || t - (loop.last || 0) > 500) { loop.sig = sig; loop.last = t; if (window.__sfswDirty > 0) window.__sfswDirty--; renderer.render(scene, camera); }
 }
 const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(); let down = null;
 cv.addEventListener('pointerdown', e => down = [e.clientX, e.clientY]);

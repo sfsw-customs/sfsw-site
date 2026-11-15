@@ -268,11 +268,12 @@
     try { var w = frame.contentWindow; if (w && w.SFSW_rod) { rod = w.SFSW_rod; clearInterval(poll); clearTimeout(giveUp); lastSent = ''; sync(); var v = lastView; lastView = null; rod.ready.then(function () { setTimeout(function () { view(v || STEPS[cur].view); }, 300); }); } } catch (e) {}
   }, 200);
   // no 3D on this device (WebGL off, or Chrome blocked it after a graphics reset): say so in the 3D box; the steps still work
-  function no3D() { if (rod) return; clearInterval(poll); clearTimeout(giveUp); frame.remove();
+  function no3D(lost) { if (rod && !lost) return; if (stage.querySelector('.rb-no3d')) return; clearInterval(poll); clearTimeout(giveUp); frame.remove();
     var m = el('div', 'rb-no3d', '<div><b>The 3D preview can\u2019t start in this browser right now.</b><br>Quit and reopen your browser, then reload this page. Your picks still work below.</div>');
     stage.appendChild(m); }
   var giveUp = setTimeout(no3D, 30000);
-  (function () { try { var c = document.createElement('canvas'); if (!(c.getContext('webgl2') || c.getContext('webgl'))) setTimeout(no3D, 0); } catch (e) { setTimeout(no3D, 0); } })();
+  addEventListener('message', function (e) { if (e.data && e.data.sfswRod === 'lost' && e.source === frame.contentWindow) no3D(true); });   // the graphics chip dropped the 3D: stop, don't retry
+  (function () { try { var c = document.createElement('canvas'), g = c.getContext('webgl2') || c.getContext('webgl'); if (!g) setTimeout(no3D, 0); else { var lx = g.getExtension('WEBGL_lose_context'); if (lx) lx.loseContext(); } } catch (e) { setTimeout(no3D, 0); } })();   // quick check, then give the context straight back
   frame.addEventListener('load', function () { try { frame.contentWindow.addEventListener('error', function (e) { if (/WebGL/i.test(String(e.message))) no3D(); }); } catch (e) {} });
 
   // the camera follows what is being picked

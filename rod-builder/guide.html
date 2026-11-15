@@ -1259,6 +1259,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GUIDES, guideModel, guideWrapMesh } from './guide3d.js';
 const ALL = Object.values(GUIDES).flat(), gdef = id => ALL.find(g => g.id === id) || ALL[0], IN = 25.4;
 function view(cv, holder, hFn) {
+  if (window.frameElement && /^f-/.test(frameElement.id)) return { set() {}, focus() {}, resize() {} };   // SFSW: inside the 3D rod, no second 3D view
   const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1)); renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
