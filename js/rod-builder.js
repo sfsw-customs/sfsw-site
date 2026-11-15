@@ -28,7 +28,9 @@
   var css = [
     '.rb-page,.rb-page body{overflow-x:clip!important;overflow-y:visible!important}',   // overflow-x:hidden on the page stops the 3D rod staying at the top
     '.rb-on .build-strip{display:none!important}',
-    '.rb-on .grip-photo-wrap,.rb-on .seat-photo-wrap,.rb-on .guide-photo-wrap{display:none!important}',   // the 3D rod shows these parts
+    '.rb-on .grip-photo-wrap,.rb-on .seat-photo-wrap,.rb-on .guide-photo-wrap{display:none!important}',
+    '.acc-thumb.rb-seat-thumb{width:132px;height:56px;flex:0 0 132px}.rb-seat-thumb img{width:100%;height:100%;object-fit:contain;background:#0d1218}',
+    '@media (max-width:560px){.acc-thumb.rb-seat-thumb{width:96px;flex-basis:96px;height:46px}}',   // the 3D rod shows these parts
     '.rb-on.configurator-layout{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"steps"!important}',   // the 3D rod and the picks take the full width
     '.rb-build .config-sidebar{position:static;width:auto;max-width:640px;margin:0 auto;grid-area:auto}',
     '.rb-stage{height:clamp(240px,42vh,440px)}',
@@ -793,6 +795,35 @@
   }
   addEventListener('resize', function () { clearTimeout(placeLengths.t); placeLengths.t = setTimeout(function () { placeLengths(); moreLinks(); }, 80); });
   call('renderBlankCards');
+
+  // ───────────────────────── Reel seats: a picture beside each one, like the butt caps ─────────────────────────
+  function seatThumb(seat) {
+    if (seat.id === S.seatId) { var cur = call('seatPhotoSrc'); if (cur) return cur; }
+    var SC = val('SEAT_COLORS') || {}, list = seat.colors && SC[seat.colors];
+    if (seat.id === 'alps-mvt' || !list || !list.length) return '../preview/seats/' + seat.id + '.png';
+    var slug = fn('slugSeatColor') || function (n) { return String(n).toLowerCase().replace(/\s+/g, '-'); };
+    return (seat.colorPhotoPath || '../preview/seats/' + seat.id) + '-' + slug(list[0].name) + '.png';
+  }
+  var _seats = window.renderSeats;
+  if (typeof _seats === 'function' && val('SEATS')) window.renderSeats = function () {
+    var host = $('seat-options'); if (!host) return _seats.apply(this, arguments);
+    host.innerHTML = val('SEATS').map(function (it) {
+      var src = seatThumb(it), sel = it.id === S.seatId;
+      return '<div class="option-item has-thumb ' + (sel ? 'selected' : '') + '" onclick="pickSeat(\'' + it.id + '\')">' +
+        '<div class="acc-thumb rb-seat-thumb" data-seat="' + it.id + '" onclick="event.stopPropagation();openLightbox(this.querySelector(\'img\').src,\'' + it.name.replace(/'/g, '') + '\')"><img src="' + src + '" alt="' + it.name + '" loading="lazy" onerror="this.parentNode.style.visibility=\'hidden\'"></div>' +
+        '<div class="option-item-body"><span class="option-item-name">' + it.name + '</span>' + (it.desc ? '<span class="option-item-desc">' + it.desc + '</span>' : '') + '</div>' +
+        '<span class="option-item-price">' + (it.adder === 0 ? 'Included' : '+$' + it.adder) + '</span></div>';
+    }).join('');
+  };
+  // the picked seat's picture follows its color
+  var _seatPrev = window.renderSeatPreview;
+  if (typeof _seatPrev === 'function') window.renderSeatPreview = function () {
+    var r = _seatPrev.apply(this, arguments);
+    var t = document.querySelector('.rb-seat-thumb[data-seat="' + S.seatId + '"] img'), src = call('seatPhotoSrc');
+    if (t && src && t.getAttribute('src') !== src) { t.parentNode.style.visibility = ''; t.src = src; }
+    return r;
+  };
+  call('renderSeats');
 
   go(0, false);
   window.updateAll();
