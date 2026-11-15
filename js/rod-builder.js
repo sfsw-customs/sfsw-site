@@ -276,7 +276,7 @@
     var notes = [], v = call('getVariant') || {}, grip = call('getGrip') || {}, seat = call('getSeat') || {}, guide = call('getGuide') || {}, grp = call('getGuideGroup') || {};
     var m = /(\d+)\s*'\s*(\d+)?/.exec(v.length || ''), len = m ? +m[1] * 12 + (+m[2] || 0) : 84;
     var p = { type: CFG.type, len: len, mat: grip.mat === 'eva' ? 'eva' : 'cork', style: grip.style === 'full' ? 'full' : 'split', eva: 'black', shrink: 'none' };
-    if (CFG.handle) ['seatAt', 'gButt', 'gRear', 'gFore'].forEach(function (k) { if (CFG.handle[k] != null) p[k] = CFG.handle[k]; });
+    if (CFG.handle) ['seatAt', 'gButt', 'gRear', 'gFore', 'gripSpan'].forEach(function (k) { if (CFG.handle[k] != null) p[k] = CFG.handle[k]; });
     var EV = val('EVA_COLORS');
     if (call('isCustomEvaGrip') && EV && EV[S.evaColorIdx]) p.eva = EV[S.evaColorIdx].id;
     if (S.heatShrinkId && SHRINK_AS[S.heatShrinkId]) { if (p.mat === 'eva') p.shrink = SHRINK_AS[S.heatShrinkId]; }
@@ -337,6 +337,7 @@
   // every pick on the page ends in updateAll(): follow it
   var _update = window.updateAll;
   window.updateAll = function () {
+    try { rgPrice(); } catch (e) {}
     var r = _update.apply(this, arguments);
     try {
       gwPerf.style.display = S.performanceOnly ? 'block' : 'none';
@@ -557,7 +558,7 @@
   // ───────────────────────── Custom grips: ring by ring ─────────────────────────
   // Custom cork and custom EVA are designed like the WrapLab Rod Builder: pick a grip piece, pick a cork or EVA ring,
   // pick the ring size, then tap rings on the strip. The 3D rod shows every ring. The grip's price is the page's own.
-  var RG_KIND = { 'ccork-custom-split': 'cork', 'ccork-custom-full': 'cork', 'eva-custom': 'eva' };
+  var RG_KIND = { 'ccork-custom-split': 'cork', 'ccork-custom-full': 'cork', 'eva-custom': 'eva', 'eva-custom-full': 'eva' };
   var RGB = BASE + 'rod-parts/', rgList = { cork: [], eva: [] }, rgReal = false, rgEl = null, rgUi = { piece: null, m: null, t: 0.5, tab: null };
   fetch(BASE + 'rings.json').then(function (r) { return r.json(); }).then(function (d) { rgList = d; rgRender(); }).catch(function () {});
   var rgOn = function () { return !!RG_KIND[S.gripId]; };
@@ -572,7 +573,7 @@
     if (!rgOn()) return null;
     var kind = RG_KIND[S.gripId], H = CFG.handle || {};
     if (!S.gripRings || S.gripRings.grip !== S.gripId) {
-      var m0 = kind === 'eva' ? 'eva:black' : 'burl', len = { butt: H.gButt || 2.5, rear: H.gRear || 2.5, fore: H.gFore || 2.5, full: 6 };
+      var m0 = kind === 'eva' ? 'eva:black' : 'burl', len = { butt: H.gButt || 2.5, rear: H.gRear || 2.5, fore: H.gFore || 2.5, full: H.gripSpan || 10.5 };
       S.gripRings = { grip: S.gripId, g: {} };
       rgKeys().forEach(function (k) { S.gripRings.g[k[0]] = rgFill(len[k[0]], m0); });
       rgUi = { piece: null, m: m0, t: 0.5, tab: kind };
@@ -607,7 +608,7 @@
         return set(r); }
       var a = b.dataset.a;
       if (a === 'fill') set(cur().map(function (x) { return { m: rgUi.m, t: x.t }; }));
-      if (a === 'add') { var r2 = cur(); if (rgLen(r2) + rgUi.t <= 20) { r2.push({ m: rgUi.m, t: rgUi.t }); set(r2); } }
+      if (a === 'add') { var r2 = cur(); if (rgLen(r2) + rgUi.t <= rgMax(rgUi.piece) + 1e-6) { r2.push({ m: rgUi.m, t: rgUi.t }); set(r2); } }
       if (a === 'del') { var r3 = cur(); if (r3.length > 1) { r3.pop(); set(r3); } }
     });
     function changed() { rgRender(); call('renderGripPreview'); updateAll(); }
@@ -637,21 +638,52 @@
     rgPaint(strip, rings, strip.clientWidth || 600);
     var name = (rgKeys().find(function (k) { return k[0] === rgUi.piece; }) || ['', 'Grip'])[1];
     rgEl.querySelector('.rb-rg-now').textContent = name + ' · ' + rgLen(rings).toFixed(2) + ' in';
-    rgEl.querySelector('.rb-rg-len').textContent = rings.length + ' rings · ' + rgLen(rings).toFixed(2) + ' in';
+    rgEl.querySelector('.rb-rg-len').textContent = rings.length + ' rings · ' + rgLen(rings).toFixed(2) + ' in' + (rgUi.piece === 'full' ? ' (set for this rod)' : ' · up to ' + rgMax(rgUi.piece).toFixed(2) + ' in');
+    [].forEach.call(rgEl.querySelectorAll('.rb-mini[data-a="add"],.rb-mini[data-a="del"]'), function (b) { b.style.display = rgUi.piece === 'full' ? 'none' : ''; });
+    var x = rgExtra(), xs = rgEl.querySelector('.rb-rg-extra'); if (!xs) { xs = el('div', 'rb-rg-lbl rb-rg-extra'); rgEl.appendChild(xs); }
+    var parts = []; if (x.len) parts.push('extra length +$' + x.len.toFixed(2)); if (x.eva) parts.push('EVA colors +$' + x.eva); if (x.colors) parts.push('extra colors +$' + x.colors);
+    xs.innerHTML = parts.length ? '<b>Grip extras:</b> ' + parts.join(' · ') : '';
+  }
+  // how long each piece may get: the rear grip(s) share the room from the butt cap to the seat; the fore grip up to 12 in
+  function rgMax(k) { var span = (CFG.handle && CFG.handle.gripSpan) || 10.5, G = S.gripRings;
+    if (k === 'fore') return 12; if (k === 'full') return span;
+    var other = G && G.g[k === 'butt' ? 'rear' : 'butt']; return Math.max(0.5, span - rgLen(other) - 0.5); }
+  // custom grip pricing: the grip's own price plus length and color extras
+  //   custom cork: +$2.50 per 0.5 in past 2.5 in (any piece on split, the fore grip on full); EVA rings +$10 per EVA color
+  //   custom EVA:  +$10 per color past the first; length is free
+  var rgPriced = null;
+  function rgExtra() {
+    var G = rgState(); if (!G) return { len: 0, eva: 0, colors: 0, total: 0 };
+    var kind = RG_KIND[S.gripId], over = function (r) { return Math.ceil(Math.max(0, rgLen(r) - 2.5) / 0.5 - 1e-9) * 2.5; }, out = { len: 0, eva: 0, colors: 0 };
+    var cols = {}; Object.keys(G.g).forEach(function (k) { (G.g[k] || []).forEach(function (r) { cols[r.m] = 1; }); });
+    if (kind === 'cork') {
+      (G.g.full ? ['fore'] : ['butt', 'rear', 'fore']).forEach(function (k) { out.len += over(G.g[k]); });
+      out.eva = Object.keys(cols).filter(rgIsEva).length * 10;
+    } else out.colors = Math.max(0, Object.keys(cols).length - 1) * 10;
+    out.total = out.len + out.eva + out.colors; return out;
+  }
+  function rgPrice() {   // runs before the page adds up the total
+    var g = call('getGrip'); if (rgPriced && rgPriced !== g && rgPriced.rbBase != null) { rgPriced.adder = rgPriced.rbBase; }
+    if (!g) return; if (g.rbBase == null) g.rbBase = g.adder;
+    g.adder = g.rbBase + (rgOn() ? rgExtra().total : 0); rgPriced = g;
   }
   function rgSummary() {
     var G = rgState(); if (!G) return '';
     return rgKeys().map(function (k) { var n = {}, rs = G.g[k[0]] || [];
       rs.forEach(function (r) { var key = rgName(r.m) + ' ' + r.t + '"'; n[key] = (n[key] || 0) + 1; });
-      return k[1] + ' ' + rgLen(rs).toFixed(2) + ' in: ' + Object.keys(n).map(function (x) { return n[x] + ' × ' + x; }).join(', '); }).join(' | ');
+      return k[1] + ' ' + rgLen(rs).toFixed(2) + ' in: ' + Object.keys(n).map(function (x) { return n[x] + ' × ' + x; }).join(', '); }).join(' | ') +
+      (function () { var x = rgExtra(), t = []; if (x.len) t.push('extra length +$' + x.len.toFixed(2)); if (x.eva) t.push('EVA colors +$' + x.eva); if (x.colors) t.push('extra colors +$' + x.colors); return t.length ? ' (' + t.join(', ') + ')' : ''; })();
   }
   // the ring designer takes the place of the page's "pick up to 3 cork designs" grid and EVA color list
   window.corkSelectionHtml = function () { return '<div class="rb-rg-slot"></div>'; };
   var _rgGrips = window.renderGrips;
   if (typeof _rgGrips === 'function') window.renderGrips = function () {
+    try { (val('GRIPS') || []).forEach(function (grp) { grp.items.forEach(function (it) { if (it.rbBase != null && it.id !== S.gripId) it.adder = it.rbBase; }); }); rgPrice(); } catch (e) {}   // list shows each grip's own price
     var r = _rgGrips.apply(this, arguments);
     var sel = document.querySelector('select[onchange*="pickEvaColor"]');
     if (sel) { var box = sel.closest('div'); var slot = el('div', 'rb-rg-slot'); box.replaceWith(slot); }
+    if (rgOn() && !document.querySelector('.rb-rg-slot')) { var it = [].find.call(document.querySelectorAll('#sec-grip .option-item'), function (o) { return (o.getAttribute('onclick') || '').indexOf("'" + S.gripId + "'") > 0; });
+      if (it) it.insertAdjacentElement('afterend', el('div', 'rb-rg-slot')); }
     var slot2 = document.querySelector('.rb-rg-slot');
     if (slot2 && rgOn()) { if (!rgEl) rgBuild(); slot2.appendChild(rgEl); rgRender(); }
     return r;
@@ -667,7 +699,6 @@
       rgKeys().forEach(function (k) { var row = el('div', 'rb-rg-prow'); row.appendChild(el('div', 'rb-rg-plbl', k[1] + ' · ' + rgLen(G.g[k[0]]).toFixed(2) + ' in'));
         rgPaint(row, G.g[k[0]] || [], Math.min(560, (strip.clientWidth || 600) - 20), 46); box.appendChild(row); });
       strip.appendChild(box);
-      var ds = $('grip-meta-desc'); if (ds) ds.textContent = 'Design each grip ring by ring below: pick cork or EVA rings and tap them onto the strip. If you have a photo of something you like, please contact us.';
     }
     return r;
   };

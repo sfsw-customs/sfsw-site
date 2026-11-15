@@ -829,13 +829,14 @@ const GRIPS = [
   {group:"Cork", items:[
     {id:"cork-split", name:"Split - Super Grade Cork",  adder:0,  style:'split', mat:'cork'},
     {id:"cork-full",  name:"Full - Super Grade Cork",   adder:15, style:'full',  mat:'cork'},
-    {id:"ccork-custom-split", name:"Custom - Split", adder:30, style:'split', mat:'cork', desc:"Choose up to 3 different cork designs below. If you have a photo of something you like, please contact us"},
-    {id:"ccork-custom-full",  name:"Custom - Full",  adder:50, style:'full',  mat:'cork', desc:"Choose up to 3 different cork designs below. If you have a photo of something you like, please contact us"}
+    {id:"ccork-custom-split", name:"Custom - Split", adder:40, style:'split', mat:'cork', desc:"Starts at +$40 for a 2.5 in butt piece, 2.5 in rear piece and 2.5 in fore grip. Each extra 0.5 in on any piece +$2.50. EVA rings mixed in +$10 per EVA color. Design each grip ring by ring below, or contact us with a photo of something you like."},
+    {id:"ccork-custom-full",  name:"Custom - Full",  adder:75, style:'full',  mat:'cork', desc:"Starts at +$75 for the full rear grip and a 2.5 in fore grip. Each extra 0.5 in on the fore grip +$2.50. EVA rings mixed in +$10 per EVA color. Design each grip ring by ring below, or contact us with a photo of something you like."}
   ]},
   {group:"Foam", items:[
     {id:"eva-split",  name:"Split",       adder:0,  style:'split', mat:'eva'},
     {id:"eva-full",   name:"Full",        adder:0,  style:'full',  mat:'eva'},
-    {id:"eva-custom", name:"Custom",  adder:30, style:'split', mat:'eva', desc:"Please select a color below. We will work with you to shape the grips to your preferences"}
+    {id:"eva-custom", name:"Custom - Split",  adder:25, style:'split', mat:'eva', desc:"+$25 with one color, +$10 for each additional color. Any grip length at no extra cost. Design each grip ring by ring below; we will work with you to shape the grips to your preferences."},
+    {id:"eva-custom-full", name:"Custom - Full",  adder:35, style:'full', mat:'eva', desc:"+$35 with one color, +$10 for each additional color. Any grip length at no extra cost. Design each grip ring by ring below; we will work with you to shape the grips to your preferences."}
   ]}
 ];
 
@@ -1147,7 +1148,7 @@ const seatDisplayName = () => {
 const isCustomCorkGrip = () => S.gripId === 'ccork-custom-split' || S.gripId === 'ccork-custom-full';
 // Any cork grip: plain cork split/full, or the custom cork build-up.
 const isCorkGrip = () => (getGrip() || {}).mat === 'cork';
-const isCustomEvaGrip  = () => S.gripId === 'eva-custom';
+const isCustomEvaGrip  = () => S.gripId === 'eva-custom' || S.gripId === 'eva-custom-full';
 
 const ccorkPatternById = id => CUSTOM_CORK_PATTERNS.find(p => p.id === id) || CUSTOM_CORK_PATTERNS[0];
 const ccorkStepFor = id => ccorkPatternById(id).step || CCORK_STEP_INCHES;
@@ -2458,7 +2459,7 @@ function updateAll() {
     ...(S.performanceOnly ? [['Performance Discount', '−$50']] : []),
   ].map(([l,v]) => `<div class="summary-line"><span class="sl-label">${l}</span><span class="sl-val">${v}</span></div>`).join('');
 
-  document.getElementById('price-display').textContent = '$' + calcTotal().toLocaleString();
+  document.getElementById('price-display').textContent = '$' + calcTotal().toLocaleString(undefined, { minimumFractionDigits: calcTotal() % 1 ? 2 : 0, maximumFractionDigits: 2 });
 
   document.getElementById('about-length').textContent = variant.length;
   document.getElementById('about-line').textContent   = variant.lineWt;
@@ -2600,7 +2601,7 @@ renderGuideWraps();
 renderAccessories();
 updateAll();
 </script>
-<script>window.SFSW_BUILDER = { type: 'spinning' };</script>
+<script>window.SFSW_BUILDER = { type: 'spinning', handle: { gripSpan: 10.5 } };   // heavy inshore spinning: 10.5 in from the butt cap to the reel seat</script>
 <script src="../js/rod-builder.js"></script>
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">×</button>

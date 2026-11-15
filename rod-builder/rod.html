@@ -685,7 +685,7 @@ async function build() {
   // the 3D seats are built hood-first from the butt; on Brett's rods the nuts and threads face the butt, so they're turned around
   if (seatModel) { const k = SEAT_LEN / seatModel.userData.len; seatModel.scale.set(seatModel.userData.noFlip ? k : -k, 1.1, 1.1); seatModel.userData.len = SEAT_LEN; seatModel.traverse(o => { if (o.material) o.material.side = THREE.DoubleSide; }); }
   const seatGeo = seatModel ? null : turned(seatI, SEAT_LEN, sd.p >= 6 ? 1.05 : 1.2, { p: sd.p || 2.5 }), seatLen = SEAT_LEN;
-  const seatX = Math.max(GRIP0 + 1, st.seatAt);
+  const seatX = Math.max(GRIP0 + 1, st.gripSpan ? GRIP0 - 0.15 + st.gripSpan : st.seatAt);   // SFSW: grip length from the butt cap to the seat, per rod type
   L.butt = GRIP0; L.seat = [seatX, seatX + seatLen];
   let x = GRIP0, note = '';   // the grip's rounded end tucks 0.15 in into the butt
   if (st.style === 'split') {
@@ -1901,7 +1901,7 @@ const sfswBoot = (async () => {
     let reguide = false;
     if (p.len && p.len !== st.len) { st.len = p.len; autoGuides(); reguide = true; }
     if (p.gcount) st.gcount[T] = p.gcount;
-    ['finish', 'blank', 'mat', 'style', 'eva', 'shrink', 'lockOn', 'lockCol', 'chkFore', 'chkSplit', 'checkType', 'mainOn', 'splitOn', 'gButt', 'gRear', 'gFore', 'seatAt'].forEach(k => { if (p[k] !== undefined && p[k] !== null) st[k] = p[k]; });
+    ['finish', 'blank', 'mat', 'style', 'eva', 'shrink', 'lockOn', 'lockCol', 'chkFore', 'chkSplit', 'checkType', 'mainOn', 'splitOn', 'gButt', 'gRear', 'gFore', 'seatAt', 'gripSpan'].forEach(k => { if (p[k] !== undefined && p[k] !== null) st[k] = p[k]; });
     if (!SHRINK[st.shrink]) st.shrink = 'none';
     if (st.shrink !== 'none' && p.shrinkCol && SHRINK[st.shrink].colors[p.shrinkCol]) st.shrinkCol[st.shrink] = p.shrinkCol;
     if (!EVA.some(e => e[0] === st.eva)) st.eva = 'black';
