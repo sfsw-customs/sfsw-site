@@ -13,7 +13,7 @@
   const BRANDS={
     prowrap:{name:'Pro-Wrap',sizes:[['0.21','A'],['0.25','D']],metalSizes:[['0.18','A'],['0.26','D']],groups:PROWRAP.concat([PROWRAP_MET]),metallic:PROWRAP_MET[1].map(x=>x[1])},
     fuji:{name:'Fuji',sizes:[['0.16','A'],['0.25','D']],metalSizes:[['0.16','A'],['0.25','D']],groups:FUJI.concat([FUJI_MET]),metallic:FUJI_MET[1].map(x=>x[1])},
-    sfsw:{name:'SFSW',sizes:[['0.21','A'],['0.25','D']],metalSizes:[['0.18','A'],['0.26','D']],groups:PROWRAP.concat([['Pro-Wrap Metallic · +$5',PROWRAP_MET[1]],['Fuji Metallic · +$5',FUJI_MET[1]]]),metallic:PROWRAP_MET[1].map(x=>x[1]).concat(FUJI_MET[1].map(x=>x[1]))},
+    sfsw:{name:'SFSW',sizes:[['0.21','A'],['0.25','D']],metalSizes:[['0.18','A'],['0.26','D']],groups:PROWRAP.concat([['Metallic · Included',PROWRAP_MET[1]],['Ultra-UV Metallic · +$10',FUJI_MET[1]]]),metallic:PROWRAP_MET[1].map(x=>x[1]).concat(FUJI_MET[1].map(x=>x[1]))},
     madeira:{name:'Madeira',sizes:[['0.215','Polyneon 40']],groups:MADEIRA}
   };
   const KEY='wlThreadBrand';

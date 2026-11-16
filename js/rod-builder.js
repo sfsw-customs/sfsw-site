@@ -79,6 +79,7 @@
     '.rb-dz-note{font-size:12.5px;color:var(--c-muted);margin:4px 0 10px;line-height:1.45}',
     '.rb-dz iframe{display:block;width:100%;min-height:0;border:0;background:transparent}',
     '.rb-on #wrap-preview{display:none!important}',
+    '.rb-on .thread-photo-preview-wrap{display:none!important}',
     '.rb-wgrp{font:600 11px var(--font-cond);letter-spacing:.16em;text-transform:uppercase;color:var(--c-muted);margin:6px 0 -2px!important}',
     '.rb-on #rod-wrap-options .option-item{align-items:center;gap:10px;padding:7px 10px 7px 7px}',
     '.rb-wth{flex:0 0 64px;width:64px;height:40px;border-radius:5px;background:#15171a center/cover no-repeat;position:relative;cursor:zoom-in;border:1px solid var(--c-border)}',
@@ -437,7 +438,7 @@
     optList.insertAdjacentHTML('beforebegin', '<div class="rb-presets-lbl">Our wraps · pick one to start</div>');
     [].forEach.call(wrapSec.querySelectorAll('p'), function (x) { if (/Design Your Own/.test(x.textContent)) x.style.display = 'none'; });   // the old pop-up designer's note
     dzBox = el('div', 'rb-dz', '<div class="rb-dz-head"><b>Your <em>colors</em></b><span class="rb-dz-now"></span></div>' +
-      '<div class="rb-dz-note">Tap a color to change it. 3 colors included · +$10 each extra color · metallics +$5 each.</div><div class="rb-dz-load">Loading colors…</div>');
+      '<div class="rb-dz-note">Tap a color to change it. 3 colors included · +$10 each extra color · metallics included · Ultra-UV metallics +$10 each.</div><div class="rb-dz-load">Loading colors…</div>');
     dz = el('iframe'); dz.id = 'sfsw-designer'; dz.title = 'Wrap Designer'; dz.setAttribute('scrolling', 'no');
     dzBox.appendChild(dz);
     var moreBtn = el('button', 'rb-more'); moreBtn.type = 'button'; dzBox.appendChild(moreBtn);
@@ -512,13 +513,13 @@
     var w = dw(); if (!w || !w.wlCapture || S.performanceOnly || !presetOf(S.wrapId)) return;
     var cap; try { cap = clean(w.wlCapture()); } catch (e) { return; }
     var kind = dzKind, cols = colorsOf(cap, kind), name = function (h) { try { return (w.WL_THREADS && w.WL_THREADS.name(h)) || h; } catch (e) { return h; } };
-    var MET = {}; try { w.WL_THREADS.BRANDS.sfsw.metallic.forEach(function (h) { MET[h.toLowerCase()] = 1; }); } catch (e) {}
+    var MET = {}, UV = {}; try { w.WL_THREADS.BRANDS.sfsw.metallic.forEach(function (h) { MET[h.toLowerCase()] = 1; }); w.WL_THREADS.BRANDS.fuji.metallic.forEach(function (h) { UV[h.toLowerCase()] = 1; }); } catch (e) {}
     var thumb = ''; try { var u = w.WL_unrolled(900, 220); if (u && u.canvas) { var c = document.createElement('canvas'); c.width = 640; c.height = Math.round(640 * (u.canvas.height / 2) / u.canvas.width); c.getContext('2d').drawImage(u.canvas, 0, 0, u.canvas.width, u.canvas.height / 2, 0, 0, c.width, c.height); thumb = c.toDataURL('image/jpeg', .8); } } catch (e) {}
     var over = cap.dragon && cap.dragon.over && cap.dragon.over.on;
     var pat = kind === 'cross' ? (cap.pat || 'Cross wrap') : cap.pattern === 'dragon' ? (over ? 'Chevron over dragon scales' : 'Dragon scale') : cap.pattern === 'chevron' ? 'Chevron' : 'Diamond';
     var ax = kind === 'taper' && cap.pattern === 'dragon' ? (over ? +cap.dragon.over.axes || 2 : +cap.axes || 8) : +cap.axes || 2;
     S.customDesign = { sfsw: kind, kind: kind === 'cross' ? 'Cross wrap' : 'Wrap Designer', pattern: pat, axes: ax, angle: cap.angle && kind !== 'cross' ? cap.angle + '°' : '', size: '', blank: cap.blankC || '',
-      colors: cols.map(function (c) { return { name: name(c.hex), hex: c.hex, threads: c.threads, metallic: !!MET[c.hex] }; }), thumb: thumb, setup: cap,
+      colors: cols.map(function (c) { var uv = !!UV[String(c.hex).toLowerCase()]; return { name: name(c.hex) + (uv ? ' (Ultra-UV)' : ''), hex: c.hex, threads: c.threads, metallic: !!MET[String(c.hex).toLowerCase()], uv: uv }; }), thumb: thumb, setup: cap,
       summary: (kind === 'cross' ? pat + ' cross wrap' : pat) + ' · ' + ax + ' axis' + (cap.angle && kind !== 'cross' ? ' · ' + cap.angle + '°' : '') };
     if (cols.length) { S.mainIdx = nearestIdx(cols[0].hex); S.supportIdxs = cols.slice(1).map(function (c) { return nearestIdx(c.hex); }); }
     var id = wrapIdFor(cap, kind) || S.wrapId;
@@ -607,11 +608,13 @@
     var d = S.customDesign; S.customDesign = null;
     try { return _preview.apply(this, arguments); } finally { S.customDesign = d; } };
   var dzNow = dzBox && dzBox.querySelector('.rb-dz-now');
-  // the page's own swatches: every metallic is +$5
-  function metLabels() { [].forEach.call(document.querySelectorAll('.wrap-color-section-label'), function (l) {
-    var pr = l.querySelector('.wrap-color-section-price'); if (pr && pr.textContent === '+$5') return;
-    if (!pr) { pr = el('span', 'wrap-color-section-price'); l.appendChild(document.createTextNode(' ')); l.appendChild(pr); } pr.textContent = '+$5'; }); }
-  if (colorSec) new MutationObserver(metLabels).observe(colorSec, { childList: true, subtree: true });
+  // the page's own swatches: every Pro-Wrap metallic (included) and every Fuji metallic (Ultra-UV, +$10)
+  (function () { var W = val('WRAP_COLORS'); if (!W || W.__sfsw) return; W.__sfsw = 1;
+    var PM = [["9100 Metallic Yellow Gold","#e1cb3c"],["9110 Metallic Gold Leaf","#e2c55d"],["9120 Metallic Goldenrod","#e3b729"],["9130 Metallic Gold","#dabd66"],["9140 Metallic Goldust","#d7b44c"],["9150 Metallic Bright Copper","#c3824a"],["9160 Metallic Pale Gold","#e6d99c"],["9170 Metallic Calcutta Gold","#d4b04e"],["9300 Metallic Red","#a22927"],["9410 Metallic Aqua","#2398bf"],["9420 Metallic Ice Blue","#3689bc"],["9440 Metallic Torquoise","#208b9a"],["9460 Metallic Deep Blue","#2b38af"],["9470 Metallic Bluefin","#1d4a99"],["9510 Metallic Lime","#8abc62"],["9520 Metallic Green","#1b9644"],["9530 Metallic Forest Green","#205958"],["9540 Metallic Shamrock","#0d7d6c"],["9600 Metallic Purple","#b32dac"],["9610 Metallic Fuchsia","#c22678"],["9620 Metallic Mauve","#c77a87"],["9630 Metallic Lavender","#99579d"],["9640 Metallic Burgundy","#7a2732"],["9710 Metallic Copper","#c15923"],["9720 Metallic Red Copper","#bc491e"],["9730 Metallic Brass","#7d3c0d"],["9740 Metallic Brown","#67261f"],["9750 Metallic Bronze","#601d14"],["9800 Metallic Black","#2a2321"],["9820 Metallic Gunsmoke","#614e3a"],["9830 Metallic Pewter","#684a3a"],["9840 Metallic Silverback","#74595d"],["9850 Metallic Blue Steel","#38323d"],["9860 Metallic Silver","#bfbfbf"],["9870 Metallic Steel Grey","#736f72"],["9880 Metallic Pearl","#e7dbd2"]], FM = [["901 Metallic Gold","#d8b253"],["902 Metallic Pale Gold","#b6a375"],["903 Metallic Silver","#9b9791"],["904 Metallic Green","#03714e"],["905 Metallic Copper","#ed9f72"],["906 Metallic Purple","#7b64bb"],["907 Metallic Black","#1e1e1e"],["908 Metallic Ice Blue","#0f8fbd"],["909 Metallic Red","#b40f1e"],["910 Metallic Aqua","#33b8aa"],["911 Metallic True Gold","#c9b768"],["912 Metallic Royal Blue","#0c4086"],["913 Metallic Pewter","#393132"],["914 Metallic Lime Green","#629626"]];
+    for (var i = W.length - 1; i >= 0; i--) if (W[i].group === 'metallic' || W[i].group === 'uv-metallic') W.splice(i, 1);
+    PM.forEach(function (x) { W.push({ name: x[0], hex: x[1], group: 'metallic', metallic: true }); });
+    FM.forEach(function (x) { W.push({ name: x[0], hex: x[1], group: 'uv-metallic', metallic: true, adder: 10 }); });
+    if (S.mainIdx >= W.length) S.mainIdx = 0; S.supportIdxs = (S.supportIdxs || []).filter(function (i) { return i < W.length; }); })();
   var wasPerf = !!S.performanceOnly;
   function designerAfterUpdate() {
     if (wasPerf && !S.performanceOnly && dz) setTimeout(function () { toDesigner(S.wrapId); }, 40);   // back from Performance Only
@@ -621,7 +624,6 @@
     if (dzBox) dzBox.style.display = !ab && !S.performanceOnly ? '' : 'none';
     if (dzNow) { var w = wrapById(S.wrapId); dzNow.textContent = w ? 'Priced as ' + w.name + ' · ' + (w.adder ? '+$' + w.adder : 'Included') : ''; }
     var d = designOn();
-    metLabels();
     if (d) {   // the summary's colors line: the real threads from the design
       var names = d.colors.map(function (c) { return c.name; }), fee = (call('supportExtraFee') || 0) + metFee();
       [].forEach.call(document.querySelectorAll('#summary .summary-line'), function (l) { var a = l.querySelector('.sl-label'), v = l.querySelector('.sl-val');
@@ -631,14 +633,14 @@
     }
   }
   function designOn() { return !S.performanceOnly && presetOf(S.wrapId) && S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign : null; }
-  var metFee = function () { var d = designOn(); if (d) return d.colors.filter(function (c) { return c.metallic; }).length * 5;
-    var W = val('WRAP_COLORS') || []; return [S.mainIdx].concat(S.supportIdxs || []).reduce(function (a, i) { return a + (W[i] && W[i].metallic ? 5 : 0); }, 0); };
+  var metFee = function () { var d = designOn(); if (d) return d.colors.filter(function (c) { return c.uv; }).length * 10;   // Ultra-UV (Fuji) metallics +$10, Pro-Wrap metallics included
+    var W = val('WRAP_COLORS') || []; return [S.mainIdx].concat(S.supportIdxs || []).reduce(function (a, i) { return a + (W[i] && W[i].group === 'uv-metallic' ? 10 : 0); }, 0); };
   window.calcUVMetallicFee = function () { return metFee(); };
   var _order = window.buildOrderItem;
   if (typeof _order === 'function') window.buildOrderItem = function () {
     var it = _order.apply(this, arguments), d = designOn(); if (!d) return it;
-    var fee = call('supportExtraFee') || 0, extra = Math.max(0, d.colors.length - 3), mets = d.colors.filter(function (c) { return c.metallic; }).length;
-    var notes = []; if (fee) notes.push('+$' + fee + ' for ' + extra + ' extra color' + (extra > 1 ? 's' : '')); if (mets) notes.push('+$' + mets * 5 + ' for ' + mets + ' metallic' + (mets > 1 ? 's' : ''));
+    var fee = call('supportExtraFee') || 0, extra = Math.max(0, d.colors.length - 3), mets = d.colors.filter(function (c) { return c.uv; }).length;
+    var notes = []; if (fee) notes.push('+$' + fee + ' for ' + extra + ' extra color' + (extra > 1 ? 's' : '')); if (mets) notes.push('+$' + mets * 10 + ' for ' + mets + ' Ultra-UV metallic' + (mets > 1 ? 's' : ''));
     (it.lines || []).forEach(function (l) { if (l.label === 'Colors') l.value = 'Colors (from the wrap design): ' + d.colors.map(function (c, i) { return (i ? '' : 'Main: ') + c.name; }).join(', ') + (notes.length ? '  (' + notes.join(', ') + ')' : ''); });
     (it.buildStrip || []).forEach(function (b) { if (b.label === 'Colors') { b.name = d.colors.map(function (c) { return c.name; }).join(' / ');
       b.colors = d.colors.map(function (c, i) { return { label: i ? (i === 1 ? 'Supporting' : 'Supporting ' + i) : 'Main', hex: c.hex, name: c.name }; }); } });
