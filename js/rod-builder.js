@@ -20,6 +20,9 @@
   var $ = function (id) { return document.getElementById(id); };
   var el = function (tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
   var fn = function (name) { try { return typeof window[name] === 'function' ? window[name] : (0, eval)('typeof ' + name + ' === "function" ? ' + name + ' : null'); } catch (e) { return null; } };
+  // the design each wrap shows on the 3D rod from the first moment (the designer then takes over with the same design)
+  var LOOK = { 'Diamond — 2 Axis': {"unit":"in","len":"8.00","dB":"15.0","dM":"14.5","dT":"14.0","pattern":"diamond","dragon":{"line":"#1e1617","metal":"#bfbfbf","over":{"on":false,"pattern":"chevron","axes":2}},"axes":2,"angle":45,"mode":"exact","nOverride":null,"tsize":0.21,"blankC":"#101010","arms":"show","fillC":"#1e1617","fill":false,"stripes":[{"c":"#bfbfbf","t":1},{"c":"#1e1617","t":4},{"c":"#bfbfbf","t":4},{"c":"#4f5254","t":4},{"c":"#1a3b79","t":6},{"c":"#686a6c","t":2},{"c":"#1a3b79","t":3},{"c":"#4f5254","t":3},{"c":"#1a3b79","t":4},{"c":"#bfbfbf","t":2},{"c":"#1e1617","t":1}],"c1":1,"center":{"on":false,"c":"#1e1617","t":1},"chevTo":null,"trims":{"on":true,"mm":20,"c":"#1a3b79","bands":[],"ends":[]},"inner":{"on":false,"pattern":"diamond","chevTo":null,"place":"center","auto":true,"stripes":[{"c":"#e3b729","t":3},{"c":"#1e1617","t":3},{"c":"#2398bf","t":3},{"c":"#e7e5e3","t":3}]},"thread":"sfsw"} };
+  var wrapNamed = function (id) { var W = val('ROD_WRAPS') || []; for (var i = 0; i < W.length; i++) if (W[i].id === id) return W[i]; return null; };
   var val = function (name) { try { return (0, eval)('typeof ' + name + ' !== "undefined" ? ' + name + ' : undefined'); } catch (e) { return undefined; } };
   var call = function (name) { var f = fn(name); if (!f) return undefined; try { return f.apply(null, [].slice.call(arguments, 1)); } catch (e) { return undefined; } };
   var secOf = function (bodyId) { var b = $(bodyId); return b ? b.closest('.cfg-section') : null; };
@@ -376,6 +379,7 @@
     p.mainOn = true;
     if (S.performanceOnly) p.main = wrapSpec('trim-bands', main, sup, null, notes, 'rod wrap');
     else if (S.customDesign && S.customDesign.setup && S.customDesign.sfsw) p.main = { full: S.customDesign.setup, kind: S.customDesign.sfsw };
+    else if (LOOK[(wrapNamed(S.wrapId) || {}).name]) p.main = { full: LOOK[wrapNamed(S.wrapId).name], kind: 'taper' };   // until the designer is up: the wrap's own design
     else p.main = wrapSpec(S.wrapId, main, sup, S.customDesign, notes, 'rod wrap');
     var sw = call('isSplitGrip') ? call('getSplitWrap') : null;
     p.splitOn = !!sw; if (sw) p.split = wrapSpec(sw.id, main, sup, null, notes, 'split wrap');
