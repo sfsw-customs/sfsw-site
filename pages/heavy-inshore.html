@@ -266,7 +266,7 @@
   <link rel="modulepreload" href="../rod-builder/vendor/three/three.module.js">
   <link rel="prefetch" href="../rod-builder/taper.html">
   <style>.build-strip{display:none!important} html.rb-boot .config-layout:not(.rb-on){visibility:hidden}</style>
-  <script>document.documentElement.classList.add('rb-boot'); setTimeout(function () { document.documentElement.classList.remove('rb-boot'); }, 6000);</script>
+  <script>window.SFSW_NO_PHOTOS = true; document.documentElement.classList.add('rb-boot'); setTimeout(function () { document.documentElement.classList.remove('rb-boot'); }, 6000);</script>
 </head>
 <body>
 <div id="nav-mount"></div>
@@ -282,59 +282,7 @@
   <div class="config-wrap">
     <div class="configurator-layout">
 
-      <div class="build-strip">
-          <div class="build-strip-slot">
-            <div class="build-strip-img-wrap" id="build-grip-wrap"><img id="build-grip-img" src="" alt=""></div>
-            <div class="build-strip-caption">
-              <div class="build-strip-label">Grips</div>
-              <div class="build-strip-name" id="build-grip-name">—</div>
-            </div>
-          </div>
-          <div class="build-strip-slot">
-            <div class="build-strip-img-wrap" id="build-seat-wrap"><img id="build-seat-img" src="" alt=""></div>
-            <div class="build-strip-caption">
-              <div class="build-strip-label">Reel Seat</div>
-              <div class="build-strip-name" id="build-seat-name">—</div>
-            </div>
-          </div>
-          <div class="build-strip-slot">
-            <div class="build-strip-img-wrap" id="build-guide-wrap"><img id="build-guide-img" src="" alt=""></div>
-            <div class="build-strip-caption">
-              <div class="build-strip-label">Guides</div>
-              <div class="build-strip-name" id="build-guide-name">—</div>
-            </div>
-          </div>
-          <div class="build-strip-slot" id="build-rodwrap-slot" style="display:none">
-            <div class="build-strip-img-wrap"><img id="build-rodwrap-img" src="" alt=""></div>
-            <div class="build-strip-caption">
-              <div class="build-strip-label">Rod Wrap</div>
-              <div class="build-strip-name" id="build-rodwrap-name">—</div>
-            </div>
-          </div>
-          <div class="build-strip-slot" id="build-colors-slot" style="display:none">
-            <div class="build-strip-img-wrap" style="flex-direction:column;gap:6px;justify-content:center;align-items:flex-start;padding:10px 12px">
-              <div id="build-wrap-colors-list" style="display:flex;flex-direction:column;gap:7px;width:100%"></div>
-            </div>
-            <div class="build-strip-caption">
-              <div class="build-strip-label">Colors</div>
-              <div class="build-strip-name" id="build-colors-name">—</div>
-            </div>
-          </div>
-          <div class="build-strip-slot" id="build-splitwrap-slot" style="display:none">
-            <div class="build-strip-img-wrap"><img id="build-splitwrap-img" src="" alt=""></div>
-            <div class="build-strip-caption">
-              <div class="build-strip-label">Split Wrap</div>
-              <div class="build-strip-name" id="build-splitwrap-name">—</div>
-            </div>
-          </div>
-          <div class="build-strip-slot" id="build-guidewrap-slot" style="display:none">
-            <div class="build-strip-img-wrap"><img id="build-guidewrap-img" src="" alt=""></div>
-            <div class="build-strip-caption">
-              <div class="build-strip-label">Guide Wrap</div>
-              <div class="build-strip-name" id="build-guidewrap-name">—</div>
-            </div>
-          </div>
-        </div>
+      <!-- old photo strip removed: the 3D rod shows the build -->
 
       <div class="cfg-steps">
         <!-- 1. BLANK -->
@@ -1654,7 +1602,7 @@ function renderGuideWraps() {
 
   if (S.guideWrapPhotoIdx >= gw.photos.length) S.guideWrapPhotoIdx = 0;
   const src = gw.photos[S.guideWrapPhotoIdx];
-  imgEl.src = src;
+  /* old preview photo removed */
   imgEl.alt = gw.name;
   imgEl.onerror = () => { imgEl.style.opacity = 0.2; };
   imgEl.style.opacity = 1;
@@ -1711,7 +1659,7 @@ function renderSplitWrapPreview() {
 
   if (w.photo) {
     wrapEl.classList.remove('is-empty');
-    imgEl.src = w.photo;
+    /* old preview photo removed */
     imgEl.alt = w.name;
     imgEl.onerror = () => { imgEl.style.opacity = 0.2; };
     imgEl.style.opacity = 1;
@@ -1750,7 +1698,7 @@ function renderSplitWrapPreview() {
   if (S.splitWrapPhotoIdx >= w.photoCount) S.splitWrapPhotoIdx = 0;
   const n = S.splitWrapPhotoIdx + 1;
   const src = `../preview/rod-wraps/${w.photoSlug || w.id}-${n}.png`;
-  imgEl.src = src;
+  /* old preview photo removed */
   imgEl.alt = `${w.name} — example ${n}`;
   imgEl.onerror = () => { imgEl.style.opacity = 0.2; imgEl.title = 'Missing: ' + src; };
   imgEl.style.opacity = 1;
@@ -1851,7 +1799,7 @@ function renderWrapPreview() {
   // Customer's own design: show their preview picture
   if (S.customDesign && S.customDesign.thumb) {
     wrapEl.classList.remove('is-empty');
-    imgEl.src = S.customDesign.thumb; imgEl.alt = 'Your wrap design'; imgEl.style.opacity = 1;
+    /* old preview photo removed */ imgEl.alt = 'Your wrap design'; imgEl.style.opacity = 1;
     counter.textContent = ''; prevBtn.style.display = 'none'; nextBtn.style.display = 'none';
     if (colorEl) colorEl.style.display = 'none';
     return;
@@ -1860,7 +1808,7 @@ function renderWrapPreview() {
   // Abalone: static photo + color swatches
   if (wrap.photo) {
     wrapEl.classList.remove('is-empty');
-    imgEl.src = wrap.photo;
+    /* old preview photo removed */
     imgEl.alt = wrap.name;
     imgEl.onerror = () => { imgEl.style.opacity = 0.2; };
     imgEl.style.opacity = 1;
@@ -1887,7 +1835,7 @@ function renderWrapPreview() {
   if (S.wrapPhotoIdx >= wrap.photoCount) S.wrapPhotoIdx = 0;
   const n = S.wrapPhotoIdx + 1;
   const src = `../preview/rod-wraps/${wrap.photoSlug || wrap.id}-${n}.png`;
-  imgEl.src = src;
+  /* old preview photo removed */
   imgEl.alt = `${wrap.name} — example ${n}`;
   imgEl.onerror = () => { imgEl.style.opacity = 0.2; imgEl.title = 'Missing: ' + src; };
   imgEl.style.opacity = 1;
@@ -1921,7 +1869,7 @@ function renderSeatPreview() {
   const stWrap    = document.getElementById('seat-softtouch-wrap');
 
   const src = seatPhotoSrc();
-  photoEl.src = src;
+  /* old preview photo removed */
   photoEl.alt = seatDisplayName() + (color ? ` — ${color.name}` : '');
   photoEl.onerror = () => { photoEl.style.opacity = 0.2; photoEl.title = 'Missing: ' + src; };
   photoEl.style.opacity = 1;
@@ -2017,7 +1965,7 @@ function renderGripPreview() {
     photoEl.style.display = '';
     stripEl.style.display = 'none';
     const src = gripPhotoSrc();
-    photoEl.src = src;
+    /* old preview photo removed */
     photoEl.alt = gripDisplayName();
     photoEl.onerror = () => { photoEl.style.opacity = 0.2; photoEl.title = 'Missing: ' + src; };
     photoEl.style.opacity = 1;
@@ -2230,7 +2178,7 @@ function renderGuidePreview() {
 
   const photoEl = document.getElementById('guide-photo');
   const src = guidePhotoSrc();
-  photoEl.src = src;
+  /* old preview photo removed */
   photoEl.alt = guideDisplayName() + (guide.titanium ? '' : ' — ' + guideColorAt(S.guideColorIdx).name);
   photoEl.onerror = () => { photoEl.style.opacity = 0.2; photoEl.title = 'Missing: ' + src; };
   photoEl.style.opacity = 1;
@@ -2254,87 +2202,7 @@ function renderGuidePreview() {
 }
 
 // ── BUILD STRIP (top showcase) ──
-function renderBuildStrip() {
-  const gripImg = document.getElementById('build-grip-img');
-  const seatImg = document.getElementById('build-seat-img');
-  const guideImg = document.getElementById('build-guide-img');
-
-  gripImg.src = gripPhotoSrc();
-  gripImg.alt = gripDisplayName();
-  gripImg.onerror = () => { gripImg.style.opacity = 0.15; };
-  gripImg.style.opacity = 1;
-  document.getElementById('build-grip-name').textContent = gripDisplayName();
-
-  seatImg.src = seatPhotoSrc();
-  const seatColor = selectedSeatColor();
-  seatImg.alt = seatDisplayName() + (seatColor ? ` — ${seatColor.name}` : '');
-  seatImg.onerror = () => { seatImg.style.opacity = 0.15; };
-  seatImg.style.opacity = 1;
-  document.getElementById('build-seat-name').textContent = seatDisplayName() + (seatColor ? ` — ${seatColor.name}` : '');
-
-  guideImg.src = guidePhotoSrc();
-  guideImg.alt = guideDisplayName() + (guideColorLabel() ? ' — ' + guideColorLabel() : '');
-  guideImg.onerror = () => { guideImg.style.opacity = 0.15; };
-  guideImg.style.opacity = 1;
-  document.getElementById('build-guide-name').textContent = guideDisplayName() + (guideColorLabel() ? ' — ' + guideColorLabel() : '');
-
-  // Rod Wrap slot
-  const rodWrapSlot = document.getElementById('build-rodwrap-slot');
-  if (rodWrapSlot && S.wrapUserSelected) {
-    rodWrapSlot.style.display = '';
-    const wrap = getWrap();
-    const wrapImg = document.getElementById('build-rodwrap-img');
-    const wrapSrc = S.customDesign && S.customDesign.thumb ? S.customDesign.thumb
-      : wrap.photo ? wrap.photo : (wrap.photoCount ? `../preview/rod-wraps/${wrap.photoSlug || wrap.id}-1.png` : '');
-    if (wrapSrc) { wrapImg.src = wrapSrc; wrapImg.alt = wrap.name; wrapImg.onerror = () => { wrapImg.style.opacity = 0.15; }; wrapImg.style.opacity = 1; }
-    document.getElementById('build-rodwrap-name').textContent = S.customDesign ? 'Your Design — ' + S.customDesign.summary : wrap.name;
-    // Colors slot
-    const colorsSlot = document.getElementById('build-colors-slot');
-    const colorsList = document.getElementById('build-wrap-colors-list');
-    if (colorsSlot && colorsList && typeof WRAP_COLORS !== 'undefined') {
-      colorsSlot.style.display = '';
-      const mainC = WRAP_COLORS[S.mainIdx];
-      const supportCs = (S.supportIdxs || []).map(i => WRAP_COLORS[i]);
-      const rows = [{label:'Main Color', color: mainC}, ...supportCs.map((c, i) => ({label: i === 0 ? 'Supporting' : 'Supporting ' + (i + 1), color: c}))];
-      colorsList.innerHTML = rows.map(r => `<div style="display:flex;align-items:center;gap:8px">
-        <div style="width:14px;height:14px;border-radius:50%;background:${r.color.hex};border:1px solid rgba(255,255,255,.25);flex-shrink:0"></div>
-        <div>
-          <div style="font-family:var(--font-cond);font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--c-gold);line-height:1.2">${r.label}</div>
-          <div style="font-size:11px;color:var(--c-text);line-height:1.3">${colorSpecLabel(r.color)}</div>
-        </div>
-      </div>`).join('');
-      document.getElementById('build-colors-name').textContent = rows.map(r => colorSpecLabel(r.color)).join(' · ');
-    }
-  }
-
-  // Split Wrap slot
-  const splitWrapSlot = document.getElementById('build-splitwrap-slot');
-  if (splitWrapSlot) {
-    const sw = getSplitWrap();
-    if (sw) {
-      splitWrapSlot.style.display = '';
-      const swImg = document.getElementById('build-splitwrap-img');
-      let swSrc = '';
-      if (sw.photo) swSrc = sw.photo;
-      else if (sw.photoCount) swSrc = `../preview/rod-wraps/${sw.photoSlug || sw.id}-${(S.splitWrapPhotoIdx || 0) + 1}.png`;
-      if (swSrc) { swImg.src = swSrc; swImg.alt = sw.name; swImg.onerror = () => { swImg.style.opacity = 0.15; }; swImg.style.opacity = 1; }
-      document.getElementById('build-splitwrap-name').textContent = sw.name;
-    } else {
-      splitWrapSlot.style.display = 'none';
-    }
-  }
-
-  // Guide Wrap slot
-  const guideWrapSlot = document.getElementById('build-guidewrap-slot');
-  if (guideWrapSlot && S.guideWrapUserSelected) {
-    guideWrapSlot.style.display = '';
-    const gw = getGuideWrap();
-    const gwImg = document.getElementById('build-guidewrap-img');
-    const gwSrc = (gw.photos && gw.photos[0]) ? gw.photos[0] : '';
-    if (gwSrc) { gwImg.src = gwSrc; gwImg.alt = gw.name; gwImg.onerror = () => { gwImg.style.opacity = 0.15; }; gwImg.style.opacity = 1; }
-    document.getElementById('build-guidewrap-name').textContent = gw.name;
-  }
-}
+function renderBuildStrip() { /* old photo strip removed */ }
 
 // ── ACCORDION ──
 function toggleSection(id) {
@@ -2513,14 +2381,14 @@ function buildOrderItem() {
 
   return {
     rodType: 'Heavy Inshore Spinning',
-    buildStrip: [
-      {label:'Grips',      name: document.getElementById('build-grip-name').textContent,      img: document.getElementById('build-grip-img').src},
-      {label:'Reel Seat',  name: document.getElementById('build-seat-name').textContent,      img: document.getElementById('build-seat-img').src},
-      {label:'Guides',     name: document.getElementById('build-guide-name').textContent,     img: document.getElementById('build-guide-img').src},
-      {label:'Rod Wrap',   name: document.getElementById('build-rodwrap-name').textContent,   img: document.getElementById('build-rodwrap-img').src || null},
-      {label:'Colors',     name: document.getElementById('build-colors-name').textContent,    img: null,
-        colors: [{label:'Main', hex: WRAP_COLORS[S.mainIdx].hex, name: WRAP_COLORS[S.mainIdx].name}, ...(S.supportIdxs||[]).map((i,idx) => ({label: idx===0?'Supporting':'Supporting '+(idx+1), hex: WRAP_COLORS[i].hex, name: WRAP_COLORS[i].name}))]},
-      {label:'Guide Wrap', name: document.getElementById('build-guidewrap-name').textContent, img: document.getElementById('build-guidewrap-img').src || null},
+    buildStrip: [   // names for the cart (the old photo strip is gone; the wrap shows the customer's own design)
+      {label:'Grips',      name: gripDisplayName(), img: null},
+      {label:'Reel Seat',  name: getSeat().name, img: null},
+      {label:'Guides',     name: guideDisplayName(), img: null},
+      {label:'Rod Wrap',   name: (ROD_WRAPS.find(w => w.id === S.wrapId) || {}).name || '—', img: (S.customDesign && S.customDesign.thumb) || null},
+      {label:'Colors',     name: mainName, img: null,
+        colors: [{label:'Main', hex: WRAP_COLORS[S.mainIdx].hex, name: mainName}]},
+      {label:'Guide Wrap', name: getGuideWrap().name, img: null},
     ],
     specs: {length: v.length, lineWt: v.lineWt, lureWt: v.lureWt, blankWt: v.blankWt},
     lureLabel: 'Lure Rating',
