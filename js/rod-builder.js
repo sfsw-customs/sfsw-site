@@ -554,7 +554,9 @@
     var WS = (window.SFSW_BUILDER || {}).wrap;   // this rod type's wrap: length (in) and butt / tip diameters (mm)
     if (WS && !restore) { cap.unit = 'in'; cap.len = (+WS.len).toFixed(2); cap.dB = (+WS.dB).toFixed(1); cap.dT = (+WS.dT).toFixed(1); cap.dM = ((+WS.dB + +WS.dT) / 2).toFixed(1); }
     if (!restore && dzKind === 'cross') noCustom(w);
-    if (!restore && !prev && dzKind === 'taper') { cap.stripes = JSON.parse(JSON.stringify(START.stripes)); if (cap.trims) { cap.trims.c = START.trim; cap.trims.bands = []; cap.trims.ends = []; } }
+    if (!restore && pr.rec) { var hx0 = threadHex(w);   // the wrap's own design goes in first, so nothing else ever shows
+      cap.stripes = pr.rec.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(pr.rec.trim || pr.rec.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } }
+    else if (!restore && !prev && dzKind === 'taper') { cap.stripes = JSON.parse(JSON.stringify(START.stripes)); if (cap.trims) { cap.trims.c = START.trim; cap.trims.bands = []; cap.trims.ends = []; } }
     if (!restore) snap(w, cap);
     try { w.wlApply(cap); } catch (e) {}
     lastKind = dzKind;
