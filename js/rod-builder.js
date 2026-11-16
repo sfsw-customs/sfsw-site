@@ -67,7 +67,7 @@
     '.rb-perf-note{display:none;background:var(--c-dark2);border:1px solid var(--c-border);border-radius:var(--radius-md);padding:14px 16px;font-size:13px;color:var(--c-muted);margin-bottom:10px}',
     '.rb-no3d{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;font-size:14px;line-height:1.5;color:var(--c-muted)}.rb-no3d b{color:var(--c-text);font-weight:600}',
     '.rb-flash{animation:rbflash 1.2s ease}',
-    '.rb-on #rod-wrap-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}',
+    '.rb-on #rod-wrap-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}',
     '.rb-on #rod-wrap-options .design-tile{display:none!important}',
     '.rb-on #rod-wrap-options .option-item{margin:0}',
     '.rb-on #rod-wrap-options > div:not(.option-item){grid-column:1/-1;margin:0!important}',
@@ -77,7 +77,20 @@
     '.rb-dz-head b{font-family:var(--font-display);font-size:20px;font-weight:400}.rb-dz-head b em{color:var(--c-gold)}',
     '.rb-dz-now{font-size:13px;color:var(--c-gold-light)}',
     '.rb-dz-note{font-size:12.5px;color:var(--c-muted);margin:4px 0 10px;line-height:1.45}',
-    '.rb-dz iframe{display:block;width:100%;min-height:900px;border:0;background:#0a0e12}',
+    '.rb-dz iframe{display:block;width:100%;min-height:0;border:0;background:transparent}',
+    '.rb-on #wrap-preview{display:none!important}',
+    '.rb-wgrp{font:600 11px var(--font-cond);letter-spacing:.16em;text-transform:uppercase;color:var(--c-muted);margin:6px 0 -2px!important}',
+    '.rb-on #rod-wrap-options .option-item{align-items:center;gap:10px;padding:7px 10px 7px 7px}',
+    '.rb-wth{flex:0 0 64px;width:64px;height:40px;border-radius:5px;background:#15171a center/cover no-repeat;position:relative;cursor:zoom-in;border:1px solid var(--c-border)}',
+    '.rb-wth b{position:absolute;right:3px;bottom:2px;font:600 9px var(--font-cond);background:rgba(0,0,0,.65);color:#fff;border-radius:3px;padding:0 4px}',
+    '.rb-on #rod-wrap-options .option-item-body{flex:1;min-width:0}',
+    '.rb-lb{position:fixed;inset:0;z-index:9999;background:rgba(5,7,9,.92);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:20px}',
+    '.rb-lb img{max-width:min(1100px,94vw);max-height:72vh;object-fit:contain;border-radius:8px}',
+    '.rb-lb .rb-lbt{color:#e8e4dc;font-size:14px}.rb-lb .rb-lbt span{color:var(--c-muted);margin-left:8px}',
+    '.rb-lb button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:50%;width:44px;height:44px;font-size:22px;cursor:pointer;position:absolute;top:50%;transform:translateY(-50%)}',
+    '.rb-lb .rb-lbp{left:16px}.rb-lb .rb-lbn{right:16px}.rb-lb .rb-lbx{top:22px;right:16px;transform:none}',
+    '.rb-more{display:flex;align-items:center;gap:8px;width:100%;margin-top:10px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius);padding:11px 14px;color:var(--c-text);font:600 12px var(--font-cond);letter-spacing:.12em;text-transform:uppercase;cursor:pointer}',
+    '.rb-more:hover{border-color:var(--c-border2)}.rb-more small{font:400 12px var(--font-body,inherit);letter-spacing:0;text-transform:none;color:var(--c-muted)}.rb-more i{margin-left:auto;font-style:normal;color:var(--c-gold)}',
     '.rb-dz-load{font-size:13px;color:var(--c-muted);padding:20px 0}',
     '.rb-rg{margin:6px 0 10px;padding:12px 14px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius);display:grid;gap:8px}',
     '.rb-rg-lbl{font-size:12.5px;color:var(--c-muted)}.rb-rg-lbl b{color:var(--c-text);font-weight:600}',
@@ -171,7 +184,7 @@
       parts: [secOf('sec-seat')] },
     { title: 'Guides', sub: 'Frame, ring material and frame color.', view: 'guides',
       parts: [secOf('sec-guides'), accCard('acc-hookkeeper-options', 'Hook Keeper', 'hookkeeper')] },
-    { title: 'Wrap', sub: 'Pick one of our wraps, then make it yours in the Wrap Designer: thread colors, counts and angle. Split grips can add a wrap between the rear grips.', view: 'wrap',
+    { title: 'Wrap', sub: 'Pick a wrap, then pick your thread colors. Tap a photo to see it bigger.', view: 'wrap',
       parts: [perfBox, secOf('sec-wrap-color'), secOf('sec-rod-wraps'), secOf('sec-split-wrap'), accCard('acc-decal-count', 'Decals', 'decals')] },
     { title: 'Guide <em>Wraps</em>', tab: 'Guide Wraps', sub: 'How each guide is wrapped onto the blank.', view: 'guides',
       parts: [gwPerf, secOf('sec-guide-wraps')] },
@@ -419,17 +432,22 @@
   var idByName = function (n) { var w = WRAPS.find(function (x) { return x.name === n; }); return w ? w.id : null; };
   var presetOf = function (id) { var w = wrapById(id); return w ? PRESET[w.name] : null; };
   var wrapSec = $('sec-rod-wraps'), colorSec = secOf('sec-wrap-color'), optList = $('rod-wrap-options');
-  var dzBox = null, dz = null, dzKind = null, dzReady = null, readT = null, lastKind = null;
+  var dzBox = null, dz = null, dzKind = null, dzReady = null, readT = null, lastKind = null, dzSimple = true;
   if (wrapSec && optList && WRAPS.length) {
     optList.insertAdjacentHTML('beforebegin', '<div class="rb-presets-lbl">Our wraps · pick one to start</div>');
     [].forEach.call(wrapSec.querySelectorAll('p'), function (x) { if (/Design Your Own/.test(x.textContent)) x.style.display = 'none'; });   // the old pop-up designer's note
-    dzBox = el('div', 'rb-dz', '<div class="rb-dz-head"><b>Wrap <em>Designer</em></b><span class="rb-dz-now"></span></div>' +
-      '<div class="rb-dz-note">Make the wrap yours: thread colors, thread counts, angle and trim bands. Every change shows on the 3D rod above. ' +
-      'Priced as the wrap style it matches · one main and 2 supporting colors included, +$10 for each additional color · metallics +$5 each.</div><div class="rb-dz-load">Loading the designer…</div>');
+    dzBox = el('div', 'rb-dz', '<div class="rb-dz-head"><b>Your <em>colors</em></b><span class="rb-dz-now"></span></div>' +
+      '<div class="rb-dz-note">Tap a color to change it. 3 colors included · +$10 each extra color · metallics +$5 each.</div><div class="rb-dz-load">Loading colors…</div>');
     dz = el('iframe'); dz.id = 'sfsw-designer'; dz.title = 'Wrap Designer'; dz.setAttribute('scrolling', 'no');
     dzBox.appendChild(dz);
+    var moreBtn = el('button', 'rb-more'); moreBtn.type = 'button'; dzBox.appendChild(moreBtn);
+    var setMore = function () { moreBtn.innerHTML = (dzSimple ? 'Customize more <small>pattern, angle, thread size, trim bands</small><i>▾</i>' : 'Fewer options <i>▴</i>');
+      try { dz.contentDocument.documentElement.classList.toggle('sfsws', dzSimple); } catch (e) {} };
+    moreBtn.onclick = function () { dzSimple = !dzSimple; setMore(); setTimeout(fitDz, 60); };
+    var fitDz = function () { try { var d = dz.contentDocument, w = d.querySelector('.wrap'); if (w) dz.style.height = Math.ceil(w.getBoundingClientRect().bottom + d.defaultView.scrollY) + 4 + 'px'; } catch (e) {} };
+    dz.addEventListener('load', function () { setMore(); try { new dz.contentWindow.ResizeObserver(fitDz).observe(dz.contentDocument.querySelector('.wrap')); } catch (e) {} fitDz(); }); setMore();
     ($('wrap-abalone-colors') || optList).insertAdjacentElement('afterend', dzBox);
-    addEventListener('message', function (e) { if (dz && e.source === dz.contentWindow && e.data && e.data.wlH) dz.style.height = Math.max(600, e.data.wlH) + 'px'; });
+    addEventListener('message', function (e) { if (dz && e.source === dz.contentWindow && e.data && e.data.wlH) fitDz(); });
   }
   var dw = function () { try { return dz && dz.contentWindow; } catch (e) { return null; } };
   function waitFor(test, ms) { return new Promise(function (res) { var t0 = Date.now(); (function tick() { var w = dw(); try { if (w && test(w)) return res(w); } catch (e) {} if (Date.now() - t0 > (ms || 30000)) return res(null); setTimeout(tick, 120); })(); }); }
@@ -557,7 +575,31 @@
     // the wrap the design is priced as stays lit in the list
     if (typeof _render === 'function') window.renderWraps = function () { var r = _render.apply(this, arguments);
       if (S.customDesign && optList) [].forEach.call(optList.querySelectorAll('.option-item'), function (o) { o.classList.toggle('selected', (o.getAttribute('onclick') || '').indexOf("'" + S.wrapId + "'") > 0); });
-      return r; };
+      dressWraps(); return r; };
+  }
+  // each wrap gets a small photo (tap for the full photos), split into Included and Upgrades
+  function wrapPhotos(w) { if (!w) return []; if (w.photo) return [w.photo]; var a = []; for (var i = 1; i <= (w.photoCount || 0); i++) a.push('../preview/rod-wraps/' + (w.photoSlug || w.id) + '-' + i + '.png'); return a; }
+  function dressWraps() {
+    if (!optList) return; var upg = false;
+    [].forEach.call(optList.querySelectorAll('.option-item'), function (o) {
+      var m = (o.getAttribute('onclick') || '').match(/pickWrap\('([^']+)'\)/); if (!m) return; var w = wrapById(m[1]); if (!w) return;
+      if (!optList.querySelector('.rb-wgrp')) o.insertAdjacentHTML('beforebegin', '<div class="rb-wgrp">Included</div>');
+      if (w.adder && !upg) { upg = true; o.insertAdjacentHTML('beforebegin', '<div class="rb-wgrp">Upgrades</div>'); }
+      if (!w.adder) { var pr = o.querySelector('.option-item-price'); if (pr) pr.style.display = 'none'; }   // the group already says Included
+      var ph = wrapPhotos(w); if (!ph.length || o.querySelector('.rb-wth')) return;
+      var th = el('span', 'rb-wth', ph.length > 1 ? '<b>' + ph.length + '</b>' : ''); th.style.backgroundImage = 'url("' + ph[0] + '")'; th.title = 'See photos';
+      th.onclick = function (e) { e.stopPropagation(); lightbox(w); }; o.insertBefore(th, o.firstChild); });
+  }
+  function lightbox(w) {
+    var ph = wrapPhotos(w), i = 0, box = el('div', 'rb-lb', '<button class="rb-lbx" aria-label="Close">×</button><img alt=""><div class="rb-lbt"></div>' +
+      (ph.length > 1 ? '<button class="rb-lbp" aria-label="Previous photo">‹</button><button class="rb-lbn" aria-label="Next photo">›</button>' : ''));
+    var img = box.querySelector('img'), cap = box.querySelector('.rb-lbt');
+    var show = function () { img.src = ph[i]; cap.innerHTML = w.name + (ph.length > 1 ? '<span>' + (i + 1) + ' / ' + ph.length + '</span>' : ''); };
+    var close = function () { box.remove(); removeEventListener('keydown', key); };
+    var key = function (e) { if (e.key === 'Escape') close(); if (e.key === 'ArrowRight') { i = (i + 1) % ph.length; show(); } if (e.key === 'ArrowLeft') { i = (i - 1 + ph.length) % ph.length; show(); } };
+    box.onclick = function (e) { var t = e.target; if (t === box || t.classList.contains('rb-lbx')) close();
+      else if (t.classList.contains('rb-lbn')) { i = (i + 1) % ph.length; show(); } else if (t.classList.contains('rb-lbp')) { i = (i - 1 + ph.length) % ph.length; show(); } };
+    addEventListener('keydown', key); document.body.appendChild(box); show();
   }
   // the photos at the top of Rod Wrap are always the real photos of the wrap picked; the customer's own design shows on the 3D rod and in the designer
   var _preview = window.renderWrapPreview;
