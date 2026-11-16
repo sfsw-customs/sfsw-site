@@ -261,6 +261,12 @@
       .acc-stepper-price{margin-left:auto}
     }
   </style>
+  <!-- Rod Builder: start the 3D downloads right away, and keep the old page layout out of sight until the builder is set up -->
+  <link rel="prefetch" href="../rod-builder/rod.html">
+  <link rel="modulepreload" href="../rod-builder/vendor/three/three.module.js">
+  <link rel="prefetch" href="../rod-builder/taper.html">
+  <style>.build-strip{display:none!important} html.rb-boot .config-layout:not(.rb-on){visibility:hidden}</style>
+  <script>document.documentElement.classList.add('rb-boot'); setTimeout(function () { document.documentElement.classList.remove('rb-boot'); }, 6000);</script>
 </head>
 <body>
 <div id="nav-mount"></div>
