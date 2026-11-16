@@ -216,11 +216,13 @@ export function guideModel(g, size, colHex, ringHex, opts = {}) {
 export function guideWrapMesh(info, px, flip, spans = [], blankR = () => 0.25) {
   // saw blades (t[2] = [second thread color, phase shift of the dashes, mirrored]):
   // two threads twisted around each other show as slanted dashes of the two colors, about 26 twists around the rod
-  const saw = info.cols.some(t => t && t[2]), Hh = saw ? 512 : 4, TEETH = 26;
+  const TWI = window.WL_TWIST, twist = TWI && info.cols.some(t => t && TWI.has(t[0]));   // Metallic Twist threads: dashes of their two colors
+  const saw = info.cols.some(t => t && t[2]), Hh = saw || twist ? 512 : 4, TEETH = 26;
   const n = info.cols.length, c = document.createElement('canvas'); c.width = n; c.height = Hh; const x = c.getContext('2d'), im = x.createImageData(n, Hh);
   info.cols.forEach((t, i) => { const idx = flip ? n - 1 - i : i; for (let y = 0; y < Hh; y++) { const o = (y * n + idx) * 4; if (!t) { im.data[o + 3] = 0; continue; }
     let col = t[0];
     if (t[2]) { const [c2, k, mir] = t[2], f = ((y / Hh * TEETH + (flip && !mir ? -k : k)) % 1 + 1) % 1; if (f >= 0.5) col = c2; }
+    if (twist) col = TWI.hex(col, y / Hh * 12, t[1], Math.round((info.zMin + i * info.step) / 0.21 - t[1]));   // about 12 mm around a guide wrap
     const rgb = hexRGB(col), m = 0.8 + 0.2 * Math.sin(Math.PI * t[1]); im.data[o] = rgb[0] * m; im.data[o + 1] = rgb[1] * m; im.data[o + 2] = rgb[2] * m; im.data[o + 3] = 255; } });
   x.putImageData(im, 0, 0);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.magFilter = THREE.NearestFilter;

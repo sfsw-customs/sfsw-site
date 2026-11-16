@@ -504,7 +504,7 @@ function paint(cv,L,o){
       let c, metal=false, fr=0.5;
       if(th){ c=hex(th[0]); fr=(th[1]+s*0.06+1)%1; metal=MET.has(th[0].toLowerCase()); }
       else { c=hex(blank); metal=MET.has(blank.toLowerCase()); }
-      if(metal){ const h=Math.sin(x*12.9898+y*78.233)*43758.5453, g=h-Math.floor(h), band=Math.exp(-Math.pow((s+0.36)/0.2,2));
+      if(metal){ if(th&&window.WL_TWIST) c=WL_TWIST.rgb(c,Math.asin(Math.max(-1,Math.min(1,s)))*R0/pxmm,fr,Math.round(z/L.tw-th[1])); const h=Math.sin(x*12.9898+y*78.233)*43758.5453, g=h-Math.floor(h), band=Math.exp(-Math.pow((s+0.36)/0.2,2));
         const k=(0.28+0.95*light*light)*(0.9+0.1*Math.sin(Math.PI*fr))*(0.9+0.2*g);
         c=c.map(v=>v*k+(v*0.6+255*0.4)*band*0.5); }
       else { const m = th ? 0.8+0.2*Math.sin(Math.PI*fr) : 1; c=c.map(v=>v*light*m); }
@@ -800,7 +800,7 @@ applySize(); drawLists(); run();
   setGroups(); addEventListener('wl-thread',()=>{ setGroups(); try{ run(); }catch(e){} });
   const isMet=n=>/metallic/i.test(n||'');
   // metallic swatches look like a spool of metallic thread: fine strands, a bright band of shine, darker edges
-  const swBg=(n,c)=>isMet(n)?`repeating-linear-gradient(90deg,rgba(255,255,255,.18) 0 1px,rgba(0,0,0,.12) 1px 2px,rgba(255,255,255,0) 2px 3px),linear-gradient(90deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 22%,rgba(255,255,255,.65) 42%,rgba(255,255,255,.15) 52%,rgba(0,0,0,0) 70%,rgba(0,0,0,.4) 100%),${c}`:c;
+  const swBg=(n,c)=>(window.WL_TWIST&&WL_TWIST.bg(c))||(isMet(n)?`repeating-linear-gradient(90deg,rgba(255,255,255,.18) 0 1px,rgba(0,0,0,.12) 1px 2px,rgba(255,255,255,0) 2px 3px),linear-gradient(90deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 22%,rgba(255,255,255,.65) 42%,rgba(255,255,255,.15) 52%,rgba(0,0,0,0) 70%,rgba(0,0,0,.4) 100%),${c}`:c);
   // recently used colors: kept for this visit, and remembered in this browser when it allows it
   const RK='sfswRecentColors';
   let recent=[]; try{ recent=JSON.parse(localStorage.getItem(RK)||'[]').filter(c=>/^#[0-9a-f]{6}$/.test(c)); }catch(e){ recent=[]; }
@@ -874,9 +874,9 @@ applySize(); drawLists(); run();
   const enhance=inp=>{
     if(inp.dataset.enh) return; inp.dataset.enh=1; inp.classList.add('cin');
     const btn=document.createElement('button'); btn.type='button'; btn.className='cbtn'; btn.setAttribute('aria-label',(inp.getAttribute('aria-label')||'Color')+': choose');
-    const sw=document.createElement('i'); sw.style.background=inp.value; btn.appendChild(sw);
+    const sw=document.createElement('i'); sw.style.background=(window.WL_TWIST&&WL_TWIST.bg(inp.value))||inp.value; btn.appendChild(sw);
     inp.parentNode.insertBefore(btn,inp);
-    inp.addEventListener('input',()=>{ sw.style.background=inp.value; });
+    inp.addEventListener('input',()=>{ sw.style.background=(window.WL_TWIST&&WL_TWIST.bg(inp.value))||inp.value; });
     btn.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); pop ? close() : open(btn,inp); });
   };
   const scan=()=>document.querySelectorAll('input[type=color]').forEach(enhance);
@@ -1132,10 +1132,15 @@ if(!WL_PAID){
       let x=(W-Math.min(tot,W-60))/2; const k=tot>W-60?(W-60)/tot:1;
       colors.forEach((h,i)=>{ const w=ws[i]*k, cx=x+w/2; g.beginPath(); g.arc(cx,cy,r*Math.min(1,k+.2),0,Math.PI*2); g.fillStyle=h; g.fill(); g.lineWidth=3; g.strokeStyle='rgba(255,255,255,.75)'; g.stroke();
         if(k>.75 && NAMES[h]){ g.fillStyle='rgba(230,236,244,.85)'; g.fillText(NAMES[h],cx,cy+r+30); } x+=w+22*k; }); }
+    // the WrapLab flask (white outline, red thread inside), w wide, centered on x,y
+    function wlFlask(g,x,y,w){ const k=w/30; g.save(); g.translate(x-15*k,y-15*k); g.scale(k,k); g.lineJoin='round'; g.lineCap='round';
+      g.strokeStyle='#fff'; g.lineWidth=2; g.stroke(new Path2D('M11 3h8M12.5 3v8L5 24.5a2 2 0 0 0 1.8 3h16.4a2 2 0 0 0 1.8-3L17.5 11V3'));
+      g.fillStyle='#b3262c'; g.fill(new Path2D('M8.2 19.5h13.6L24.6 25H5.4z'));
+      g.strokeStyle='#ff8a8f'; g.lineWidth=1; g.beginPath(); g.moveTo(7.4,21.4); g.lineTo(22.6,21.4); g.moveTo(6.4,23.3); g.lineTo(23.6,23.3); g.stroke(); g.restore(); }
     // watermark: WrapLab + rodwraplab.com
     g.fillStyle='rgba(255,255,255,.14)'; g.fillRect(70,H-470,W-140,2);
     g.font='700 76px '+DISP; const site='rodwraplab.com', tw=g.measureText(site).width, iw=64, bx=(W-(iw+24+tw))/2, by=H-370;
-    dia(g,bx+iw/2,by-27,30,8,'#fff'); dia(g,bx+iw/2,by-27,14,4,'#e5585e');
+    wlFlask(g,bx+iw/2,by-27,64);
     g.textAlign='left'; g.fillStyle='#fff'; g.fillText(site,bx+iw+24,by); g.textAlign='center';
     return cv; }
 

@@ -421,7 +421,10 @@
   // and into the build; the price is the wrap style the design matches.
   var BASE = CFG.engine.replace(/[^\/]*$/, '');
   var PRESET = {
-    'Diamond — 2 Axis': { k: 'taper', p: 'diamond', a: 2 }, 'Chevron — 2 Axis': { k: 'taper', p: 'chevron', a: 2 },
+    'Diamond — 2 Axis': { k: 'taper', p: 'diamond', a: 2, rec: {   // the first photo's design
+      trim: '484 Deep Sea',   // the first stripe is the center
+      stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 4], ['9860 Metallic Silver', 4], ['841 Iron Ore', 4], ['484 Deep Sea', 6], ['862S Metallic Twist Black/Silver', 2],
+        ['484 Deep Sea', 3], ['841 Iron Ore', 3], ['484 Deep Sea', 4], ['9860 Metallic Silver', 2], ['862 Twilight Black', 1]] } }, 'Chevron — 2 Axis': { k: 'taper', p: 'chevron', a: 2 },
     'Dragon Scale': { k: 'taper', p: 'dragon', a: 8 }, 'Chevron — 4 Axis': { k: 'taper', p: 'chevron', a: 4 },
     'Diamond — 4 Axis': { k: 'taper', p: 'diamond', a: 4 }, '4 Axis Decorative Chevron or Diamond': { k: 'taper', p: 'diamond', a: 4 },
     '8 Axis Wrap': { k: 'taper', p: 'diamond', a: 8 }, '16 Axis Wrap': { k: 'taper', p: 'diamond', a: 16 },
@@ -530,6 +533,8 @@
   // a preset into the designer: its pattern and axis lines, keeping the customer's colors and the wrap's size on this blank
   var applyN = 0;
   var designCols = function () { return S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign.colors.map(function (c) { return c.hex; }) : null; };
+  function threadHex(w) { var m = {}; try { w.WL_THREADS.BRANDS.sfsw.groups.forEach(function (g) { g[1].forEach(function (x) { m[x[0]] = x[1]; }); }); } catch (e) {}
+    return function (n) { return m[n] || '#1e1617'; }; }
   async function toDesigner(id, restore, prevCols) {
     if (!dz) return; var n = ++applyN;
     var pr = presetOf(id);
@@ -541,6 +546,8 @@
     var fit = null; try { if (rod && rod.fit) fit = await rod.fit(); } catch (e) {}
     var cap = restore ? JSON.parse(JSON.stringify(restore.setup)) : w.wlCapture();
     if (fit) { cap.unit = fit.unit; cap.len = fit.len; cap.dB = fit.dB; cap.dM = fit.dM; cap.dT = fit.dT; }
+    var WS = (window.SFSW_BUILDER || {}).wrap;   // this rod type's wrap: length (in) and butt / tip diameters (mm)
+    if (WS && !restore) { cap.unit = 'in'; cap.len = (+WS.len).toFixed(2); cap.dB = (+WS.dB).toFixed(1); cap.dT = (+WS.dT).toFixed(1); cap.dM = ((+WS.dB + +WS.dT) / 2).toFixed(1); }
     if (!restore && dzKind === 'cross') noCustom(w);
     if (!restore && !prev && dzKind === 'taper') { cap.stripes = JSON.parse(JSON.stringify(START.stripes)); if (cap.trims) { cap.trims.c = START.trim; cap.trims.bands = []; cap.trims.ends = []; } }
     if (!restore) snap(w, cap);
@@ -565,7 +572,11 @@
       if (n !== applyN) return;
       var cols = prev || START.stripes.map(function (x) { return x.c; });
       var c2 = w.wlCapture();
-      if (dzKind === 'cross' || switched || first) { (c2.stripes || []).forEach(function (x, i) { x.c = cols[i % cols.length]; }); if (c2.trims) { c2.trims.c = cols[0]; c2.trims.bands = []; c2.trims.ends = []; } }
+      if (pr.rec) {   // this wrap's own recipe (the design in its photo)
+        var hx = threadHex(w), R = pr.rec;
+        c2.stripes = R.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; });
+        if (c2.trims) { c2.trims.c = hx(R.trim || R.stripes[0][0]); c2.trims.bands = []; c2.trims.ends = []; }
+      } else if (dzKind === 'cross' || switched || first) { (c2.stripes || []).forEach(function (x, i) { x.c = cols[i % cols.length]; }); if (c2.trims) { c2.trims.c = cols[0]; c2.trims.bands = []; c2.trims.ends = []; } }
       try { w.wlApply(snap(w, c2)); } catch (e) {}
     }
     clearTimeout(readT); readT = setTimeout(readDesign, 450);

@@ -2289,20 +2289,20 @@ function render(){
     if(BT){ const k=st/(state.tsize*Math.SQRT2), qa=(mod(u-v,2)-1)*k, qb=(mod(u+v,2)-1)*k, ja=Math.round(qa), jb=Math.round(qb);
       const E=BT.map.get(ja), F=(BT.mapB||BT.map).get(jb);
       if(E||F){ const fa=qa+0.5-Math.floor(qa+0.5), fb=qb+0.5-Math.floor(qb+0.5);
-        if(!E||!F){ const X=E||F; inner=[btOff+X.c, E?fa:fb]; }
-        else { const eTop = E.t!==F.t ? E.t>F.t : ((ja+jb)%2===0); inner = eTop ? [btOff+E.c,fa] : [btOff+F.c,fb]; } } }
+        if(!E||!F){ const X=E||F; inner=[btOff+X.c, E?fa:fb, E?1:-1, E?ja:jb]; }
+        else { const eTop = E.t!==F.t ? E.t>F.t : ((ja+jb)%2===0); inner = eTop ? [btOff+E.c,fa,1,ja] : [btOff+F.c,fb,-1,jb]; } } }
     if(inner && state.between.order!=='before') return inner;
     if(!A && !B){
       if(inner) return inner;
       return state.arms==='cover' ? [-1,0] : null;   // filler covers the open blank between snowflakes too
     }
-    if(!A || !B){ if(state.arms==='cover') return [-1,0]; const X=A||B; return [X.c, frac(A?pa:pb)]; }
+    if(!A || !B){ if(state.arms==='cover') return [-1,0]; const X=A||B; return [X.c, frac(A?pa:pb), A?1:-1, A?ia:ib]; }   // [color, across, which way it runs, which thread]
     // the thread laid later lies on top; setup threads alternate over and under
     const aTop = A.t!==B.t ? A.t>B.t : ((ia+ib)%2===0);
-    return aTop ? [A.c,frac(pa)] : [B.c,frac(pb)];
+    return aTop ? [A.c,frac(pa),1,ia] : [B.c,frac(pb),-1,ib];
   };
   const shadeThread=(c,fr,k)=>{ const m=0.82+0.18*Math.sin(Math.PI*fr); return [c[0]*m*k,c[1]*m*k,c[2]*m*k]; };
-  window.__wlRod={surf,zToU,steps,Lt,Lp,n,cols,shade:shadeThread,fillRGB:hex($('fillC').value),from:state.from,label:state.pat+' · '+state.axes+' axis'};   // for the rod builder
+  window.__wlRod={surf,zToU,steps,Lt,Lp,n,cols,D,shade:shadeThread,fillRGB:hex($('fillC').value),from:state.from,label:state.pat+' · '+state.axes+' axis'};   // for the rod builder
 
   const dpr=state.fast?0.75:Math.min(1.5,window.devicePixelRatio||1);   // lighter while the blank numbers are being typed
   const cssW=Math.max(320,$('cvT').parentElement.clientWidth||900);
@@ -2310,7 +2310,8 @@ function render(){
   // --- looking down 0°, true scale ---
   const cvT=$('cvT'); const MET=window.SFSW_METALLIC||new Set(), metc=stripes.map(st=>MET.has((st.c||'').toLowerCase())).concat(BT?BT.colors.map(c=>MET.has(c.toLowerCase())):[]), blankMet=MET.has($('blankC').value.toLowerCase()), fillMet=MET.has($('fillC').value.toLowerCase());
   // metallic look: high contrast (dark away from the light, bright tinted shine where it faces it) with a fine glint
-  const metShade=(base,s,light,x,y,fr)=>{ const h=Math.sin(x*12.9898+y*78.233)*43758.5453, g=h-Math.floor(h);
+  let twA=0, twI=0; const TWX_=(c,a,fr)=>window.WL_TWIST?WL_TWIST.rgb(c,a,fr,twI):c;   // twA: mm around the rod at the pixel being drawn   // Metallic Twist threads: dashes of their two colors
+  const metShade=(base,s,light,x,y,fr)=>{ base=TWX_(base,twA,fr); const h=Math.sin(x*12.9898+y*78.233)*43758.5453, g=h-Math.floor(h);
     const band=Math.exp(-Math.pow((s-0.36)/0.2,2)), soft=Math.exp(-Math.pow((s-0.1)/0.55,2));
     const k=(0.28+0.95*light*light)*(0.94+0.06*Math.sin(Math.PI*fr))*(0.9+0.2*g);
     return [0,1,2].map(i=>base[i]*k*(0.75+0.5*soft)+(base[i]*0.6+255*0.4)*band*0.55); };
@@ -2327,12 +2328,13 @@ function render(){
       for(let y=0;y<H;y++){
         const s=(cy-(y+0.5))/R, o=(y*W+x)*4;
         if(Math.abs(s)>=1){ img[o+3]=0; continue; }
-        const si=((s+1)*1023.5)|0, ph=LUT.ph[si], v=(ph/(2*Math.PI)+state.view/360)*n;
+        const si=((s+1)*1023.5)|0, ph=LUT.ph[si], v=(ph/(2*Math.PI)+state.view/360)*n; twA=(ph/(2*Math.PI)+state.view/360)*Math.PI*D(z); twI=Math.floor(z/(state.tsize||0.2));   /* trim rings: each ring its own thread */
         const light=LUT.light[si];
         if(trimD>=0){ const t=WLTrim.at(state.trims,trimD,twT,((ph/(2*Math.PI)+state.view/360)%1+1)%1,z<zA?-1:1,blankHex,D(z));
           if(t){ const tc=tHex(t[0]); let c=shadeThread(tc,t[1],light), spec=LUT.spec[si]; if(MET.has(t[0].toLowerCase())){ c=metShade(tc,s,light,x,y,t[1]); spec*=0.6; }
             img[o]=Math.min(255,c[0]+spec); img[o+1]=Math.min(255,c[1]+spec); img[o+2]=Math.min(255,c[2]+spec); img[o+3]=255*Math.min(1,R-Math.abs(cy-(y+0.5))+0.5); continue; } }
         const ex=Math.max(0.5,(Lp/2)/st), r=(u>=-ex && u<=steps+ex && (!Wt || trimD<0)) ? surf(u,v,st) : null;   // only the counted cross repetitions
+        if(r && r[2]){ twA=0.5*(u+r[2]*v)*Math.hypot(st,Math.PI*D(z)/n); twI=r[3]; }   // a Metallic Twist thread: mm along it
         let c = r ? shadeThread(r[0]<0?hex($('fillC').value):cols[r[0]],r[1],light) : [blank[0]*light,blank[1]*light,blank[2]*light];
         let spec=LUT.spec[si];
         if(r && r[0]>=0 && metc[r[0]]){ c=metShade(cols[r[0]],s,light,x,y,r[1]); spec*=0.6; }
@@ -2357,10 +2359,12 @@ function render(){
 }
 // The rod builder asks for the wrap laid flat: across = along the wrap, down = once around the rod; bare blank is see-through.
 window.WL_unrolled=function(W,H){ const r=window.__wlRod; if(!r) return null;
+  const TWS=(px,py,c,fr,k,t,u,vv,stp)=>{ if(!window.WL_TWIST) return r.shade(c,fr,k); const zz=(px+0.5)/W*r.Lt, Cc=Math.PI*(r.D?r.D(zz):10);
+    const a=t&&t[2]?0.5*(u+t[2]*vv)*Math.hypot(stp,Cc/r.n):(py+0.5)/H*Cc; return r.shade(WL_TWIST.rgb(c,a,fr,t&&t[3]||0),fr,k); };
   const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d'), im=x.createImageData(W,H), d=im.data;
   for(let px=0;px<W;px++){ const z=(px+0.5)/W*r.Lt, [u,st]=r.zToU(z), ex=Math.max(0.5,(r.Lp/2)/st), inside=u>=-ex&&u<=r.steps+ex;
-    for(let py=0;py<H;py++){ const o=(py*W+px)*4, t=inside?r.surf(u,(py+0.5)/H*r.n,st):null;
-      if(!t){ d[o+3]=0; continue; } const col=r.shade(t[0]<0?r.fillRGB:r.cols[t[0]],t[1],1);
+    for(let py=0;py<H;py++){ const o=(py*W+px)*4, vv=(py+0.5)/H*r.n, t=inside?r.surf(u,vv,st):null;
+      if(!t){ d[o+3]=0; continue; } const col=TWS(px,py,t[0]<0?r.fillRGB:r.cols[t[0]],t[1],1,t,u,vv,st);
       d[o]=col[0]; d[o+1]=col[1]; d[o+2]=col[2]; d[o+3]=255; } }
   x.putImageData(im,0,0); return {canvas:c,lengthMM:r.Lt,from:r.from,label:r.label}; };
 function paint(cv,cssW,cssH,dpr,fn){
@@ -2405,7 +2409,7 @@ runNow();
   setGroups(); addEventListener('wl-thread',()=>{ setGroups(); try{ run(); }catch(e){} });
   const isMet=n=>/metallic/i.test(n||'');
   // metallic swatches look like a spool of metallic thread: fine strands, a bright band of shine, darker edges
-  const swBg=(n,c)=>isMet(n)?`repeating-linear-gradient(90deg,rgba(255,255,255,.18) 0 1px,rgba(0,0,0,.12) 1px 2px,rgba(255,255,255,0) 2px 3px),linear-gradient(90deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 22%,rgba(255,255,255,.65) 42%,rgba(255,255,255,.15) 52%,rgba(0,0,0,0) 70%,rgba(0,0,0,.4) 100%),${c}`:c;
+  const swBg=(n,c)=>(window.WL_TWIST&&WL_TWIST.bg(c))||(isMet(n)?`repeating-linear-gradient(90deg,rgba(255,255,255,.18) 0 1px,rgba(0,0,0,.12) 1px 2px,rgba(255,255,255,0) 2px 3px),linear-gradient(90deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 22%,rgba(255,255,255,.65) 42%,rgba(255,255,255,.15) 52%,rgba(0,0,0,0) 70%,rgba(0,0,0,.4) 100%),${c}`:c);
   // recently used colors: kept for this visit, and remembered in this browser when it allows it
   const RK='sfswRecentColors';
   let recent=[]; try{ recent=JSON.parse(localStorage.getItem(RK)||'[]').filter(c=>/^#[0-9a-f]{6}$/.test(c)); }catch(e){ recent=[]; }
@@ -2479,9 +2483,9 @@ runNow();
   const enhance=inp=>{
     if(inp.dataset.enh) return; inp.dataset.enh=1; inp.classList.add('cin');
     const btn=document.createElement('button'); btn.type='button'; btn.className='cbtn'; btn.setAttribute('aria-label',(inp.getAttribute('aria-label')||'Color')+': choose');
-    const sw=document.createElement('i'); sw.style.background=inp.value; btn.appendChild(sw);
+    const sw=document.createElement('i'); sw.style.background=(window.WL_TWIST&&WL_TWIST.bg(inp.value))||inp.value; btn.appendChild(sw);
     inp.parentNode.insertBefore(btn,inp);
-    inp.addEventListener('input',()=>{ sw.style.background=inp.value; });
+    inp.addEventListener('input',()=>{ sw.style.background=(window.WL_TWIST&&WL_TWIST.bg(inp.value))||inp.value; });
     btn.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); pop ? close() : open(btn,inp); });
   };
   const scan=()=>document.querySelectorAll('input[type=color]').forEach(enhance);
