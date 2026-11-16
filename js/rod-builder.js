@@ -338,6 +338,7 @@
     var m = /(\d+)\s*'\s*(\d+)?/.exec(v.length || ''), len = m ? +m[1] * 12 + (+m[2] || 0) : 84;
     var p = { type: CFG.type, len: len, mat: grip.mat === 'eva' ? 'eva' : 'cork', style: grip.style === 'full' ? 'full' : 'split', eva: 'black', shrink: 'none' };
     if (CFG.handle) ['seatAt', 'gButt', 'gRear', 'gFore', 'gripSpan'].forEach(function (k) { if (CFG.handle[k] != null) p[k] = CFG.handle[k]; });
+    if (CFG.wrap && CFG.wrap.dB) p.wrapD = +CFG.wrap.dB;   // the blank is this thick where the wrap starts
     var EV = val('EVA_COLORS');
     if (call('isCustomEvaGrip') && EV && EV[S.evaColorIdx]) p.eva = EV[S.evaColorIdx].id;
     if (S.heatShrinkId && SHRINK_AS[S.heatShrinkId]) { if (p.mat === 'eva') p.shrink = SHRINK_AS[S.heatShrinkId]; }
