@@ -82,6 +82,9 @@
     '.rb-dz-note{font-size:12.5px;color:var(--c-muted);margin:4px 0 10px;line-height:1.45}',
     '.rb-dz iframe{display:block;width:100%;min-height:0;border:0;background:transparent}',
     '.rb-on #wrap-preview{display:none!important}',
+    '.rb-trim{cursor:pointer}.rb-trim-opts{display:inline-flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:8px;cursor:default;max-width:100%}',
+    '.rb-trim-spots{display:flex;gap:8px;flex-wrap:wrap}.rb-trim-spots button{display:flex;align-items:center;gap:7px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:999px;padding:6px 13px;color:var(--c-text);font-size:13px;cursor:pointer}',
+    '.rb-trim-spots i{width:14px;height:14px;border-radius:4px;border:1.5px solid var(--c-border2,#555);display:inline-block}.rb-trim-spots button.on{border-color:var(--c-gold);color:var(--c-gold)}.rb-trim-spots button.on i{background:var(--c-gold);border-color:var(--c-gold);box-shadow:inset 0 0 0 2px var(--c-dark3)}',
     '.rb-on .seat-preview{display:none!important}',
     '.rb-seat-opts{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-top:10px;cursor:default}',
     '.rb-seat-opts:empty{display:none}.rb-seat-opts .seat-color-block{text-align:left;min-width:0;margin:0}.rb-seat-opts .seat-swatch-row{justify-content:flex-start}.rb-seat-opts .seat-color-name{margin-top:4px}',
@@ -188,16 +191,20 @@
   var STEPS = [
     { title: 'Blank', sub: 'Pick the blank, then its length and power.', view: 'all',
       parts: [secOf('sec-blank')] },
-    { title: 'Grips', sub: 'Grips and butt cap, plus heat shrink and trim rings if you want them.', view: 'handle',
-      parts: [secOf('sec-grip'), accCard('acc-heatshrink-options', 'Heat Shrink', 'heatshrink'), secOf('sec-butt'), accCard('acc-trim-options', 'Trim Rings', 'trim')] },
+    { title: 'Grips', sub: 'The grips, plus heat shrink if you want it.', view: 'handle',
+      parts: [secOf('sec-grip'), accCard('acc-heatshrink-options', 'Heat Shrink', 'heatshrink')] },
+    { title: 'Butt', sub: 'The butt cap or gimbal at the end of the rod.', view: 'butt',
+      parts: [secOf('sec-butt')] },
     { title: 'Reel <em>Seat</em>', tab: 'Reel Seat', sub: 'The reel seat and its color.', view: 'handle',
       parts: [secOf('sec-seat')] },
     { title: 'Guides', sub: 'Frame, ring material and frame color.', view: 'guides',
-      parts: [secOf('sec-guides'), accCard('acc-hookkeeper-options', 'Hook Keeper', 'hookkeeper')] },
+      parts: [secOf('sec-guides')] },
     { title: 'Wrap', sub: 'Pick a wrap, then pick your thread colors. Tap a photo to see it bigger.', view: 'wrap',
-      parts: [perfBox, secOf('sec-wrap-color'), secOf('sec-rod-wraps'), secOf('sec-split-wrap'), accCard('acc-decal-count', 'Decals', 'decals')] },
+      parts: [perfBox, secOf('sec-wrap-color'), secOf('sec-rod-wraps'), secOf('sec-split-wrap')] },
     { title: 'Guide <em>Wraps</em>', tab: 'Guide Wraps', sub: 'How each guide is wrapped onto the blank.', view: 'guides',
       parts: [gwPerf, secOf('sec-guide-wraps')] },
+    { title: 'Additions', sub: 'Trim rings, a hook keeper and decals. All optional.', view: 'handle',
+      parts: [accCard('acc-trim-options', 'Trim Rings', 'trim'), accCard('acc-hookkeeper-options', 'Hook Keeper', 'hookkeeper'), accCard('acc-decal-count', 'Decals', 'decals')] },
     // the last step: everything picked, the total, Add to Cart
     { title: 'Your <em>Build</em>', tab: 'Your Build', sub: 'Everything you picked, with the total. Tap a step above to change anything.', view: 'all', last: true,
       parts: [(function () { var sb = document.querySelector('.config-sidebar'); if (!sb) return null; var w = el('div', 'rb-build'); w.appendChild(sb); return w; })()] }
@@ -375,9 +382,10 @@
     p.ring = /torzite/i.test(gn) ? 'Titanium Torzite' : /titanium/i.test(gn) && /sic/i.test(gn) ? 'Titanium SiC' : /sic/i.test(gn) ? 'SiC' : /ti-?forged/i.test(gn) ? 'TiForged' : 'Alconite';
     var gc = call('guideColorAt', S.guideColorIdx); p.gCol = gc ? gc.name : null;
     // trim rings sit on the fore grip first, then between the split grips
-    var qty = 0, tid = null; Object.keys(S.trimRingQty || {}).forEach(function (k) { var q = S.trimRingQty[k] || 0; if (q > 0 && !tid) tid = k; qty += q; });
-    p.chkFore = qty > 0; p.chkSplit = qty > 1 && p.style === 'split';
-    if (tid) { p.checkType = TRIM_AS[tid] || 'slim'; var tc = (S.trimRingColor || {})[tid]; p.check = TRIM_COL[tc] || tc; }
+    var TL = trimLoc(), ck = function (id) { var tc = (S.trimRingColor || {})[id]; return { t: TRIM_AS[id] || 'slim', c: TRIM_COL[tc] || tc || 'Silver' }; };
+    p.chkFore = !!TL.fore; p.chkSplit = !!TL.split && p.style === 'split';
+    p.ckF = TL.fore ? ck(TL.fore) : null; p.ckS = p.chkSplit ? ck(TL.split) : null;
+    var k0 = p.ckF || p.ckS; if (k0) { p.checkType = k0.t; p.check = k0.c; }
     // wraps
     var main = hexOf(S.mainIdx), sup = (S.supportIdxs || []).map(hexOf);
     var dc = !S.performanceOnly && S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign.colors.map(function (c) { return c.hex; }) : null;
@@ -937,6 +945,42 @@
     placeSeatOpts(); return r;
   };
   call('renderSeats');
+
+  // ───────────────────────── Trim rings: tick where they go ─────────────────────────
+  // Full grips: one on the fore grip (tap the ring). Split grips: the fore grip (1) and/or between the split grips (2).
+  // Each spot holds one kind of ring; the count and price follow from the ticks.
+  function isSplitGrip() { var g = call('getGrip'); return !!g && g.style !== 'full'; }
+  function trimLoc() {
+    if (!S.trimLoc) { S.trimLoc = { fore: null, split: null }; var q = S.trimRingQty || {};   // from a saved cart item
+      Object.keys(q).forEach(function (k) { var n = q[k] || 0; if (n % 2 && !S.trimLoc.fore) S.trimLoc.fore = k; if (n >= 2 && !S.trimLoc.split) S.trimLoc.split = k; }); }
+    if (!isSplitGrip()) S.trimLoc.split = null;
+    return S.trimLoc;
+  }
+  function syncTrimQty() { var TL = trimLoc(), q = S.trimRingQty || (S.trimRingQty = {});
+    (val('TRIM_RINGS') || []).forEach(function (t) { q[t.id] = (TL.fore === t.id ? 1 : 0) + (TL.split === t.id ? 2 : 0); }); }
+  window.SFSW_trim = function (id, spot) { var TL = trimLoc(); TL[spot] = TL[spot] === id ? null : id; syncTrimQty(); call('renderAccessories'); updateAll(); };
+  function renderTrims() {
+    var host = $('acc-trim-options'), T = val('TRIM_RINGS'), D = val('TRIM_COLOR_DEFS') || {}; if (!host || !T) return;
+    var TL = trimLoc(), split = isSplitGrip(); syncTrimQty();
+    host.innerHTML = T.map(function (t) {
+      var on = TL.fore === t.id || TL.split === t.id, n = (TL.fore === t.id ? 1 : 0) + (TL.split === t.id ? 2 : 0), col = (S.trimRingColor || {})[t.id];
+      var sw = (t.colors || []).map(function (cn) { var c = D[cn] || { name: cn, hex: '#666' };
+        return '<div class="trim-swatch ' + (col === c.name ? 'active' : '') + '" style="background:' + c.hex + '" title="' + c.name + '" onclick="event.stopPropagation();pickTrimColor(\'' + t.id + '\',\'' + c.name + '\')"></div>'; }).join('');
+      var spots = split ? '<div class="rb-trim-spots">' +
+          '<button type="button" class="' + (TL.fore === t.id ? 'on' : '') + '" onclick="event.stopPropagation();SFSW_trim(\'' + t.id + '\',\'fore\')"><i></i>Fore grip</button>' +
+          '<button type="button" class="' + (TL.split === t.id ? 'on' : '') + '" onclick="event.stopPropagation();SFSW_trim(\'' + t.id + '\',\'split\')"><i></i>Split grips</button></div>' : '';
+      return '<div class="option-item has-thumb rb-trim ' + (on ? 'selected' : '') + '"' + (split ? '' : ' onclick="SFSW_trim(\'' + t.id + '\',\'fore\')"') + '>' +
+        (t.photo ? '<div class="acc-thumb" onclick="event.stopPropagation();openLightbox(\'' + t.photo + '\',\'' + t.name + '\')"><img src="' + t.photo + '" alt="' + t.name + '" loading="lazy"></div>' : '') +
+        '<div class="option-item-body"><span class="option-item-name">' + t.name + '</span>' + (t.desc ? '<span class="option-item-desc">' + t.desc + '</span>' : '') +
+        '<div class="rb-trim-opts" onclick="event.stopPropagation()">' + spots + (sw ? '<div class="trim-color-row">' + sw + '</div><div class="trim-color-name">Color: ' + (col || '—') + '</div>' : '') + '</div></div>' +
+        '<span class="option-item-price">' + (n ? '+$' + n * t.adder : '+$' + t.adder + (split ? ' each' : '')) + '</span></div>';
+    }).join('');
+  }
+  var _acc = window.renderAccessories;
+  if (typeof _acc === 'function') window.renderAccessories = function () { var r = _acc.apply(this, arguments); renderTrims(); return r; };
+  var _grips2 = window.renderGrips;   // full grips can't have the split rings
+  if (typeof _grips2 === 'function') window.renderGrips = function () { var r = _grips2.apply(this, arguments); var had = S.trimLoc && S.trimLoc.split; trimLoc(); syncTrimQty(); renderTrims(); if (had && !S.trimLoc.split) updateAll(); return r; };
+  renderTrims();
 
   // ───────────────────────── Guides: compact ring picker ─────────────────────────
   // Each frame is a row of small ring cards (name + price). The picked ring's details open under its frame:

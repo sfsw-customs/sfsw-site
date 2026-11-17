@@ -735,10 +735,11 @@ async function build() {
   const CKP = { slim: [[0, 0], [0, 0.305], [0.015, 0.315], [0.1, 0.272], [0.12, 0.262], [0.12, 0]],
     dimple: [[0, 0], [0, 0.325], [0.025, 0.335], [0.235, 0.272], [0.26, 0.262], [0.26, 0]],
     step: [[0, 0], [0, 0.32], [0.012, 0.332], [0.05, 0.332], [0.058, 0.3], [0.155, 0.296], [0.17, 0.282], [0.17, 0]] };
-  const ckLen = CHECKS[st.checkType].len;
-  const wcheck = (x0, dir) => { const grp = new THREE.Group(), mat = metal(st.check, 0.22);
-    grp.add(new THREE.Mesh(AXIS(new THREE.LatheGeometry(CKP[st.checkType].map(([a, r]) => new THREE.Vector2(r, a)), 72)), mat));
-    if (st.checkType === 'dimple') {
+  const ckF = st.ckF || { t: st.checkType, c: st.check }, ckS = st.ckS || ckF;   // SFSW: the fore grip and the split grips can each have their own trim ring
+  const ckLen = CHECKS[ckF.t].len;
+  const wcheck = (x0, dir, K, sc) => { const grp = new THREE.Group(), mat = metal(K.c, 0.22);
+    grp.add(new THREE.Mesh(AXIS(new THREE.LatheGeometry(CKP[K.t].map(([a, r]) => new THREE.Vector2(r, a)), 72)), mat));
+    if (K.t === 'dimple') {
       if (!dimpleTex) { const c = document.createElement('canvas'); c.width = 1024; c.height = 256; const k = c.getContext('2d'); k.fillStyle = '#fff'; k.fillRect(0, 0, 1024, 256);
         // lathe uv: u around, v per profile point; the cone face is the middle span (v 0.4 to 0.6)
         for (let i = 0; i < 10; i++) { const cx = (i + 0.5) * 102.4, cy = 128, gr = k.createRadialGradient(cx, cy, 0, cx, cy, 13);
@@ -746,9 +747,9 @@ async function build() {
           k.fillStyle = gr; k.beginPath(); k.arc(cx, cy, 13, 0, 7); k.fill(); k.restore(); }
         dimpleTex = new THREE.CanvasTexture(c); }
       mat.map = dimpleTex; mat.bumpMap = dimpleTex; mat.bumpScale = 6; mat.needsUpdate = true; }
-    const m = tag(grp, 's-grip'); m.position.x = x0; if (dir < 0) { m.scale.x = -1; m.traverse(o => { if (o.material) o.material.side = THREE.DoubleSide; }); } g.add(m); };
-  if (st.chkFore) { wcheck(x - 0.02, 1); x += ckLen - 0.02; }
-  if (st.style === 'split' && st.chkSplit && L.split && L.split[1] - L.split[0] > 0.6) { wcheck(L.split[0] - 0.02, 1); wcheck(L.split[1] + 0.02, -1); }
+    const m = tag(grp, 's-grip'); m.position.x = x0; if (sc) m.scale.y = m.scale.z = sc;   /* SFSW: as wide as the grip it sits against */ if (dir < 0) { m.scale.x = -1; m.traverse(o => { if (o.material) o.material.side = THREE.DoubleSide; }); } g.add(m); };
+  if (st.chkFore) { wcheck(x - 0.02, 1, ckF); x += ckLen - 0.02; }
+  if (st.style === 'split' && st.chkSplit && L.split && L.split[1] - L.split[0] > 0.6) { wcheck(L.split[0] - 0.02, 1, ckS, D * 0.5 / 0.335); wcheck(L.split[1] + 0.02, -1, ckS, D * 0.49 / 0.335); }
   L.handle1 = x;
   const bEnd = RL(), blank = tag(new THREE.Mesh(AXIS(new THREE.CylinderGeometry(blankR(bEnd), blankR(L.buttStart + 0.3), bEnd - L.buttStart - 0.3, 48, 1)), blankMat), 's-blank');
   blank.position.x = (bEnd + L.buttStart + 0.3) / 2; g.add(blank);
@@ -1930,6 +1931,7 @@ const sfswBoot = (async () => {
     if (gd) { st.guide[T] = gd.id; const gc = gd.colors.includes(p.gCol) ? p.gCol : ({ Grey: 'Gunmetal', Gunmetal: 'Grey' })[p.gCol]; if (gd.colors.includes(gc)) st.gCol[T + gd.id] = gc; if (gd.rings.includes(p.ring)) st.ring[T + gd.id] = p.ring; }
     st.klRun = 0;
     if (p.check && CK[p.check]) st.check = CK[p.check];
+    const ckOf = k => k ? { t: CHECKS[k.t] ? k.t : 'slim', c: CK[k.c] || CK.Silver } : null; st.ckF = ckOf(p.ckF); st.ckS = ckOf(p.ckS);   // each spot has its own trim ring
     if (p.cork) { st.cork.on = true; st.cork.g = clone(p.cork); } else { st.cork.on = false; st.cork.g = {}; }
     $('len').value = st.len; ['gButt', 'gRear', 'gFore', 'seatAt'].forEach(id => { $(id).value = st[id]; });
     [['mainOn', st.mainOn], ['splitOn', st.splitOn], ['corkOn', st.cork.on], ['chkFore', st.chkFore], ['chkSplit', st.chkSplit]].forEach(([id, v]) => { $(id).checked = !!v; });
