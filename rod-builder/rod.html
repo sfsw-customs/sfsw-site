@@ -347,7 +347,7 @@ const SEATS = {
     {id:'fuji-deluxe',name:'Fuji Deluxe',colors:['Silver','Grey'],lock:true},
     {id:'fuji-tvs',name:'Fuji TVS',p:1.8,lock:true},
     {id:'alps-vtg',name:'ALPS VTG',p:1.25,model:'alpsVtg',lock:true},
-    {id:'at-alum-spin',name:'AT Aluminum Spin',colors:['Silver','Black','Blue','Gunmetal','Red'],model:'alpsAlum'},   // SFSW: the clean 3D aluminum seat, no photo or logo
+    {id:'at-alum-spin',name:'AT Aluminum Spin',colors:['Silver','Black','Blue','Gunmetal','Red']},   // SFSW: the clean 3D aluminum seat, no photo or logo
     {id:'at-alum',name:'AT Aluminum',colors:C_ATALUM,model:'atAlum'},
     {id:'alps-mvt',name:'ALPS MVT',colors:['Black','Silver','Blue','Purple','Red','Gold'],p:1.8,model:'alpsMvt'},
     {id:'alps-alum',name:'ALPS Aluminum',colors:C_ALPSALUM,model:'alpsAlum'},
@@ -716,7 +716,7 @@ async function build() {
   }
   const seat = tag(seatModel || new THREE.Mesh(seatGeo, photoMat(photoTex(seatI), 0.35)), 's-seat');
   if ((seatModel && !seatModel.userData.noFlip) || (!seatModel && sd.flip)) { seat.scale.x = -Math.abs(seat.scale.x); seat.position.x = seatX + seatLen; if (!seatModel) seat.material.side = THREE.DoubleSide; } else seat.position.x = seatX;
-  const sfswTurn = { 'alps-vtg': Math.PI, 'alps-mvt': Math.PI, 'alps-triangle': Math.PI * 1.25, 'alps-tri': Math.PI * 1.5 }[sd.id];   // SFSW: each seat turned to face the way it sits on the rod
+  const sfswTurn = { 'alps-vtg': Math.PI, 'alps-mvt': Math.PI, 'alps-triangle': Math.PI * 1.25, 'alps-tri': Math.PI * 1.5, 'at-alum-spin': -Math.PI / 2 }[sd.id];   // SFSW: each seat turned to face the way it sits on the rod
   if (sfswTurn) seat.rotation.x = sfswTurn;
   g.add(seat); x = seatX + seatLen - 0.15;
   if (sd.lock && st.lockOn) {   // one knurled aluminum ring, on the threads just behind the seat's nut
