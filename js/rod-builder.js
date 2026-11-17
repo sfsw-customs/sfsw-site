@@ -88,6 +88,7 @@
     '.rb-rs i{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}.rb-rs small{display:block;font:600 9.5px var(--font-cond);letter-spacing:.12em;text-transform:uppercase;color:var(--c-muted)}',
     '.rb-rs.on{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.25)}.rb-rs b{margin-left:4px;color:var(--c-muted);font-weight:400;padding:0 2px}.rb-rs b:hover{color:#fff}',
     '.rb-rs.add{padding:8px 14px;border-style:dashed;color:var(--c-muted)}.rb-rs.add small{display:inline;color:var(--c-gold)}.rb-rs-tip{font-size:12px;color:var(--c-muted);margin-left:auto}',
+    '.rb-len{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-len-l{flex:1;font-size:14px}.rb-len-l small{display:block;color:var(--c-muted);font-size:12px}.rb-len button{width:32px;height:32px;border-radius:50%;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);color:var(--c-text);font-size:18px;cursor:pointer}.rb-len button:disabled{opacity:.35;cursor:default}.rb-len b{min-width:52px;text-align:center;font-weight:600}.rb-len-fee{min-width:64px;text-align:right;color:var(--c-gold);font:600 13px var(--font-cond)}',
     '.rb-rnd-note{display:none;font-size:13px;color:var(--c-muted)}.rb-modes.rnd .rb-rnd-note{display:block}.rb-exs button.rb-exm{border-style:dashed}.rb-exs button.rb-exm.on{border-style:solid}','.rb-rpal{margin-top:4px}.rb-rp-h{font:600 11px var(--font-cond);letter-spacing:.14em;text-transform:uppercase;color:var(--c-muted);margin:10px 0 6px}',
     '.rb-rp{display:flex;flex-wrap:wrap;gap:6px}.rb-rp button{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.18);cursor:pointer;padding:0}.rb-rp button.on{box-shadow:0 0 0 2px var(--c-dark),0 0 0 4px var(--c-gold)}','.rb-wphoto{height:84px;margin:8px 0 2px;border-radius:var(--radius);border:1px solid var(--c-border);background:#0d0f12 center/cover no-repeat;cursor:zoom-in}',
     '.rb-exs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;cursor:default}.rb-exs button{background:var(--c-dark3);border:1px solid var(--c-border);border-radius:999px;padding:4px 12px;color:var(--c-text);font-size:12.5px;cursor:pointer}.rb-exs button.on{border-color:var(--c-gold);color:var(--c-gold)}',
@@ -409,8 +410,9 @@
     p.mainOn = true;
     if (S.performanceOnly) p.main = wrapSpec('trim-bands', main, sup, null, notes, 'rod wrap');
     else if (!rnd && S.customDesign && S.customDesign.setup && S.customDesign.sfsw) p.main = { full: S.customDesign.setup, kind: S.customDesign.sfsw };
-    else if (!rnd && LOOK[(wrapNamed(S.wrapId) || {}).name]) p.main = { full: LOOK[wrapNamed(S.wrapId).name], kind: 'taper' };   // until the designer is up: the wrap's own design
+    else if (!rnd && wrapLen() === BASE_LEN() && LOOK[(wrapNamed(S.wrapId) || {}).name]) p.main = { full: LOOK[wrapNamed(S.wrapId).name], kind: 'taper' };   // until the designer is up: the wrap's own design
     else p.main = wrapSpec(S.wrapId, main, sup, rnd ? null : S.customDesign, notes, 'rod wrap');
+    if (p.main && !p.main.full && CFG.wrap) p.main.len = wrapLen();
     var sw = call('isSplitGrip') ? call('getSplitWrap') : null;
     p.splitOn = !!sw; if (sw) p.split = wrapSpec(sw.id, main, sup, null, notes, 'split wrap');
     p.gw = guideWrapSpec(S.guideWrapId, main, sup, notes);
@@ -496,7 +498,7 @@
     dz.addEventListener('load', function () { setMore(); try { new dz.contentWindow.ResizeObserver(fitDz).observe(dz.contentDocument.querySelector('.wrap')); } catch (e) {} fitDz(); }); setMore();
     // three ways to get a wrap: one of our examples, build your own in the designer, or pick colors and let us lay it out (Random)
     modeEl = el('div', 'rb-modes');
-    modeEl.innerHTML = '' +
+    modeEl.innerHTML = (CFG.wrap ? '<div class="rb-len"><span class="rb-len-l">Wrap length <small>' + BASE_LEN() + ' in included · +$10 each added inch</small></span><button type="button" data-d="-1" aria-label="Shorter">−</button><b></b><button type="button" data-d="1" aria-label="Longer">+</button><span class="rb-len-fee"></span></div>' : '') +
 
       '<div class="rb-dz-slot"></div>' +
       '<div class="rb-rnd-note">Random: pick a main color and supporting colors, and we lay out the wrap. Main + 2 supporting included · +$10 each extra supporting color.</div>' +
@@ -505,7 +507,8 @@
     modeEl.querySelector('.rb-dz-slot').appendChild(dzBox);
     rndPal = modeEl.querySelector('.rb-rpal'); rndBar = el('div', 'rb-rbar');
     [].forEach.call(modeEl.querySelectorAll('.rb-mode'), function (b) { b.onclick = function () { setMode(b.dataset.m === S.wrapMode ? 'example' : b.dataset.m); }; });
-    setTimeout(renderModes, 0);
+    [].forEach.call(modeEl.querySelectorAll('.rb-len button'), function (b) { b.onclick = function () { setWrapLen(wrapLen() + +b.dataset.d); }; });
+    setTimeout(function () { renderModes(); renderLen(); }, 0);
     addEventListener('message', function (e) { if (dz && e.source === dz.contentWindow && e.data && e.data.wlH) fitDz(); });
   }
   var dw = function () { try { return dz && dz.contentWindow; } catch (e) { return null; } };
@@ -631,6 +634,17 @@
       return '<div class="rb-rp-h">' + g[1] + '</div><div class="rb-rp">' + items.map(function (x) { return '<button type="button" class="' + (x[1] === cur2 ? 'on' : '') + '" data-i="' + x[1] + '" title="' + x[0].name + '" style="background:' + x[0].hex + '"></button>'; }).join('') + '</div>'; }).join('');
     [].forEach.call(rndPal.querySelectorAll('.rb-rp button'), function (b) { b.onclick = function () { var i = +b.dataset.i; if (rndSlot === 'main') S.mainIdx = i; else sup[rndSlot] = i; call('renderSupportingRows'); updateAll(); }; });
   }
+  // wrap length: starts at the rod type's length (8 in here); each extra inch is +$10
+  function BASE_LEN() { return (CFG.wrap && +CFG.wrap.len) || 8; }
+  function wrapLen() { return Math.max(BASE_LEN(), +S.wrapLen || BASE_LEN()); }
+  function lenFee() { return CFG.wrap ? (wrapLen() - BASE_LEN()) * 10 : 0; }
+  function setWrapLen(n) {
+    S.wrapLen = Math.max(BASE_LEN(), Math.min(BASE_LEN() + 12, n)); renderLen();
+    var w = dw(); if (w && w.wlCapture && S.wrapMode !== 'random') { try { var c = w.wlCapture(); c.unit = 'in'; c.len = wrapLen().toFixed(2); w.wlApply(c); } catch (e) {} clearTimeout(readT); readT = setTimeout(readDesign, 300); }
+    updateAll();
+  }
+  function renderLen() { var b = modeEl && modeEl.querySelector('.rb-len'); if (!b) return; var f = lenFee();
+    b.querySelector('b').textContent = wrapLen() + ' in'; b.querySelector('.rb-len-fee').textContent = f ? '+$' + f : 'Included'; b.querySelector('[data-d="-1"]').disabled = wrapLen() <= BASE_LEN(); }
   function setMode(m, quiet) {
     var was = S.wrapMode; S.wrapMode = m;
     if (m === 'build' && was !== 'build') { dzSimple = false; if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
@@ -650,9 +664,10 @@
     var w = await loadKind(restore ? restore.sfsw : pr.k); if (!w || n !== applyN) return;
     var fit = null; try { if (rod && rod.fit) fit = await rod.fit(); } catch (e) {}
     var cap = restore ? JSON.parse(JSON.stringify(restore.setup)) : w.wlCapture();
+    if (restore && restore.setup && restore.setup.unit === 'in' && +restore.setup.len) S.wrapLen = +restore.setup.len;
     if (fit) { cap.unit = fit.unit; cap.len = fit.len; cap.dB = fit.dB; cap.dM = fit.dM; cap.dT = fit.dT; }
     var WS = (window.SFSW_BUILDER || {}).wrap;   // this rod type's wrap: length (in) and butt / tip diameters (mm)
-    if (WS && !restore) { cap.unit = 'in'; cap.len = (+WS.len).toFixed(2); cap.dB = (+WS.dB).toFixed(1); cap.dT = (+WS.dT).toFixed(1); cap.dM = ((+WS.dB + +WS.dT) / 2).toFixed(1); }
+    if (WS && !restore) { cap.unit = 'in'; cap.len = (+wrapLen()).toFixed(2); cap.dB = (+WS.dB).toFixed(1); cap.dT = (+WS.dT).toFixed(1); cap.dM = ((+WS.dB + +WS.dT) / 2).toFixed(1); }
     if (!restore && dzKind === 'cross') noCustom(w);
     if (!restore && REC) { var hx0 = threadHex(w);   // the wrap's own design goes in first, so nothing else ever shows
       cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } }
@@ -772,10 +787,12 @@
   function designOn() { return !S.performanceOnly && S.wrapMode !== 'random' && presetOf(S.wrapId) && S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign : null; }
   var metFee = function () { var d = designOn(); if (d) return d.colors.filter(function (c) { return c.uv; }).length * 10;   // Ultra-UV (Fuji) metallics +$10, Pro-Wrap metallics included
     var W = val('WRAP_COLORS') || []; return [S.mainIdx].concat(S.supportIdxs || []).reduce(function (a, i) { return a + (W[i] && W[i].group === 'uv-metallic' ? 10 : 0); }, 0); };
-  window.calcUVMetallicFee = function () { return metFee(); };
+  window.calcUVMetallicFee = function () { return metFee() + lenFee(); };   // (the wrap length rides along here)
   var _order = window.buildOrderItem;
   if (typeof _order === 'function') window.buildOrderItem = function () {
-    var it = _order.apply(this, arguments), d = designOn(); if (!d) return it;
+    var it = _order.apply(this, arguments), d = designOn();
+    if (lenFee() && it.lines) it.lines.push({ label: 'Wrap Length', value: wrapLen() + ' in  +$' + lenFee() });
+    if (!d) return it;
     var fee = call('supportExtraFee') || 0, extra = Math.max(0, d.colors.length - 3), mets = d.colors.filter(function (c) { return c.uv; }).length;
     var notes = []; if (fee) notes.push('+$' + fee + ' for ' + extra + ' extra color' + (extra > 1 ? 's' : '')); if (mets) notes.push('+$' + mets * 10 + ' for ' + mets + ' Ultra-UV metallic' + (mets > 1 ? 's' : ''));
     (it.lines || []).forEach(function (l) { if (l.label === 'Colors') l.value = 'Colors (from the wrap design): ' + d.colors.map(function (c, i) { return (i ? '' : 'Main: ') + c.name; }).join(', ') + (notes.length ? '  (' + notes.join(', ') + ')' : ''); });
