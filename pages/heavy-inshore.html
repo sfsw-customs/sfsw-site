@@ -90,17 +90,6 @@
     .option-item-body{display:flex;flex-direction:column;min-width:0;flex:1}
     .option-item-name{color:var(--c-text)}
     .option-item-desc{font-size:11.5px;color:var(--c-muted);line-height:1.5;margin-top:3px}
-    .design-tile{display:flex;gap:14px;align-items:center;padding:14px;border:1px dashed rgba(201,148,26,.55);border-radius:var(--radius-md);background:rgba(201,148,26,.06);cursor:pointer;margin-bottom:10px;transition:border-color .15s,background .15s}
-    .design-tile:hover{border-color:var(--c-gold);background:rgba(201,148,26,.1)}
-    .design-tile.selected{border-style:solid;border-color:var(--c-gold)}
-    .design-tile-thumb{width:92px;height:52px;border-radius:4px;background:var(--c-dark3);object-fit:cover;flex-shrink:0;border:1px solid var(--c-border)}
-    .design-tile-icon{width:92px;height:52px;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--c-dark3);color:var(--c-gold);font-size:22px;border:1px solid var(--c-border)}
-    .design-tile-body{flex:1;min-width:0}
-    .design-tile-title{font-family:var(--font-cond);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:14px;color:var(--c-text)}
-    .design-tile-desc{font-size:12.5px;color:var(--c-muted);line-height:1.5;margin-top:2px}
-    .design-tile-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
-    .design-tile-actions button{background:none;border:1px solid var(--c-border2);color:var(--c-text);border-radius:4px;padding:4px 10px;font-family:var(--font-cond);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
-    .design-tile-actions button:hover{border-color:var(--c-gold);color:var(--c-gold)}
     .option-item-price{font-family:var(--font-cond);font-size:12px;font-weight:600;color:var(--c-gold);flex-shrink:0;margin-left:1rem;padding-top:1px}
     .sub-group{margin-bottom:16px}
     .sub-group:last-child{margin-bottom:0}
@@ -213,20 +202,6 @@
 
     /* Deposit note under total */
     .price-deposit-note{margin-top:8px;font-size:11.5px;color:var(--c-muted);text-align:right;font-style:italic;letter-spacing:.01em}
-
-    /* Performance-only toggle */
-    .perf-only-banner{margin-bottom:10px}
-    .perf-only-btn{position:relative;width:100%;background:var(--c-dark2);border:2px solid var(--c-border);border-radius:var(--radius-md);padding:14px 100px 14px 16px;cursor:pointer;text-align:left;transition:border-color .15s,background .15s;display:flex;flex-direction:column;gap:5px}
-    .perf-only-btn:hover{border-color:var(--c-border2)}
-    .perf-only-btn.active{border-color:var(--c-gold);background:rgba(201,148,26,.07)}
-    .perf-btn-row{display:flex;align-items:center}
-    .perf-btn-title{font-family:var(--font-cond);font-size:15px;font-weight:700;color:var(--c-text);letter-spacing:.04em}
-    .perf-btn-badge{position:absolute;top:50%;right:16px;transform:translateY(-50%);font-family:var(--font-cond);font-size:13px;font-weight:700;color:var(--c-gold);background:rgba(201,148,26,.12);border:1px solid rgba(201,148,26,.3);border-radius:4px;padding:2px 8px;display:inline-flex;align-items:center;gap:3px}
-    .perf-btn-badge-amt{font-size:26px}
-    .perf-btn-sub{font-size:12px;color:var(--c-muted);line-height:1.45}
-    .perf-only-btn.active .perf-btn-sub{color:var(--c-text)}
-    .perf-active-note{background:rgba(201,148,26,.07);border:1px solid rgba(201,148,26,.22);border-radius:var(--radius);padding:9px 14px;font-size:12px;color:var(--c-gold);margin-bottom:10px;display:none}
-    .perf-active-note.visible{display:block}
 
     /* Rod wrap preview — single-photo layout with prev/next arrows */
     .wrap-preview{margin-bottom:1rem}
@@ -455,7 +430,6 @@
                 </div>
               </div>
             </div>
-            <p style="font-size:12.5px;color:var(--c-muted);line-height:1.6;margin:10px 0 12px">Pick one of the wrap styles below, or tap <strong style="color:var(--c-text)">Design Your Own</strong> to lay out the pattern and thread colors yourself. We will work together to make sure the wrap is designed to your preference. If you have a photo of a wrap you want, feel free to text me a copy.</p>
             <div class="option-list" id="rod-wrap-options"></div>
             <div id="wrap-abalone-colors" style="display:none;margin-top:12px;padding:10px 12px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius)"></div>
           </div>
@@ -605,7 +579,6 @@
 <div id="footer-mount"></div>
 <script src="../js/sfsw.js"></script>
 <script src="../js/similar-build.js"></script>
-<script src="../js/wrap-design.js"></script>
 <script>
 document.getElementById('nav-mount').innerHTML = buildNav('');
 document.getElementById('footer-mount').innerHTML = buildFooter();
@@ -1014,7 +987,7 @@ const S = {
   buttId: 'alps-rubber',
   buttColor: {'alps-aluminum-butt':'Gunmetal', 'alps-aluminum-rubber-butt':'Gunmetal', 'at-gimbal':'Black', 'alps-gimbal':'Silver', 'alps-tri-butt':'Blue', 'at-weighted-butt':'Blue'},
   buttRubberCover: false,
-  performanceOnly: false,       // $25 off — hides colors/wrap/guide wrap, bars custom cork/EVA
+  performanceOnly: false,       // (Performance Only was removed; kept false so saved carts still read)
 };
 
 const allGripItems  = () => GRIPS.flatMap(g => g.items);
@@ -1034,16 +1007,12 @@ const SPLIT_WRAP_OPTIONS = [
 const getSplitWrap    = () => SPLIT_WRAP_OPTIONS.find(w => w.id === S.splitWrapId) || null;
 const splitWrapAdder  = () => (isSplitGrip() && getSplitWrap()) ? getSplitWrap().price : 0;
 const getGuideWrap = () => GUIDE_WRAPS.find(w => w.id === S.guideWrapId);
-const PERF_STANDARD_WRAP_FEE = 30;
 const guideWrapAdder = () => {
   const gw = getGuideWrap();
-  if (S.performanceOnly && gw.id === 'under-wrapped') return PERF_STANDARD_WRAP_FEE;
   return gw.adder;
 };
-const PERF_SUPPORT_INCLUDED_COUNT = 1;
-const PERF_EXTRA_COLOR_FEE = 10;
-const effectiveSupportIncluded = () => S.performanceOnly ? PERF_SUPPORT_INCLUDED_COUNT : SUPPORT_INCLUDED_COUNT;
-const effectiveExtraColorFee   = () => S.performanceOnly ? PERF_EXTRA_COLOR_FEE : EXTRA_COLOR_FEE;
+const effectiveSupportIncluded = () => SUPPORT_INCLUDED_COUNT;
+const effectiveExtraColorFee   = () => EXTRA_COLOR_FEE;
 const extraSupportCount = () => Math.max(0, S.supportIdxs.length - effectiveSupportIncluded());
 const supportExtraFee   = () => extraSupportCount() * effectiveExtraColorFee();
 
@@ -1199,44 +1168,10 @@ const buttDisplayName = () => {
 
 const calcTotal = () => {
   const b = getBlank();
-  return b.price + (S.variantAdder||0) + seatTotal() + getGrip().adder + customCorkAdder() + getGuide().adder + tipUpgradeFee() + supportExtraFee() + getWrap().adder + splitWrapAdder() + guideWrapAdder() + buttAdder() + rubberCoverAdder() + accessoriesAdder() + calcUVMetallicFee(WRAP_COLORS, S.mainIdx, S.supportIdxs) - (S.performanceOnly ? 50 : 0);
+  return b.price + (S.variantAdder||0) + seatTotal() + getGrip().adder + customCorkAdder() + getGuide().adder + tipUpgradeFee() + supportExtraFee() + getWrap().adder + splitWrapAdder() + guideWrapAdder() + buttAdder() + rubberCoverAdder() + accessoriesAdder() + calcUVMetallicFee(WRAP_COLORS, S.mainIdx, S.supportIdxs);
 };
 
 // ── PERFORMANCE ONLY ──
-function togglePerformance() {
-  S.performanceOnly = !S.performanceOnly;
-  applyPerformanceMode(S.performanceOnly);
-}
-
-function applyPerformanceMode(on) {
-  const btn  = document.getElementById('perf-only-btn');
-  const note = document.getElementById('perf-active-note');
-  if (btn)  btn.classList.toggle('active', on);
-  if (note) note.classList.toggle('visible', on);
-
-  // Hide/show sections
-  ['sec-rod-wraps','sec-guide-wraps'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { const sec = el.closest('.cfg-section'); if (sec) sec.style.display = on ? 'none' : ''; }
-  });
-
-  if (on) {
-    S.mainIdx = WRAP_COLORS.findIndex(c => c.name === 'Black');
-    S.supportIdxs = [];
-    S.wrapId = ROD_WRAPS[0].id;
-    S.wrapUserSelected = false;
-    S.customDesign = null;
-    S.guideWrapId = 'blacked-out';
-    S.guideWrapUserSelected = false;
-  }
-
-  renderGrips();
-  renderGripPreview();
-  renderGuideWraps();
-  renderBlankCards();
-  updateAll();
-}
-
 // ── BLANK CARDS ──
 function renderBlankCards() {
   document.getElementById('blank-cards').innerHTML = BLANKS.map(b => {
@@ -1249,7 +1184,7 @@ function renderBlankCards() {
     return `<div class="blank-card ${sel?'selected':''}" onclick="pickBlank('${b.id}')">
       <div class="blank-card-header">
         <span class="blank-card-name">${b.name}</span>
-        <span class="blank-card-price">${S.performanceOnly ? `<span class="blank-card-price-orig">$${b.price}</span>$${b.price - 50}` : `$${b.price}`}</span>
+        <span class="blank-card-price">$${b.price}</span>
       </div>
       ${b.madeInUSA ? '<div class="blank-card-made">★ Made in USA</div>' : ''}
       ${b.desc ? `<div class="blank-card-desc">${b.desc}</div>` : ''}
@@ -1369,47 +1304,6 @@ function pickWrap(id)  {
   requestAnimationFrame(() => { S.wrapId = id; S.wrapPhotoIdx = 0; S.wrapUserSelected = true; S.customDesign = null; renderWraps(); updateAll();   });
 }
 
-// ── Design Your Own (js/wrap-design.js + /wrap-designer/) ──
-function openWrapDesigner() {
-  sfswOpenWrapDesigner({
-    start: S.customDesign,
-    onDesign: d => {
-      const r = sfswReadWrapDesign(d, WRAP_COLORS);
-      const w = ROD_WRAPS.find(x => x.name === r.wrapName) || ROD_WRAPS[0];
-      S.customDesign = r.design;
-      S.wrapId = w.id; S.wrapPhotoIdx = 0; S.wrapUserSelected = true;
-      if (r.colorIdxs.length) { S.mainIdx = r.colorIdxs[0]; S.supportIdxs = r.colorIdxs.slice(1); }
-      renderWraps(); updateAll();
-      const sec = document.getElementById('sec-rod-wraps');
-      if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  });
-}
-function removeWrapDesign(e) {
-  if (e) e.stopPropagation();
-  S.customDesign = null; renderWraps(); updateAll();
-}
-function designTileHtml() {
-  const d = S.customDesign;
-  if (!d) return `<div class="design-tile" onclick="openWrapDesigner()">
-      <div class="design-tile-icon">✎</div>
-      <div class="design-tile-body">
-        <div class="design-tile-title">Design Your Own</div>
-        <div class="design-tile-desc">Pick the pattern, axis lines and every thread color, and see it on the rod. Same price as the matching wrap style.</div>
-      </div>
-      <span class="option-item-price">Open →</span>
-    </div>`;
-  const w = getWrap();
-  return `<div class="design-tile selected" onclick="openWrapDesigner()">
-      <img class="design-tile-thumb" src="${d.thumb}" alt="Your wrap design">
-      <div class="design-tile-body">
-        <div class="design-tile-title">Your Design</div>
-        <div class="design-tile-desc">${d.summary} · priced as ${w.name}</div>
-        <div class="design-tile-actions"><button type="button" onclick="event.stopPropagation();openWrapDesigner()">Edit Design</button><button type="button" onclick="removeWrapDesign(event)">Remove</button></div>
-      </div>
-      <span class="option-item-price">${w.adder===0?'Included':'+$'+w.adder}</span>
-    </div>`;
-}
 function pickSplitWrap(id) {
   requestAnimationFrame(() => { S.splitWrapId = (S.splitWrapId === id) ? null : id; S.splitWrapPhotoIdx = 0; renderSplitWrapOptions(); updateAll();   });
 }
@@ -1551,7 +1445,7 @@ function nextWrapPhoto() {
 function renderWraps() {
   const el = document.getElementById('rod-wrap-options');
   if (el) {
-    el.innerHTML = designTileHtml() + ROD_WRAPS.map(w => {
+    el.innerHTML = ROD_WRAPS.map(w => {
       let html = `<div class="option-item ${w.id===S.wrapId && !S.customDesign?'selected':''}" onclick="pickWrap('${w.id}')">
         <div class="option-item-body">
           <span class="option-item-name">${w.name}</span>
@@ -1575,11 +1469,9 @@ function renderWraps() {
 
 function renderGuideWraps() {
   const gw = getGuideWrap();
-  const list = S.performanceOnly
-    ? [GUIDE_WRAPS.find(w => w.id === 'blacked-out'), GUIDE_WRAPS.find(w => w.id === 'under-wrapped')]
-    : GUIDE_WRAPS.filter(w => w.id !== 'blacked-out');
+  const list = GUIDE_WRAPS.filter(w => w.id !== 'blacked-out');
   document.getElementById('guide-wrap-options').innerHTML = list.map(w => {
-    const price = S.performanceOnly && w.id === 'under-wrapped' ? PERF_STANDARD_WRAP_FEE : w.adder;
+    const price = w.adder;
     let html = `<div class="option-item ${w.id===S.guideWrapId?'selected':''}" onclick="pickGuideWrap('${w.id}')">
       <div class="option-item-body">
         <span class="option-item-name">${w.name}</span>
@@ -2279,7 +2171,7 @@ function updateAll() {
 
   // Split Wrap — only offered for split-style grips, hidden + cleared otherwise
   const splitWrapWrap = document.getElementById('split-wrap-cfg-section');
-  const showSplitWrap = !S.performanceOnly && isSplitGrip();
+  const showSplitWrap = isSplitGrip();
   if (splitWrapWrap) splitWrapWrap.style.display = showSplitWrap ? '' : 'none';
   if (!showSplitWrap && S.splitWrapId) S.splitWrapId = null;
   renderSplitWrapOptions();
@@ -2295,9 +2187,9 @@ function updateAll() {
   document.getElementById('chosen-butt').textContent        = buttDisplayName() + (rubberCoverAdder() ? ' + Rubber Cover' : '');
   document.getElementById('chosen-guides').textContent      = guideDisplayName() + (guideColorLabel() ? ' · ' + guideColorLabel() : '');
   document.getElementById('chosen-wrap-color').textContent  = colorSummary;
-  document.getElementById('chosen-rod-wrap').textContent    = S.performanceOnly ? 'Performance — None' : (S.customDesign ? 'Your Design' : wrap.name);
+  document.getElementById('chosen-rod-wrap').textContent    = S.customDesign ? 'Your Design' : wrap.name;
   const gw = getGuideWrap();
-  document.getElementById('chosen-guide-wrap').textContent  = gw.name + (guideWrapAdder() ? ' +$' + guideWrapAdder() : '') + (S.performanceOnly ? ' (Performance)' : '');
+  document.getElementById('chosen-guide-wrap').textContent  = gw.name + (guideWrapAdder() ? ' +$' + guideWrapAdder() : '');
   const accSummary = accessoriesSummaryText();
   document.getElementById('chosen-accessories').textContent = accSummary;
 
@@ -2314,11 +2206,10 @@ function updateAll() {
     ['Butt',        buttLine],
     ['Guides',      guideDisplayName() + (guideColorLabel() ? ' (' + guideColorLabel() + ')' : '') + (guide.adder ? '  +$'+guide.adder : '') + (tipUpgradeActive() ? '  · '+tipUpgradeLabel()+' +$'+tipUpgradeFee() : '')],
     ['Colors',      colorSummary + (extraFee ? '  +$'+extraFee : '')],
-    ['Rod Wrap',    S.performanceOnly ? 'Performance — No decorative wrap' : (wrap.name + (wrap.adder ? '  +$'+wrap.adder : ''))],
+    ['Rod Wrap',    wrap.name + (wrap.adder ? '  +$'+wrap.adder : '')],
     ...(showSplitWrap && getSplitWrap() ? [['Split Wrap', getSplitWrap().name + (splitWrapAdder() ? '  +$' + splitWrapAdder() : '')]] : []),
-    ['Guide Wrap', gw.name + (guideWrapAdder() ? '  +$'+guideWrapAdder() : '') + (S.performanceOnly ? '  (Performance)' : '')],
+    ['Guide Wrap', gw.name + (guideWrapAdder() ? '  +$'+guideWrapAdder() : '')],
     ['Accessories', accSummary],
-    ...(S.performanceOnly ? [['Performance Discount', '−$50']] : []),
   ].map(([l,v]) => `<div class="summary-line"><span class="sl-label">${l}</span><span class="sl-val">${v}</span></div>`).join('');
 
   document.getElementById('price-display').textContent = '$' + calcTotal().toLocaleString(undefined, { minimumFractionDigits: calcTotal() % 1 ? 2 : 0, maximumFractionDigits: 2 });
@@ -2349,9 +2240,7 @@ function updateAll() {
   }
   const includedNote = document.getElementById('color-included-note');
   if (includedNote) {
-    includedNote.textContent = (S.performanceOnly
-      ? 'One main color selection included.'
-      : 'One main color and 2 supporting colors included.')
+    includedNote.textContent = 'One main color and 2 supporting colors included.'
       + ' +$' + effectiveExtraColorFee() + ' for each additional color';
   }
 
@@ -2399,15 +2288,14 @@ function buildOrderItem() {
       {label:'Butt',        value: buttDisplayName() + (rubberCoverAdder() ? ' + Rubber Cover' : '') + (buttAdder() + rubberCoverAdder() ? '  +$' + (buttAdder() + rubberCoverAdder()) : '')},
       {label:'Guides',      value: guideDisplayName() + (guideColorName ? ' (' + guideColorName + ')' : '') + (getGuide().adder ? '  +$' + getGuide().adder : '') + (tipUpgradeActive() ? '  · ' + tipUpgradeLabel() + ' +$' + tipUpgradeFee() : '')},
       {label:'Colors',      value: colorLine},
-      {label:'Rod Wrap',    value: S.performanceOnly ? 'Performance Build — No decorative wrap' : (getWrap().name + (S.customDesign ? ' — Custom Design: ' + S.customDesign.summary : '') + (getWrap().adder ? '  +$' + getWrap().adder : ''))},
-      ...(!S.performanceOnly && isSplitGrip() && getSplitWrap() ? [{label:'Split Wrap', value: getSplitWrap().name + (splitWrapAdder() ? '  +$' + splitWrapAdder() : '')}] : []),
-      {label:'Guide Wrap', value: getGuideWrap().name + (guideWrapAdder() ? '  +$' + guideWrapAdder() : '') + (S.performanceOnly ? '  (Performance)' : '')},
+      {label:'Rod Wrap',    value: getWrap().name + (S.customDesign ? ' — Custom Design: ' + S.customDesign.summary : '') + (getWrap().adder ? '  +$' + getWrap().adder : '')},
+      ...(isSplitGrip() && getSplitWrap() ? [{label:'Split Wrap', value: getSplitWrap().name + (splitWrapAdder() ? '  +$' + splitWrapAdder() : '')}] : []),
+      {label:'Guide Wrap', value: getGuideWrap().name + (guideWrapAdder() ? '  +$' + guideWrapAdder() : '')},
       {label:'Accessories', value: accessoriesSummaryText()},
-      ...(S.performanceOnly ? [{label:'Performance Discount', value: '−$50'}] : []),
     ],
     total: calcTotal(),
     // the customer's own wrap design (picture, pattern, axes, angle, thread colors) — shown on the admin order
-    wrapDesign: (!S.performanceOnly && S.customDesign) ? S.customDesign : null
+    wrapDesign: S.customDesign || null
   };
 }
 

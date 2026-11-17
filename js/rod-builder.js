@@ -67,7 +67,6 @@
     '.rb-nav{display:flex;gap:10px;margin:14px 0 6px}',
     '.rb-nav .btn{justify-content:center;font-size:14px;padding:13px 16px}',
     '.rb-nav .rb-back{flex:0 0 auto}.rb-nav .rb-next{flex:1 1 auto}',
-    '.rb-perf-note{display:none;background:var(--c-dark2);border:1px solid var(--c-border);border-radius:var(--radius-md);padding:14px 16px;font-size:13px;color:var(--c-muted);margin-bottom:10px}',
     '.rb-no3d{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;font-size:14px;line-height:1.5;color:var(--c-muted)}.rb-no3d b{color:var(--c-text);font-weight:600}',
     '.rb-flash{animation:rbflash 1.2s ease}',
     '.rb-on #rod-wrap-options{display:flex;flex-direction:column;gap:6px}',
@@ -201,9 +200,7 @@
     card.lastChild.appendChild(g);
     return card;
   }
-  S.performanceOnly = false;   // Performance Only mode removed from the builder
-  var perfBox = null;
-  var gwPerf = el('div', 'rb-perf-note', 'Performance builds come with blacked-out guide wraps, so there is nothing to pick here.');
+  S.performanceOnly = false;   // a saved cart from the old Performance Only mode opens as a normal build
 
   var STEPS = [
     { title: 'Blank', sub: 'Pick the blank, then its length and power.', view: 'all',
@@ -215,11 +212,11 @@
     { title: 'Reel <em>Seat</em>', tab: 'Reel Seat', sub: 'The reel seat and its color.', view: 'handle',
       parts: [secOf('sec-seat')] },
     { title: 'Wrap', sub: 'Pick a wrap style, then start from one of our examples, build your own, or go Random and just pick colors.', view: 'wrap',
-      parts: [perfBox, secOf('sec-wrap-color'), secOf('sec-rod-wraps'), secOf('sec-split-wrap')] },
+      parts: [secOf('sec-wrap-color'), secOf('sec-rod-wraps'), secOf('sec-split-wrap')] },
     { title: 'Guides', sub: 'Frame, ring material and frame color.', view: 'guides',
       parts: [secOf('sec-guides')] },
     { title: 'Guide <em>Wraps</em>', tab: 'Guide Wraps', sub: 'How each guide is wrapped onto the blank.', view: 'guides',
-      parts: [gwPerf, secOf('sec-guide-wraps')] },
+      parts: [secOf('sec-guide-wraps')] },
     { title: 'Additions', sub: 'Trim rings, a hook keeper and decals. All optional.', view: 'grips',
       parts: [accCard('acc-trim-options', 'Trim Rings', 'trim'), accCard('acc-hookkeeper-options', 'Hook Keeper', 'hookkeeper'), accCard('acc-decal-count', 'Decals', 'decals')] },
     // the last step: everything picked, the total, Add to Cart
@@ -406,11 +403,10 @@
     var k0 = p.ckF || p.ckS; if (k0) { p.checkType = k0.t; p.check = k0.c; }
     // wraps
     var main = hexOf(S.mainIdx), sup = (S.supportIdxs || []).map(hexOf);
-    var rnd = S.wrapMode === 'random', dc = !S.performanceOnly && !rnd && S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign.colors.map(function (c) { return c.hex; }) : null;
+    var rnd = S.wrapMode === 'random', dc = !rnd && S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign.colors.map(function (c) { return c.hex; }) : null;
     if (dc) { main = dc[0]; sup = dc.slice(1); }
     p.mainOn = true;
-    if (S.performanceOnly) p.main = wrapSpec('trim-bands', main, sup, null, notes, 'rod wrap');
-    else if (!rnd && S.customDesign && S.customDesign.setup && S.customDesign.sfsw) p.main = { full: S.customDesign.setup, kind: S.customDesign.sfsw };
+    if (!rnd && S.customDesign && S.customDesign.setup && S.customDesign.sfsw) p.main = { full: S.customDesign.setup, kind: S.customDesign.sfsw };
     else if (!rnd && wrapLen() === BASE_LEN() && LOOK[(wrapNamed(S.wrapId) || {}).name]) p.main = { full: LOOK[wrapNamed(S.wrapId).name], kind: 'taper' };   // until the designer is up: the wrap's own design
     else p.main = wrapSpec(S.wrapId, main, sup, rnd ? null : S.customDesign, notes, 'rod wrap');
     if (p.main && !p.main.full && CFG.wrap) p.main.len = wrapLen();
@@ -444,7 +440,6 @@
     try { rgPrice(); } catch (e) {}
     var r = _update.apply(this, arguments);
     try {
-      gwPerf.style.display = S.performanceOnly ? 'block' : 'none';
       if (splitChosen && !S.splitWrapId) splitChosen.textContent = 'Optional · tap to add';
       designerAfterUpdate();
       var LS = STEPS[STEPS.length - 1], pd = $('price-display');   // the running total sits on the Your Build tab
@@ -575,7 +570,7 @@
     return best;
   }
   function readDesign() {
-    var w = dw(); if (!w || !w.wlCapture || S.performanceOnly || !presetOf(S.wrapId) || S.wrapMode === 'random') return;
+    var w = dw(); if (!w || !w.wlCapture || !presetOf(S.wrapId) || S.wrapMode === 'random') return;
     var cap; try { cap = clean(w.wlCapture()); } catch (e) { return; }
     var kind = dzKind, cols = colorsOf(cap, kind), name = function (h) { try { return (w.WL_THREADS && w.WL_THREADS.name(h)) || h; } catch (e) { return h; } };
     var MET = {}, UV = {}; try { w.WL_THREADS.BRANDS.sfsw.metallic.forEach(function (h) { MET[h.toLowerCase()] = 1; }); w.WL_THREADS.BRANDS.fuji.metallic.forEach(function (h) { UV[h.toLowerCase()] = 1; }); } catch (e) {}
@@ -601,7 +596,7 @@
   function recOf(pr, id) { return pr && pr.recs ? pr.recs[Math.min(recPick[id] || 0, pr.recs.length - 1)] : null; }
   function renderModes() {
     if (!modeEl) return; var id = S.wrapId, pr = presetOf(id), w = wrapNamed(id), ph = wrapPhotos(w), recs = (pr && pr.recs) || [], m = S.wrapMode;
-    modeEl.style.display = pr && !S.performanceOnly ? '' : 'none';
+    modeEl.style.display = pr ? '' : 'none';
     exButtons();
     [].forEach.call(modeEl.querySelectorAll('.rb-mode'), function (b) { b.classList.toggle('selected', b.dataset.m === m); });
     if (dzBox) dzBox.classList.toggle('rb-dz-off', m !== 'build');
@@ -658,7 +653,7 @@
   async function toDesigner(id, restore, prevCols) {
     if (!dz) return; var n = ++applyN;
     var pr = presetOf(id);
-    dzBox.style.display = pr && !S.performanceOnly ? '' : 'none';
+    dzBox.style.display = pr ? '' : 'none';
     if (!pr) return;
     renderModes(); var REC = S.wrapMode === 'example' ? recOf(pr, id) : null;
     var prev = prevCols || designCols(), first = !prev, switched = false;
@@ -733,7 +728,7 @@
     if (!optList) return; var id = S.wrapId, w = wrapNamed(id), pr = presetOf(id), recs = (pr && pr.recs) || [], ph = wrapPhotos(w), n = Math.max(ph.length, recs.length), cur = recPick[id] || 0;
     [].forEach.call(optList.querySelectorAll('.rb-exs'), function (x) { x.remove(); });
     var card = [].find.call(optList.querySelectorAll('.option-item'), function (o) { return (o.getAttribute('onclick') || '').indexOf("'" + id + "'") > 0; });
-    if (card && !S.performanceOnly) {
+    if (card) {
       var box = el('div', 'rb-exs'); box.addEventListener('click', function (e) { e.stopPropagation(); });
       for (var i = 0; i < n; i++) { var b = el('button', i === cur && S.wrapMode === 'example' ? 'on' : '', 'Example ' + (i + 1)); b.type = 'button'; b.dataset.i = i;
         b.onclick = function () { var k = +this.dataset.i; recPick[id] = k; var was = S.wrapMode;
@@ -768,14 +763,11 @@
     PM.forEach(function (x) { W.push({ name: x[0], hex: x[1], group: 'metallic', metallic: true }); });
     FM.forEach(function (x) { W.push({ name: x[0], hex: x[1], group: 'uv-metallic', metallic: true, adder: 10 }); });
     if (S.mainIdx >= W.length) S.mainIdx = 0; S.supportIdxs = (S.supportIdxs || []).filter(function (i) { return i < W.length; }); })();
-  var wasPerf = !!S.performanceOnly;
   function designerAfterUpdate() {
-    if (wasPerf && !S.performanceOnly && dz) setTimeout(function () { toDesigner(S.wrapId); }, 40);   // back from Performance Only
-    wasPerf = !!S.performanceOnly;
     var ab = !presetOf(S.wrapId);   // Abalone (no designer): its thread colors are picked on the page
-    if (colorSec) colorSec.style.display = (S.performanceOnly || ab || !dz) ? '' : 'none';
+    if (colorSec) colorSec.style.display = (ab || !dz) ? '' : 'none';
     if (S.wrapMode === 'random') updTop();
-    if (modeEl) modeEl.style.display = !ab && !S.performanceOnly ? '' : 'none';
+    if (modeEl) modeEl.style.display = !ab ? '' : 'none';
     if (dzNow) { var w = wrapById(S.wrapId); dzNow.textContent = w ? 'Priced as ' + w.name + ' · ' + (w.adder ? '+$' + w.adder : 'Included') : ''; }
     var d = designOn();
     if (d) {   // the summary's colors line: the real threads from the design
@@ -786,7 +778,7 @@
       var cw = $('chosen-rod-wrap'), wn = wrapById(S.wrapId); if (cw && wn) cw.textContent = wn.name;
     }
   }
-  function designOn() { return !S.performanceOnly && S.wrapMode !== 'random' && presetOf(S.wrapId) && S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign : null; }
+  function designOn() { return S.wrapMode !== 'random' && presetOf(S.wrapId) && S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign : null; }
   var metFee = function () { var d = designOn(); if (d) return d.colors.filter(function (c) { return c.uv; }).length * 10;   // Ultra-UV (Fuji) metallics +$10, Pro-Wrap metallics included
     var W = val('WRAP_COLORS') || []; return [S.mainIdx].concat(S.supportIdxs || []).reduce(function (a, i) { return a + (W[i] && W[i].group === 'uv-metallic' ? 10 : 0); }, 0); };
   window.calcUVMetallicFee = function () { return metFee() + lenFee(); };   // (the wrap length rides along here)
@@ -975,8 +967,8 @@
   window.SFSW_blMore = function (id) { blOpen[id] = !blOpen[id]; call('renderBlankCards'); };
   if (typeof _blanks === 'function' && val('BLANKS')) window.renderBlankCards = function () {
     var host = $('blank-cards'); if (!host) return _blanks.apply(this, arguments);
-    var B = val('BLANKS') || [], perf = !!S.performanceOnly, esc = function (t) { return String(t == null ? '' : t); };
-    var price = function (b) { return perf ? '<span class="rb-bl-orig">$' + b.price + '</span>$' + (b.price - 50) : '$' + b.price; };
+    var B = val('BLANKS') || [], esc = function (t) { return String(t == null ? '' : t); };
+    var price = function (b) { return '$' + b.price; };
     var cards = B.map(function (b) {
       var sel = b.id === S.blankId, v = sel ? b.variants[S.variantIdx] : null;
       var tight = (b.madeInUSA ? 1 : 0) + (b.name.length > 16 ? 1 : 0) + (b.name.length > 30 ? 1 : 0);   // fewer description lines when the name or badge takes room
