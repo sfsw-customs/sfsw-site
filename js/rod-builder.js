@@ -82,6 +82,12 @@
     '.rb-dz-note{font-size:12.5px;color:var(--c-muted);margin:4px 0 10px;line-height:1.45}',
     '.rb-dz iframe{display:block;width:100%;min-height:0;border:0;background:transparent}',
     '.rb-on #wrap-preview{display:none!important}',
+    '.rb-modes{margin-top:14px;display:flex;flex-direction:column;gap:8px}.rb-ex-h{font:600 11px var(--font-cond);letter-spacing:.16em;text-transform:uppercase;color:var(--c-muted);margin:4px 0 8px}',
+    '.rb-ex-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px}.rb-ex-none{color:var(--c-muted);font-size:13px;padding:6px 0}',
+    '.rb-exc{flex:0 0 200px;scroll-snap-align:start;display:flex;flex-direction:column;gap:6px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius);padding:6px;color:var(--c-text);font-size:13px;cursor:pointer;text-align:left}',
+    '.rb-exc i{display:block;height:96px;border-radius:5px;background:#15171a center/cover no-repeat}.rb-exc span{padding:0 4px 2px}.rb-exc.on{border-color:var(--c-gold);color:var(--c-gold)}.rb-exc.photo span{color:var(--c-muted)}',
+    '.rb-mode{cursor:pointer}.rb-mode .rb-mode-go{color:var(--c-muted)}.rb-mode.selected .rb-mode-go{color:var(--c-gold)}',
+    '.rb-dz.rb-dz-off{position:absolute!important;left:-99999px!important;top:0;width:900px}',
     '.rb-trim{cursor:pointer}.rb-trim-opts{display:inline-flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:8px;cursor:default;max-width:100%}',
     '.rb-trim-spots{display:flex;gap:8px;flex-wrap:wrap}.rb-trim-spots button{display:flex;align-items:center;gap:7px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:999px;padding:6px 13px;color:var(--c-text);font-size:13px;cursor:pointer}',
     '.rb-trim-spots i{width:14px;height:14px;border-radius:4px;border:1.5px solid var(--c-border2,#555);display:inline-block}.rb-trim-spots button.on{border-color:var(--c-gold);color:var(--c-gold)}.rb-trim-spots button.on i{background:var(--c-gold);border-color:var(--c-gold);box-shadow:inset 0 0 0 2px var(--c-dark3)}',
@@ -199,7 +205,7 @@
       parts: [secOf('sec-seat')] },
     { title: 'Guides', sub: 'Frame, ring material and frame color.', view: 'guides',
       parts: [secOf('sec-guides')] },
-    { title: 'Wrap', sub: 'Pick a wrap, then pick your thread colors. Tap a photo to see it bigger.', view: 'wrap',
+    { title: 'Wrap', sub: 'Pick a wrap style, then start from one of our examples, build your own, or go Random and just pick colors.', view: 'wrap',
       parts: [perfBox, secOf('sec-wrap-color'), secOf('sec-rod-wraps'), secOf('sec-split-wrap')] },
     { title: 'Guide <em>Wraps</em>', tab: 'Guide Wraps', sub: 'How each guide is wrapped onto the blank.', view: 'guides',
       parts: [gwPerf, secOf('sec-guide-wraps')] },
@@ -388,13 +394,13 @@
     var k0 = p.ckF || p.ckS; if (k0) { p.checkType = k0.t; p.check = k0.c; }
     // wraps
     var main = hexOf(S.mainIdx), sup = (S.supportIdxs || []).map(hexOf);
-    var dc = !S.performanceOnly && S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign.colors.map(function (c) { return c.hex; }) : null;
+    var rnd = S.wrapMode === 'random', dc = !S.performanceOnly && !rnd && S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign.colors.map(function (c) { return c.hex; }) : null;
     if (dc) { main = dc[0]; sup = dc.slice(1); }
     p.mainOn = true;
     if (S.performanceOnly) p.main = wrapSpec('trim-bands', main, sup, null, notes, 'rod wrap');
-    else if (S.customDesign && S.customDesign.setup && S.customDesign.sfsw) p.main = { full: S.customDesign.setup, kind: S.customDesign.sfsw };
-    else if (LOOK[(wrapNamed(S.wrapId) || {}).name]) p.main = { full: LOOK[wrapNamed(S.wrapId).name], kind: 'taper' };   // until the designer is up: the wrap's own design
-    else p.main = wrapSpec(S.wrapId, main, sup, S.customDesign, notes, 'rod wrap');
+    else if (!rnd && S.customDesign && S.customDesign.setup && S.customDesign.sfsw) p.main = { full: S.customDesign.setup, kind: S.customDesign.sfsw };
+    else if (!rnd && LOOK[(wrapNamed(S.wrapId) || {}).name]) p.main = { full: LOOK[wrapNamed(S.wrapId).name], kind: 'taper' };   // until the designer is up: the wrap's own design
+    else p.main = wrapSpec(S.wrapId, main, sup, rnd ? null : S.customDesign, notes, 'rod wrap');
     var sw = call('isSplitGrip') ? call('getSplitWrap') : null;
     p.splitOn = !!sw; if (sw) p.split = wrapSpec(sw.id, main, sup, null, notes, 'split wrap');
     p.gw = guideWrapSpec(S.guideWrapId, main, sup, notes);
@@ -459,12 +465,13 @@
   var idByName = function (n) { var w = WRAPS.find(function (x) { return x.name === n; }); return w ? w.id : null; };
   var presetOf = function (id) { var w = wrapById(id); return w ? PRESET[w.name] : null; };
   var wrapSec = $('sec-rod-wraps'), colorSec = secOf('sec-wrap-color'), optList = $('rod-wrap-options');
-  var dzBox = null, dz = null, dzKind = null, dzReady = null, readT = null, lastKind = null, dzSimple = true;
+  var dzBox = null, dz = null, dzKind = null, dzReady = null, readT = null, lastKind = null, dzSimple = true, modeEl = null;
+  if (!S.wrapMode) S.wrapMode = S.customDesign && S.customDesign.sfsw ? 'build' : 'example';
   if (wrapSec && optList && WRAPS.length) {
     optList.insertAdjacentHTML('beforebegin', '<div class="rb-presets-lbl">Our wraps · pick one to start</div>');
     [].forEach.call(wrapSec.querySelectorAll('p'), function (x) { if (/Design Your Own/.test(x.textContent)) x.style.display = 'none'; });   // the old pop-up designer's note
-    dzBox = el('div', 'rb-dz', '<div class="rb-dz-head"><b>Your <em>colors</em></b><span class="rb-dz-now"></span></div>' +
-      '<div class="rb-dz-note">Tap a color to change it. 3 colors included · +$10 each extra color · metallics included · Ultra-UV metallics +$10 each.</div><div class="rb-dz-load">Loading colors…</div>');
+    dzBox = el('div', 'rb-dz', '<div class="rb-dz-head"><b>Wrap <em>Designer</em></b><span class="rb-dz-now"></span></div>' +
+      '<div class="rb-dz-note">Tap a color to change it, set the thread counts, and open Customize more for the pattern and angle. Every change shows on the 3D rod. 3 colors included · +$10 each extra color · metallics included · Ultra-UV metallics +$10 each.</div><div class="rb-dz-load">Loading the designer…</div>');
     dz = el('iframe'); dz.id = 'sfsw-designer'; dz.title = 'Wrap Designer'; dz.setAttribute('scrolling', 'no');
     dzBox.appendChild(dz);
     var moreBtn = el('button', 'rb-more'); moreBtn.type = 'button'; dzBox.appendChild(moreBtn);
@@ -473,7 +480,18 @@
     moreBtn.onclick = function () { dzSimple = !dzSimple; setMore(); setTimeout(fitDz, 60); };
     var fitDz = function () { try { var d = dz.contentDocument, w = d.querySelector('.wrap'); if (w) dz.style.height = Math.ceil(w.getBoundingClientRect().bottom + d.defaultView.scrollY) + 4 + 'px'; } catch (e) {} };
     dz.addEventListener('load', function () { setMore(); try { new dz.contentWindow.ResizeObserver(fitDz).observe(dz.contentDocument.querySelector('.wrap')); } catch (e) {} fitDz(); }); setMore();
-    ($('wrap-abalone-colors') || optList).insertAdjacentElement('afterend', dzBox);
+    // three ways to get a wrap: one of our examples, build your own in the designer, or pick colors and let us lay it out (Random)
+    modeEl = el('div', 'rb-modes');
+    modeEl.innerHTML = '<div class="rb-ex"><div class="rb-ex-h">Examples</div><div class="rb-ex-row"></div></div>' +
+      '<div class="option-item rb-mode" data-m="build"><div class="option-item-body"><span class="option-item-name">Build Your Wrap</span><span class="option-item-desc">Make it your own in the Wrap Designer: colors, thread counts, pattern and angle.</span></div><span class="option-item-price rb-mode-go">Open designer ▾</span></div>' +
+      '<div class="rb-dz-slot"></div>' +
+      '<div class="option-item rb-mode" data-m="random"><div class="option-item-body"><span class="option-item-name">Random</span><span class="option-item-desc">Pick a main color and supporting colors, and we lay out the wrap. Main + 2 supporting included · +$10 each extra supporting color.</span></div><span class="option-item-price rb-mode-go">Pick colors ▾</span></div>' +
+      '<div class="rb-rnd-slot"></div>';
+    ($('wrap-abalone-colors') || optList).insertAdjacentElement('afterend', modeEl);
+    modeEl.querySelector('.rb-dz-slot').appendChild(dzBox);
+    if (colorSec) modeEl.querySelector('.rb-rnd-slot').appendChild(colorSec);
+    [].forEach.call(modeEl.querySelectorAll('.rb-mode'), function (b) { b.onclick = function () { setMode(b.dataset.m === S.wrapMode ? 'example' : b.dataset.m); }; });
+    setTimeout(renderModes, 0);
     addEventListener('message', function (e) { if (dz && e.source === dz.contentWindow && e.data && e.data.wlH) fitDz(); });
   }
   var dw = function () { try { return dz && dz.contentWindow; } catch (e) { return null; } };
@@ -536,7 +554,7 @@
     return best;
   }
   function readDesign() {
-    var w = dw(); if (!w || !w.wlCapture || S.performanceOnly || !presetOf(S.wrapId)) return;
+    var w = dw(); if (!w || !w.wlCapture || S.performanceOnly || !presetOf(S.wrapId) || S.wrapMode === 'random') return;
     var cap; try { cap = clean(w.wlCapture()); } catch (e) { return; }
     var kind = dzKind, cols = colorsOf(cap, kind), name = function (h) { try { return (w.WL_THREADS && w.WL_THREADS.name(h)) || h; } catch (e) { return h; } };
     var MET = {}, UV = {}; try { w.WL_THREADS.BRANDS.sfsw.metallic.forEach(function (h) { MET[h.toLowerCase()] = 1; }); w.WL_THREADS.BRANDS.fuji.metallic.forEach(function (h) { UV[h.toLowerCase()] = 1; }); } catch (e) {}
@@ -560,21 +578,35 @@
     return function (n) { return m[n] || '#1e1617'; }; }
   var recPick = {};   // which photo design each wrap is on
   function recOf(pr, id) { return pr && pr.recs ? pr.recs[Math.min(recPick[id] || 0, pr.recs.length - 1)] : null; }
-  function recRow(id, pr) {   // "Start from a photo": one button per photo design
-    var row = dzBox && dzBox.querySelector('.rb-recs'); if (!dzBox) return;
-    if (!pr || !pr.recs || pr.recs.length < 2) { if (row) row.remove(); return; }
-    if (!row) { row = el('div', 'rb-recs'); dzBox.insertBefore(row, dzBox.querySelector('.rb-dz-note').nextSibling); }
-    var ph = wrapPhotos(wrapNamed(id));
-    row.innerHTML = '<span>Start from a photo</span>' + pr.recs.map(function (r, i) {
-      return '<button type="button" data-i="' + i + '" class="' + ((recPick[id] || 0) === i ? 'on' : '') + '">' + (ph[i] ? '<i style="background-image:url(&quot;' + ph[i] + '&quot;)"></i>' : '') + 'Design ' + (i + 1) + '</button>'; }).join('');
-    [].forEach.call(row.querySelectorAll('button'), function (b) { b.onclick = function () { recPick[id] = +b.dataset.i; toDesigner(id, null, null); }; });
+  function renderModes() {
+    if (!modeEl) return; var id = S.wrapId, pr = presetOf(id), w = wrapNamed(id), ph = wrapPhotos(w), recs = (pr && pr.recs) || [], m = S.wrapMode;
+    modeEl.style.display = pr && !S.performanceOnly ? '' : 'none';
+    var row = modeEl.querySelector('.rb-ex-row'), n = Math.max(ph.length, recs.length);
+    row.innerHTML = n ? Array.apply(null, Array(n)).map(function (_, i) { var has = !!recs[i];
+      return '<button type="button" class="rb-exc' + (has ? '' : ' photo') + (m === 'example' && has && (recPick[id] || 0) === i ? ' on' : '') + '" data-i="' + i + '">' +
+        (ph[i] ? '<i style="background-image:url(&quot;' + ph[i] + '&quot;)"></i>' : '<i></i>') + '<span>' + (has ? 'Example ' + (i + 1) : 'Photo ' + (i + 1)) + '</span></button>'; }).join('')
+      : '<div class="rb-ex-none">Examples for this wrap are coming soon. Build your own below, or go Random.</div>';
+    [].forEach.call(row.querySelectorAll('.rb-exc'), function (b) { b.onclick = function () { var i = +b.dataset.i;
+      if (!recs[i]) return lightbox(w, i);   // photo only for now
+      recPick[id] = i; setMode('example', true); toDesigner(id, null, null); }; });
+    [].forEach.call(modeEl.querySelectorAll('.rb-mode'), function (b) { b.classList.toggle('selected', b.dataset.m === m); });
+    if (dzBox) dzBox.classList.toggle('rb-dz-off', m !== 'build');
+    if (colorSec) colorSec.style.display = m === 'random' ? '' : 'none';
+  }
+  function setMode(m, quiet) {
+    var was = S.wrapMode; S.wrapMode = m;
+    if (m === 'build' && was !== 'build') { dzSimple = false; if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
+    if (m === 'random' && was !== 'random') { S.supportIdxs = (S.supportIdxs || []).slice(0, 2); call('renderSupportingRows'); }   // Random starts at main + 2 supporting
+    renderModes(); if (quiet) return;
+    if (was === 'random' && m !== 'random') { clearTimeout(readT); readT = setTimeout(readDesign, 50); }
+    updateAll();
   }
   async function toDesigner(id, restore, prevCols) {
     if (!dz) return; var n = ++applyN;
     var pr = presetOf(id);
     dzBox.style.display = pr && !S.performanceOnly ? '' : 'none';
     if (!pr) return;
-    recRow(id, pr); var REC = recOf(pr, id);
+    renderModes(); var REC = S.wrapMode === 'example' ? recOf(pr, id) : null;
     var prev = prevCols || designCols(), first = !prev, switched = false;
     switched = !!(lastKind && lastKind !== (restore ? restore.sfsw : pr.k));
     var w = await loadKind(restore ? restore.sfsw : pr.k); if (!w || n !== applyN) return;
@@ -639,8 +671,8 @@
       var th = el('span', 'rb-wth', ph.length > 1 ? '<b>' + ph.length + '</b>' : ''); th.style.backgroundImage = 'url("' + ph[0] + '")'; th.title = 'See photos';
       th.onclick = function (e) { e.stopPropagation(); lightbox(w); }; o.insertBefore(th, o.firstChild); });
   }
-  function lightbox(w) {
-    var ph = wrapPhotos(w), i = 0, box = el('div', 'rb-lb', '<button class="rb-lbx" aria-label="Close">×</button><img alt=""><div class="rb-lbt"></div>' +
+  function lightbox(w, start) {
+    var ph = wrapPhotos(w), i = Math.min(start || 0, Math.max(0, ph.length - 1)), box = el('div', 'rb-lb', '<button class="rb-lbx" aria-label="Close">×</button><img alt=""><div class="rb-lbt"></div>' +
       (ph.length > 1 ? '<button class="rb-lbp" aria-label="Previous photo">‹</button><button class="rb-lbn" aria-label="Next photo">›</button>' : ''));
     var img = box.querySelector('img'), cap = box.querySelector('.rb-lbt');
     var show = function () { img.src = ph[i]; cap.innerHTML = w.name + (ph.length > 1 ? '<span>' + (i + 1) + ' / ' + ph.length + '</span>' : ''); };
@@ -668,8 +700,9 @@
     if (wasPerf && !S.performanceOnly && dz) setTimeout(function () { toDesigner(S.wrapId); }, 40);   // back from Performance Only
     wasPerf = !!S.performanceOnly;
     var ab = !presetOf(S.wrapId);   // Abalone (no designer): its thread colors are picked on the page
-    if (colorSec) colorSec.style.display = (S.performanceOnly || ab || !dz) ? '' : 'none';
-    if (dzBox) dzBox.style.display = !ab && !S.performanceOnly ? '' : 'none';
+    if (colorSec) colorSec.style.display = (S.performanceOnly || ab || !dz || S.wrapMode === 'random') ? '' : 'none';
+    if (colorSec && modeEl) { var slot = modeEl.querySelector('.rb-rnd-slot'); if (ab || S.performanceOnly) { if (colorSec.parentNode === slot) modeEl.insertAdjacentElement('afterend', colorSec); } else if (colorSec.parentNode !== slot) slot.appendChild(colorSec); }
+    if (modeEl) modeEl.style.display = !ab && !S.performanceOnly ? '' : 'none';
     if (dzNow) { var w = wrapById(S.wrapId); dzNow.textContent = w ? 'Priced as ' + w.name + ' · ' + (w.adder ? '+$' + w.adder : 'Included') : ''; }
     var d = designOn();
     if (d) {   // the summary's colors line: the real threads from the design
@@ -680,7 +713,7 @@
       var cw = $('chosen-rod-wrap'), wn = wrapById(S.wrapId); if (cw && wn) cw.textContent = wn.name;
     }
   }
-  function designOn() { return !S.performanceOnly && presetOf(S.wrapId) && S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign : null; }
+  function designOn() { return !S.performanceOnly && S.wrapMode !== 'random' && presetOf(S.wrapId) && S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign : null; }
   var metFee = function () { var d = designOn(); if (d) return d.colors.filter(function (c) { return c.uv; }).length * 10;   // Ultra-UV (Fuji) metallics +$10, Pro-Wrap metallics included
     var W = val('WRAP_COLORS') || []; return [S.mainIdx].concat(S.supportIdxs || []).reduce(function (a, i) { return a + (W[i] && W[i].group === 'uv-metallic' ? 10 : 0); }, 0); };
   window.calcUVMetallicFee = function () { return metFee(); };
