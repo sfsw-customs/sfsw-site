@@ -203,7 +203,7 @@
       parts: [perfBox, secOf('sec-wrap-color'), secOf('sec-rod-wraps'), secOf('sec-split-wrap')] },
     { title: 'Guide <em>Wraps</em>', tab: 'Guide Wraps', sub: 'How each guide is wrapped onto the blank.', view: 'guides',
       parts: [gwPerf, secOf('sec-guide-wraps')] },
-    { title: 'Additions', sub: 'Trim rings, a hook keeper and decals. All optional.', view: 'handle',
+    { title: 'Additions', sub: 'Trim rings, a hook keeper and decals. All optional.', view: 'grips',
       parts: [accCard('acc-trim-options', 'Trim Rings', 'trim'), accCard('acc-hookkeeper-options', 'Hook Keeper', 'hookkeeper'), accCard('acc-decal-count', 'Decals', 'decals')] },
     // the last step: everything picked, the total, Add to Cart
     { title: 'Your <em>Build</em>', tab: 'Your Build', sub: 'Everything you picked, with the total. Tap a step above to change anything.', view: 'all', last: true,
