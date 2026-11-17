@@ -82,7 +82,14 @@
     '.rb-dz-note{font-size:12.5px;color:var(--c-muted);margin:4px 0 10px;line-height:1.45}',
     '.rb-dz iframe{display:block;width:100%;min-height:0;border:0;background:transparent}',
     '.rb-on #wrap-preview{display:none!important}',
-    '.rb-top .rb-wphoto{display:none}.rb-top.rb-wtop .rb-wphoto{display:block}','.rb-wphoto{height:84px;margin:8px 0 2px;border-radius:var(--radius);border:1px solid var(--c-border);background:#0d0f12 center/cover no-repeat;cursor:zoom-in}',
+    '.rb-top .rb-wphoto{display:none}.rb-top.rb-wtop .rb-wphoto{display:block}',
+    '.rb-rbar{display:none;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 2px;padding:8px;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-top.rb-rtop .rb-rbar{display:flex}',
+    '.rb-rs{display:flex;align-items:center;gap:8px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:999px;padding:4px 10px 4px 4px;color:var(--c-text);font-size:13px;cursor:pointer;text-align:left}',
+    '.rb-rs i{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}.rb-rs small{display:block;font:600 9.5px var(--font-cond);letter-spacing:.12em;text-transform:uppercase;color:var(--c-muted)}',
+    '.rb-rs.on{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.25)}.rb-rs b{margin-left:4px;color:var(--c-muted);font-weight:400;padding:0 2px}.rb-rs b:hover{color:#fff}',
+    '.rb-rs.add{padding:8px 14px;border-style:dashed;color:var(--c-muted)}.rb-rs.add small{display:inline;color:var(--c-gold)}.rb-rs-tip{font-size:12px;color:var(--c-muted);margin-left:auto}',
+    '.rb-rnd-note{display:none;font-size:13px;color:var(--c-muted)}.rb-modes.rnd .rb-rnd-note{display:block}.rb-exs button.rb-exm{border-style:dashed}.rb-exs button.rb-exm.on{border-style:solid}','.rb-rpal{margin-top:4px}.rb-rp-h{font:600 11px var(--font-cond);letter-spacing:.14em;text-transform:uppercase;color:var(--c-muted);margin:10px 0 6px}',
+    '.rb-rp{display:flex;flex-wrap:wrap;gap:6px}.rb-rp button{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.18);cursor:pointer;padding:0}.rb-rp button.on{box-shadow:0 0 0 2px var(--c-dark),0 0 0 4px var(--c-gold)}','.rb-wphoto{height:84px;margin:8px 0 2px;border-radius:var(--radius);border:1px solid var(--c-border);background:#0d0f12 center/cover no-repeat;cursor:zoom-in}',
     '.rb-exs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;cursor:default}.rb-exs button{background:var(--c-dark3);border:1px solid var(--c-border);border-radius:999px;padding:4px 12px;color:var(--c-text);font-size:12.5px;cursor:pointer}.rb-exs button.on{border-color:var(--c-gold);color:var(--c-gold)}',
     '.rb-modes{margin-top:14px;display:flex;flex-direction:column;gap:8px}.rb-ex-h{font:600 11px var(--font-cond);letter-spacing:.16em;text-transform:uppercase;color:var(--c-muted);margin:4px 0 8px}',
     '.rb-ex-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px}.rb-ex-none{color:var(--c-muted);font-size:13px;padding:6px 0}',
@@ -283,7 +290,7 @@
       s.tabEl.classList.toggle('done', k < reached && k !== cur || (k < cur)); s.tabEl.setAttribute('aria-selected', k === cur);
     });
     lastView = null; view(STEPS[cur].view);
-    if (wphoto) { if (wphoto.parentNode !== top) top.insertBefore(wphoto, approx); top.classList.toggle('rb-wtop', STEPS[cur].view === 'wrap' && !wphoto.hidden); }
+    updTop();
     if (typeof placeLengths === 'function') { placeLengths(); moreLinks(); }
     if (scroll) { var y = top.getBoundingClientRect().top + scrollY - navH() - 6; if (Math.abs(scrollY - y) > 4) scrollTo({ top: y, behavior: 'smooth' }); }
     if (typeof window.sfswTrack === 'function') { try { window.sfswTrack('rod_builder_step', STEPS[cur].tab || STEPS[cur].title.replace(/<[^>]+>/g, '')); } catch (e) {} }
@@ -490,13 +497,13 @@
     // three ways to get a wrap: one of our examples, build your own in the designer, or pick colors and let us lay it out (Random)
     modeEl = el('div', 'rb-modes');
     modeEl.innerHTML = '' +
-      '<div class="option-item rb-mode" data-m="build"><div class="option-item-body"><span class="option-item-name">Build Your Wrap</span><span class="option-item-desc">Make it your own in the Wrap Designer: colors, thread counts, pattern and angle.</span></div><span class="option-item-price rb-mode-go">Open designer ▾</span></div>' +
+
       '<div class="rb-dz-slot"></div>' +
-      '<div class="option-item rb-mode" data-m="random"><div class="option-item-body"><span class="option-item-name">Random</span><span class="option-item-desc">Pick a main color and supporting colors, and we lay out the wrap. Main + 2 supporting included · +$10 each extra supporting color.</span></div><span class="option-item-price rb-mode-go">Pick colors ▾</span></div>' +
-      '<div class="rb-rnd-slot"></div>';
+      '<div class="rb-rnd-note">Random: pick a main color and supporting colors, and we lay out the wrap. Main + 2 supporting included · +$10 each extra supporting color.</div>' +
+      '<div class="rb-rnd-slot"><div class="rb-rpal"></div></div>';
     ($('wrap-abalone-colors') || optList).insertAdjacentElement('afterend', modeEl);
     modeEl.querySelector('.rb-dz-slot').appendChild(dzBox);
-    if (colorSec) modeEl.querySelector('.rb-rnd-slot').appendChild(colorSec);
+    rndPal = modeEl.querySelector('.rb-rpal'); rndBar = el('div', 'rb-rbar');
     [].forEach.call(modeEl.querySelectorAll('.rb-mode'), function (b) { b.onclick = function () { setMode(b.dataset.m === S.wrapMode ? 'example' : b.dataset.m); }; });
     setTimeout(renderModes, 0);
     addEventListener('message', function (e) { if (dz && e.source === dz.contentWindow && e.data && e.data.wlH) fitDz(); });
@@ -593,7 +600,36 @@
     exButtons();
     [].forEach.call(modeEl.querySelectorAll('.rb-mode'), function (b) { b.classList.toggle('selected', b.dataset.m === m); });
     if (dzBox) dzBox.classList.toggle('rb-dz-off', m !== 'build');
-    if (colorSec) colorSec.style.display = m === 'random' ? '' : 'none';
+    if (colorSec) colorSec.style.display = 'none'; if (rndPal) rndPal.style.display = m === 'random' ? '' : 'none'; modeEl.classList.toggle('rnd', m === 'random'); updTop();
+  }
+  // what floats under the 3D rod on the Wrap step: the example's photo, and in Random the color slots
+  function updTop() {
+    if (typeof top === 'undefined' || !top || !STEPS[cur]) return; var onWrap = STEPS[cur].view === 'wrap', rnd = onWrap && S.wrapMode === 'random' && !!modeEl && modeEl.style.display !== 'none';
+    if (wphoto && wphoto.parentNode !== top) top.insertBefore(wphoto, approx);
+    if (rndBar && rndBar.parentNode !== top) top.insertBefore(rndBar, approx);
+    top.classList.toggle('rb-wtop', onWrap && !!wphoto && !wphoto.hidden && !rnd); top.classList.toggle('rb-rtop', rnd);
+    if (rnd) renderRandom();
+  }
+  // Random: tap a slot in the floating bar (Main, Supporting 1, 2 …), then tap colors below to fill it
+  var rndBar, rndPal, rndSlot = 'main';
+  function rndName(i) { var c = (val('WRAP_COLORS') || [])[i]; return c ? c.name : '—'; }
+  function renderRandom() {
+    var W = val('WRAP_COLORS') || []; if (!rndBar || !W.length) return; var sup = S.supportIdxs || (S.supportIdxs = []), inc = 2, fee = 10;
+    if (rndSlot !== 'main' && !(rndSlot < sup.length)) rndSlot = 'main';
+    var slot = function (k, i, label) { var c = W[i] || {}, on = rndSlot === k;
+      return '<button type="button" class="rb-rs' + (on ? ' on' : '') + '" data-k="' + k + '"><i style="background:' + (c.hex || '#333') + '"></i><span><small>' + label + '</small>' + (c.name || '—') + '</span>' +
+        (k !== 'main' ? '<b data-x="' + k + '" title="Remove">×</b>' : '') + '</button>'; };
+    rndBar.innerHTML = slot('main', S.mainIdx, 'Main') + sup.map(function (i, k) { return slot(k, i, 'Supporting ' + (k + 1) + (k >= inc ? ' · +$' + fee : '')); }).join('') +
+      '<button type="button" class="rb-rs add">+ Add supporting color' + (sup.length >= inc ? ' <small>+$' + fee + '</small>' : '') + '</button>' +
+      '<span class="rb-rs-tip">Tap a slot, then tap a color below</span>';
+    [].forEach.call(rndBar.querySelectorAll('.rb-rs'), function (b) { b.onclick = function (e) {
+      var x = e.target.closest('[data-x]'); if (x) { sup.splice(+x.dataset.x, 1); rndSlot = 'main'; call('renderSupportingRows'); updateAll(); return; }
+      if (b.classList.contains('add')) { sup.push(S.mainIdx === 1 ? 0 : 1); rndSlot = sup.length - 1; call('renderSupportingRows'); updateAll(); return; }
+      rndSlot = b.dataset.k === 'main' ? 'main' : +b.dataset.k; renderRandom(); }; });
+    var cur2 = rndSlot === 'main' ? S.mainIdx : sup[rndSlot], groups = [['', 'Colors'], ['metallic', 'Metallic'], ['uv-metallic', 'Ultra-UV Metallic · +$10']];
+    rndPal.innerHTML = groups.map(function (g) { var items = W.map(function (c, i) { return [c, i]; }).filter(function (x) { return (x[0].group || '') === g[0]; }); if (!items.length) return '';
+      return '<div class="rb-rp-h">' + g[1] + '</div><div class="rb-rp">' + items.map(function (x) { return '<button type="button" class="' + (x[1] === cur2 ? 'on' : '') + '" data-i="' + x[1] + '" title="' + x[0].name + '" style="background:' + x[0].hex + '"></button>'; }).join('') + '</div>'; }).join('');
+    [].forEach.call(rndPal.querySelectorAll('.rb-rp button'), function (b) { b.onclick = function () { var i = +b.dataset.i; if (rndSlot === 'main') S.mainIdx = i; else sup[rndSlot] = i; call('renderSupportingRows'); updateAll(); }; });
   }
   function setMode(m, quiet) {
     var was = S.wrapMode; S.wrapMode = m;
@@ -669,6 +705,7 @@
       if (!optList.querySelector('.rb-wgrp')) o.insertAdjacentHTML('beforebegin', '<div class="rb-wgrp">Included</div>');
       if (w.adder && !upg) { upg = true; o.insertAdjacentHTML('beforebegin', '<div class="rb-wgrp">Upgrades</div>'); }
       if (!w.adder) { var pr = o.querySelector('.option-item-price'); if (pr) pr.style.display = 'none'; }   // the group already says Included
+      return;   // photos show in the slot above the list
       var ph = wrapPhotos(w); if (!ph.length || o.querySelector('.rb-wth')) return;
       var th = el('span', 'rb-wth', ph.length > 1 ? '<b>' + ph.length + '</b>' : ''); th.style.backgroundImage = 'url("' + ph[0] + '")'; th.title = 'See photos';
       th.onclick = function (e) { e.stopPropagation(); lightbox(w); }; o.insertBefore(th, o.firstChild); });
@@ -679,14 +716,16 @@
     if (!optList) return; var id = S.wrapId, w = wrapNamed(id), pr = presetOf(id), recs = (pr && pr.recs) || [], ph = wrapPhotos(w), n = Math.max(ph.length, recs.length), cur = recPick[id] || 0;
     [].forEach.call(optList.querySelectorAll('.rb-exs'), function (x) { x.remove(); });
     var card = [].find.call(optList.querySelectorAll('.option-item'), function (o) { return (o.getAttribute('onclick') || '').indexOf("'" + id + "'") > 0; });
-    if (card && n > 1 && !S.performanceOnly) {
+    if (card && !S.performanceOnly) {
       var box = el('div', 'rb-exs'); box.addEventListener('click', function (e) { e.stopPropagation(); });
-      for (var i = 0; i < n; i++) { var b = el('button', (i === cur && S.wrapMode === 'example') || (i === cur && !recs.length) ? 'on' : '', 'Example ' + (i + 1)); b.type = 'button'; b.dataset.i = i;
-        b.onclick = function () { var k = +this.dataset.i; recPick[id] = k;
-          if (recs[k]) { setMode('example', true); toDesigner(id, null, null); } else { exButtons(); } }; box.appendChild(b); }
+      for (var i = 0; i < n; i++) { var b = el('button', i === cur && S.wrapMode === 'example' ? 'on' : '', 'Example ' + (i + 1)); b.type = 'button'; b.dataset.i = i;
+        b.onclick = function () { var k = +this.dataset.i; recPick[id] = k; var was = S.wrapMode;
+          if (recs[k]) { setMode('example', true); toDesigner(id, null, null); } else { setMode('example', was === 'example'); exButtons(); } }; box.appendChild(b); }
+      [['build', 'Customize'], ['random', 'Random']].forEach(function (x) { var b = el('button', 'rb-exm' + (S.wrapMode === x[0] ? ' on' : ''), x[1]); b.type = 'button';
+        b.onclick = function () { setMode(S.wrapMode === x[0] ? 'example' : x[0]); exButtons(); }; box.appendChild(b); });
       (card.querySelector('.option-item-body') || card).appendChild(box);
     }
-    if (wphoto) { var src = ph[Math.min(cur, ph.length - 1)]; wphoto.hidden = !src; if (top && wphoto.parentNode === top) top.classList.toggle('rb-wtop', !!src && $('rb-step-wrap-on') === null && [].some.call(document.querySelectorAll('.rb-step.on'), function (x) { return x.contains(optList); })); if (src) { wphoto.style.backgroundImage = 'url("' + src + '")'; wphoto.onclick = function () { lightbox(w, Math.min(cur, ph.length - 1)); }; } }
+    if (wphoto) { var src = ph[Math.min(cur, ph.length - 1)]; wphoto.hidden = !src; if (src) { wphoto.style.backgroundImage = 'url("' + src + '")'; wphoto.onclick = function () { lightbox(w, Math.min(cur, ph.length - 1)); }; } updTop(); }
   }
   function lightbox(w, start) {
     var ph = wrapPhotos(w), i = Math.min(start || 0, Math.max(0, ph.length - 1)), box = el('div', 'rb-lb', '<button class="rb-lbx" aria-label="Close">×</button><img alt=""><div class="rb-lbt"></div>' +
@@ -717,8 +756,8 @@
     if (wasPerf && !S.performanceOnly && dz) setTimeout(function () { toDesigner(S.wrapId); }, 40);   // back from Performance Only
     wasPerf = !!S.performanceOnly;
     var ab = !presetOf(S.wrapId);   // Abalone (no designer): its thread colors are picked on the page
-    if (colorSec) colorSec.style.display = (S.performanceOnly || ab || !dz || S.wrapMode === 'random') ? '' : 'none';
-    if (colorSec && modeEl) { var slot = modeEl.querySelector('.rb-rnd-slot'); if (ab || S.performanceOnly) { if (colorSec.parentNode === slot) modeEl.insertAdjacentElement('afterend', colorSec); } else if (colorSec.parentNode !== slot) slot.appendChild(colorSec); }
+    if (colorSec) colorSec.style.display = (S.performanceOnly || ab || !dz) ? '' : 'none';
+    if (S.wrapMode === 'random') updTop();
     if (modeEl) modeEl.style.display = !ab && !S.performanceOnly ? '' : 'none';
     if (dzNow) { var w = wrapById(S.wrapId); dzNow.textContent = w ? 'Priced as ' + w.name + ' · ' + (w.adder ? '+$' + w.adder : 'Included') : ''; }
     var d = designOn();
