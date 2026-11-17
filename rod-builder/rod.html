@@ -1647,8 +1647,9 @@ function corkCanvas(rings, len) {
   x.imageSmoothingQuality = 'high';
   let u = 0; rings.forEach((r, n) => { const zm = 1;
     if (isEva(r.m)) {   // EVA ring: the same smooth foam as the EVA grips
-      const id = r.m.slice(4), w = r.t * ppi; x.drawImage(evaCanvas(id, evaRingImg[id], r.t), u, 0, w, H);
-      x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(u + w - 1, 0, 1.5, H); u += w; return; }
+      // SFSW: one continuous pattern along the whole grip; each EVA ring shows its own stretch of it, with no seam to the next EVA ring
+      const id = r.m.slice(4), w = r.t * ppi, full = evaCanvas(id, evaRingImg[id], len), k2 = full.width / W; x.drawImage(full, u * k2, 0, w * k2, full.height, u, 0, w, H);
+      const nx = rings[n + 1]; if (nx && !isEva(nx.m)) { x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(u + w - 1, 0, 1.5, H); } u += w; return; }
     const w = r.t * ppi, im = corkImg[r.m === 'sandwich' ? 'rubber' : r.m], sw = Math.min(im.width, w / k * zm), th = im.height * k / zm;
     // each ring starts at its own place along the strip, so neighbouring rings of the same cork don't match
     // every repeat around the ring takes a different window of the photo strip, so the grain never repeats in a row
@@ -1688,7 +1689,7 @@ function stripPaint(cv, rings, len, ppi) {
   [[0, 'rgba(0,0,0,.55)'], [0.1, 'rgba(0,0,0,.18)'], [0.28, 'rgba(255,255,255,.22)'], [0.4, 'rgba(255,255,255,.06)'], [0.7, 'rgba(0,0,0,.12)'], [0.92, 'rgba(0,0,0,.42)'], [1, 'rgba(0,0,0,.65)']].forEach(([o, c]) => g.addColorStop(o, c));
   x.fillStyle = g; x.fillRect(0, 0, W, H);
   // glue line between rings
-  let u = 0; rings.forEach(r => { u += r.t * ppi * dpr; x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(Math.round(u) - 1, 0, 1, H); });
+  let u = 0; rings.forEach(r => { u += r.t * ppi * dpr; x.fillStyle = 'rgba(0,0,0,.2)'; x.fillRect(Math.round(u) - 1, 0, 1, H); });   // SFSW: faint ring marks, so the pattern reads as one piece
 }
 function corkStrip() {
   if ($('corkBox').hidden) return;
