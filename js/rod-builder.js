@@ -82,6 +82,9 @@
     '.rb-dz-note{font-size:12.5px;color:var(--c-muted);margin:4px 0 10px;line-height:1.45}',
     '.rb-dz iframe{display:block;width:100%;min-height:0;border:0;background:transparent}',
     '.rb-on #wrap-preview{display:none!important}',
+    '.rb-on .seat-preview{display:none!important}',
+    '.rb-seat-opts{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-top:10px;cursor:default}',
+    '.rb-seat-opts:empty{display:none}.rb-seat-opts .seat-color-block{text-align:left;min-width:0;margin:0}.rb-seat-opts .seat-swatch-row{justify-content:flex-start}.rb-seat-opts .seat-color-name{margin-top:4px}',
     '.rb-recs{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 10px}.rb-recs span{font:600 11px var(--font-cond);letter-spacing:.14em;text-transform:uppercase;color:var(--c-muted);margin-right:4px}',
     '.rb-recs button{display:flex;align-items:center;gap:8px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius);padding:5px 12px 5px 5px;color:var(--c-text);font-size:13px;cursor:pointer}',
     '.rb-recs button.on{border-color:var(--c-gold);color:var(--c-gold)}.rb-recs i{width:54px;height:32px;border-radius:4px;background:#15171a center/cover no-repeat}',
@@ -915,14 +918,23 @@
         '<div class="option-item-body"><span class="option-item-name">' + it.name + '</span>' + (it.desc ? '<span class="option-item-desc">' + it.desc + '</span>' : '') + '</div>' +
         '<span class="option-item-price">' + (it.adder === 0 ? 'Included' : '+$' + it.adder) + '</span></div>';
     }).join('');
+    placeSeatOpts();
   };
+  // the picked seat's colors (and soft-touch option) sit inside that seat's own card
+  var seatOpts = null;
+  function placeSeatOpts() {
+    var card = document.querySelector('#seat-options .option-item.selected'); if (!card) return;
+    if (!seatOpts) { seatOpts = el('div', 'rb-seat-opts'); seatOpts.addEventListener('click', function (e) { e.stopPropagation(); });
+      [$('seat-color-block'), $('seat-softtouch-wrap')].forEach(function (x) { if (x) seatOpts.appendChild(x); }); }
+    var home = card.querySelector('.option-item-body') || card; if (seatOpts.parentNode !== home) home.appendChild(seatOpts);
+  }
   // the picked seat's picture follows its color
   var _seatPrev = window.renderSeatPreview;
   if (typeof _seatPrev === 'function') window.renderSeatPreview = function () {
     var r = _seatPrev.apply(this, arguments);
     var t = document.querySelector('.rb-seat-thumb[data-seat="' + S.seatId + '"] img'), src = call('seatPhotoSrc');
     if (t && src && t.getAttribute('src') !== src) { t.parentNode.style.visibility = ''; t.src = src; }
-    return r;
+    placeSeatOpts(); return r;
   };
   call('renderSeats');
 
