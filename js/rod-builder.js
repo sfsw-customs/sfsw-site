@@ -129,6 +129,7 @@
     '.rb-seg button:last-child{border-right:0}.rb-seg button[aria-pressed="true"]{background:var(--c-gold);color:#0a0e12}',
     '.rb-seg.rb-big button{padding:9px 16px}',
     '.rb-rg-tabs{display:flex;align-items:center;gap:12px;flex-wrap:wrap}',
+    '.rb-rg-stripbox{flex:1 1 380px;min-width:0}.rb-rg-stripbox .rb-rg-row{margin-top:6px}.rb-rg-top + .rb-rg-lbl{margin-top:12px}.rb-rings button.on{outline:2px solid var(--c-gold);outline-offset:-2px;z-index:2;position:relative}',
     '.rb-rg-top{display:flex;align-items:center;gap:10px 22px;flex-wrap:wrap}.rb-rg-sz{display:flex;align-items:center;gap:10px;color:var(--c-muted);font-size:14px}',
     '.rb-tp{font-family:var(--font-body,inherit);text-transform:none;letter-spacing:0;font-weight:600;font-size:11.5px;color:var(--c-gold-light);margin-left:6px}',
     '.rb-seg button[aria-pressed="true"] .rb-tp{color:#0a0e12}',
@@ -832,11 +833,11 @@
   }
   function rgBuild() {
     rgEl = el('div', 'rb-rg');
-    rgEl.innerHTML = '<div class="rb-rg-lbl">Grip to design</div><div class="rb-rg-top"><div class="rb-seg rb-big" data-k="piece"></div><div class="rb-rg-sz">Ring size <div class="rb-seg" data-k="size"><button type="button" data-v="0.25">0.25 in</button><button type="button" data-v="0.5">0.5 in</button></div></div></div>' +
-      '<div class="rb-rg-lbl"><span class="rb-rg-kind"></span>: <b class="rb-rg-name"></b></div><div class="rb-rg-tabs"><div class="rb-seg" data-k="tab"><button type="button" data-v="cork">Cork <span class="rb-tp">+$2.50 per 0.5 in added</span></button><button type="button" data-v="eva">EVA <span class="rb-tp">+$10 per color</span></button></div><span class="rb-rg-price"></span></div>' +
-      '<div class="rb-chips"></div>' +
-      '<div class="rb-rg-lbl"><b class="rb-rg-now"></b> · tap a ring to give it this material and size</div><div class="rb-strip"></div>' +
-      '<div class="rb-rg-row"><button type="button" class="rb-mini" data-a="fill">Fill this grip</button><button type="button" class="rb-mini" data-a="add">Add ring</button><button type="button" class="rb-mini" data-a="del">Remove last ring</button><span class="rb-rg-len"></span></div>';
+    rgEl.innerHTML = '<div class="rb-rg-lbl">Grip to design</div><div class="rb-rg-top"><div class="rb-seg rb-big" data-k="piece"></div><div class="rb-rg-sz">Ring size <div class="rb-seg" data-k="size"><button type="button" data-v="0.25">0.25 in</button><button type="button" data-v="0.5">0.5 in</button></div></div>' +
+      '<div class="rb-rg-stripbox"><div class="rb-rg-lbl"><b class="rb-rg-now"></b> · <span class="rb-rg-hint"></span></div><div class="rb-strip"></div>' +
+      '<div class="rb-rg-row"><button type="button" class="rb-mini" data-a="add">Add ring</button><button type="button" class="rb-mini" data-a="del">Remove last ring</button><span class="rb-rg-len"></span></div></div></div>' +
+'<div class="rb-rg-lbl"><span class="rb-rg-kind"></span>: <b class="rb-rg-name"></b></div><div class="rb-rg-tabs"><div class="rb-seg" data-k="tab"><button type="button" data-v="cork">Cork <span class="rb-tp">+$2.50 per 0.5 in added</span></button><button type="button" data-v="eva">EVA <span class="rb-tp">+$10 per color</span></button></div><span class="rb-rg-price"></span></div>' +
+      '<div class="rb-chips"></div>';
     rgEl.addEventListener('click', function (e) {
       e.stopPropagation();
       var b = e.target.closest('button'); if (!b) return;
@@ -844,19 +845,20 @@
       var cur = function () { return (G.g[rgUi.piece] || []).map(function (r) { return { m: r.m, t: r.t }; }); };
       var set = function (r) { G.g[rgUi.piece] = r; changed(); };
       if (seg) { var k = seg.dataset.k, v = b.dataset.v;
-        if (k === 'piece') rgUi.piece = v; else if (k === 'tab') rgUi.tab = v; else if (k === 'size') rgUi.t = +v;
+        if (k === 'piece') { rgUi.piece = v; rgUi.sel = null; } else if (k === 'tab') rgUi.tab = v; else if (k === 'size') rgUi.t = +v;
         return rgRender(); }
-      if (b.dataset.m) { rgUi.m = b.dataset.m; return rgRender(); }
-      if (b.dataset.i != null) {   // painting a ring keeps the grip's length, like WrapLab
-        var r = cur(), i = +b.dataset.i, old = r[i], t = rgUi.t;
+      if (b.dataset.i != null) { var ti = +b.dataset.i; rgUi.sel = rgUi.sel === ti ? null : ti; return rgRender(); }   // pick a ring (tap again: back to the whole grip)
+      if (b.dataset.m) { rgUi.m = b.dataset.m;
+        if (rgUi.sel == null) return set(cur().map(function (x) { return { m: rgUi.m, t: x.t }; }));   // no ring picked: the whole grip takes the color
+        // a ring picked: just that ring takes the color (and the ring size), keeping the grip's length
+        var r = cur(), i = Math.min(rgUi.sel, r.length - 1), old = r[i], t = rgUi.t;
         if (t < old.t) r.splice(i, 1, { m: rgUi.m, t: t }, { m: old.m, t: old.t - t });
         else if (t > old.t && r[i + 1]) { r[i] = { m: rgUi.m, t: t }; var nx = r[i + 1]; if (nx.t > t - old.t) nx.t -= t - old.t; else r.splice(i + 1, 1); }
         else r[i] = { m: rgUi.m, t: old.t };
         return set(r); }
       var a = b.dataset.a;
-      if (a === 'fill') set(cur().map(function (x) { return { m: rgUi.m, t: x.t }; }));
       if (a === 'add') { var r2 = cur(); if (rgLen(r2) + rgUi.t <= rgMax(rgUi.piece) + 1e-6) { r2.push({ m: rgUi.m, t: rgUi.t }); set(r2); } }
-      if (a === 'del') { var r3 = cur(); if (r3.length > 1) { r3.pop(); set(r3); } }
+      if (a === 'del') { var r3 = cur(); if (r3.length > 1) { r3.pop(); if (rgUi.sel != null && rgUi.sel >= r3.length) rgUi.sel = null; set(r3); } }
     });
     function changed() { rgRender(); call('renderGripPreview'); updateAll(); }
   }
@@ -865,7 +867,7 @@
     var wrap = el('div', 'rb-rings' + (rgReal ? '' : ' flat')); wrap.style.width = Math.round(len * ppi) + 'px'; if (h) wrap.style.height = h + 'px';
     if (rgReal && rod && rod.paintRings) { var cv = document.createElement('canvas'); wrap.appendChild(cv); try { rod.paintRings(cv, rings, ppi); } catch (e) {} }
     rings.forEach(function (r, i) { var b = el('button', null, ''); b.type = 'button'; b.dataset.i = i; b.title = rgName(r.m) + ', ' + r.t + ' in';
-      b.style.width = (r.t * ppi) + 'px'; if (!rgReal) b.style.backgroundImage = 'url("' + rgChip(r.m) + '")'; wrap.appendChild(b); });
+      b.style.width = (r.t * ppi) + 'px'; if (rgUi.sel === i) b.className = 'on'; if (!rgReal) b.style.backgroundImage = 'url("' + rgChip(r.m) + '")'; wrap.appendChild(b); });
     host.appendChild(wrap);
   }
   function rgRender() {
@@ -887,6 +889,7 @@
     rgPaint(strip, rings, strip.clientWidth || 600);
     var name = (rgKeys().find(function (k) { return k[0] === rgUi.piece; }) || ['', 'Grip'])[1];
     rgEl.querySelector('.rb-rg-now').textContent = name + ' · ' + rgLen(rings).toFixed(2) + ' in';
+    rgEl.querySelector('.rb-rg-hint').textContent = rgUi.sel == null ? 'a color fills the whole grip · tap a ring to color just that one' : 'ring ' + (rgUi.sel + 1) + ' picked · tap a color for it · tap the ring again for the whole grip';
     rgEl.querySelector('.rb-rg-len').textContent = rings.length + ' rings · ' + rgLen(rings).toFixed(2) + ' in' + (rgUi.piece === 'full' ? ' (set for this rod)' : ' · up to ' + rgMax(rgUi.piece).toFixed(2) + ' in');
     [].forEach.call(rgEl.querySelectorAll('.rb-mini[data-a="add"],.rb-mini[data-a="del"]'), function (b) { b.style.display = rgUi.piece === 'full' ? 'none' : ''; });
     var x = rgExtra(), xs = rgEl.querySelector('.rb-rg-extra'); if (!xs) { xs = el('div', 'rb-rg-lbl rb-rg-extra'); rgEl.appendChild(xs); }
