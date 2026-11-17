@@ -82,6 +82,9 @@
     '.rb-dz-note{font-size:12.5px;color:var(--c-muted);margin:4px 0 10px;line-height:1.45}',
     '.rb-dz iframe{display:block;width:100%;min-height:0;border:0;background:transparent}',
     '.rb-on #wrap-preview{display:none!important}',
+    '.rb-recs{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 10px}.rb-recs span{font:600 11px var(--font-cond);letter-spacing:.14em;text-transform:uppercase;color:var(--c-muted);margin-right:4px}',
+    '.rb-recs button{display:flex;align-items:center;gap:8px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius);padding:5px 12px 5px 5px;color:var(--c-text);font-size:13px;cursor:pointer}',
+    '.rb-recs button.on{border-color:var(--c-gold);color:var(--c-gold)}.rb-recs i{width:54px;height:32px;border-radius:4px;background:#15171a center/cover no-repeat}',
     '.rb-on .thread-photo-preview-wrap{display:none!important}',
     '.rb-wgrp{font:600 11px var(--font-cond);letter-spacing:.16em;text-transform:uppercase;color:var(--c-muted);margin:6px 0 -2px!important}',
     '.rb-on #rod-wrap-options .option-item{align-items:center;gap:10px;padding:7px 10px 7px 7px}',
@@ -426,10 +429,14 @@
   // and into the build; the price is the wrap style the design matches.
   var BASE = CFG.engine.replace(/[^\/]*$/, '');
   var PRESET = {
-    'Diamond — 2 Axis': { k: 'taper', p: 'diamond', a: 2, rec: {   // the first photo's design
-      trim: '484 Deep Sea',   // the first stripe is the center
-      stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 4], ['9860 Metallic Silver', 4], ['841 Iron Ore', 4], ['484 Deep Sea', 6], ['862S Metallic Twist Black/Silver', 2],
-        ['484 Deep Sea', 3], ['841 Iron Ore', 3], ['484 Deep Sea', 4], ['9860 Metallic Silver', 2], ['862 Twilight Black', 1]] } }, 'Chevron — 2 Axis': { k: 'taper', p: 'chevron', a: 2 },
+    'Diamond — 2 Axis': { k: 'taper', p: 'diamond', a: 2, recs: [   // one design per photo, in photo order; the first stripe is the center
+      { trim: '484 Deep Sea',
+        stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 4], ['9860 Metallic Silver', 4], ['841 Iron Ore', 4], ['484 Deep Sea', 6], ['862S Metallic Twist Black/Silver', 2],
+          ['484 Deep Sea', 3], ['841 Iron Ore', 3], ['484 Deep Sea', 4], ['9860 Metallic Silver', 2], ['862 Twilight Black', 1]] },
+      { trim: '484 Deep Sea',
+        stripes: [['9520 Metallic Green', 1], ['862 Twilight Black', 4], ['9520 Metallic Green', 3], ['807 White', 2], ['513 Guacamole', 6], ['807 White', 2],
+          ['9520 Metallic Green', 2], ['862 Twilight Black', 2], ['9520 Metallic Green', 1], ['862 Twilight Black', 2], ['9520 Metallic Green', 2], ['807 White', 2],
+          ['819 Ghost Grey', 6], ['807 White', 2]] } ] }, 'Chevron — 2 Axis': { k: 'taper', p: 'chevron', a: 2 },
     'Dragon Scale': { k: 'taper', p: 'dragon', a: 8 }, 'Chevron — 4 Axis': { k: 'taper', p: 'chevron', a: 4 },
     'Diamond — 4 Axis': { k: 'taper', p: 'diamond', a: 4 }, '4 Axis Decorative Chevron or Diamond': { k: 'taper', p: 'diamond', a: 4 },
     '8 Axis Wrap': { k: 'taper', p: 'diamond', a: 8 }, '16 Axis Wrap': { k: 'taper', p: 'diamond', a: 16 },
@@ -540,11 +547,23 @@
   var designCols = function () { return S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign.colors.map(function (c) { return c.hex; }) : null; };
   function threadHex(w) { var m = {}; try { w.WL_THREADS.BRANDS.sfsw.groups.forEach(function (g) { g[1].forEach(function (x) { m[x[0]] = x[1]; }); }); } catch (e) {}
     return function (n) { return m[n] || '#1e1617'; }; }
+  var recPick = {};   // which photo design each wrap is on
+  function recOf(pr, id) { return pr && pr.recs ? pr.recs[Math.min(recPick[id] || 0, pr.recs.length - 1)] : null; }
+  function recRow(id, pr) {   // "Start from a photo": one button per photo design
+    var row = dzBox && dzBox.querySelector('.rb-recs'); if (!dzBox) return;
+    if (!pr || !pr.recs || pr.recs.length < 2) { if (row) row.remove(); return; }
+    if (!row) { row = el('div', 'rb-recs'); dzBox.insertBefore(row, dzBox.querySelector('.rb-dz-note').nextSibling); }
+    var ph = wrapPhotos(wrapNamed(id));
+    row.innerHTML = '<span>Start from a photo</span>' + pr.recs.map(function (r, i) {
+      return '<button type="button" data-i="' + i + '" class="' + ((recPick[id] || 0) === i ? 'on' : '') + '">' + (ph[i] ? '<i style="background-image:url(&quot;' + ph[i] + '&quot;)"></i>' : '') + 'Design ' + (i + 1) + '</button>'; }).join('');
+    [].forEach.call(row.querySelectorAll('button'), function (b) { b.onclick = function () { recPick[id] = +b.dataset.i; toDesigner(id, null, null); }; });
+  }
   async function toDesigner(id, restore, prevCols) {
     if (!dz) return; var n = ++applyN;
     var pr = presetOf(id);
     dzBox.style.display = pr && !S.performanceOnly ? '' : 'none';
     if (!pr) return;
+    recRow(id, pr); var REC = recOf(pr, id);
     var prev = prevCols || designCols(), first = !prev, switched = false;
     switched = !!(lastKind && lastKind !== (restore ? restore.sfsw : pr.k));
     var w = await loadKind(restore ? restore.sfsw : pr.k); if (!w || n !== applyN) return;
@@ -554,8 +573,8 @@
     var WS = (window.SFSW_BUILDER || {}).wrap;   // this rod type's wrap: length (in) and butt / tip diameters (mm)
     if (WS && !restore) { cap.unit = 'in'; cap.len = (+WS.len).toFixed(2); cap.dB = (+WS.dB).toFixed(1); cap.dT = (+WS.dT).toFixed(1); cap.dM = ((+WS.dB + +WS.dT) / 2).toFixed(1); }
     if (!restore && dzKind === 'cross') noCustom(w);
-    if (!restore && pr.rec) { var hx0 = threadHex(w);   // the wrap's own design goes in first, so nothing else ever shows
-      cap.stripes = pr.rec.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(pr.rec.trim || pr.rec.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } }
+    if (!restore && REC) { var hx0 = threadHex(w);   // the wrap's own design goes in first, so nothing else ever shows
+      cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } }
     else if (!restore && !prev && dzKind === 'taper') { cap.stripes = JSON.parse(JSON.stringify(START.stripes)); if (cap.trims) { cap.trims.c = START.trim; cap.trims.bands = []; cap.trims.ends = []; } }
     if (!restore) snap(w, cap);
     try { w.wlApply(cap); } catch (e) {}
@@ -579,8 +598,8 @@
       if (n !== applyN) return;
       var cols = prev || START.stripes.map(function (x) { return x.c; });
       var c2 = w.wlCapture();
-      if (pr.rec) {   // this wrap's own recipe (the design in its photo)
-        var hx = threadHex(w), R = pr.rec;
+      if (REC) {   // this wrap's own recipe (the design in its photo)
+        var hx = threadHex(w), R = REC;
         c2.stripes = R.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; });
         if (c2.trims) { c2.trims.c = hx(R.trim || R.stripes[0][0]); c2.trims.bands = []; c2.trims.ends = []; }
       } else if (dzKind === 'cross' || switched || first) { (c2.stripes || []).forEach(function (x, i) { x.c = cols[i % cols.length]; }); if (c2.trims) { c2.trims.c = cols[0]; c2.trims.bands = []; c2.trims.ends = []; } }
