@@ -749,7 +749,7 @@ async function build() {
       mat.map = dimpleTex; mat.bumpMap = dimpleTex; mat.bumpScale = 6; mat.needsUpdate = true; }
     const m = tag(grp, 's-grip'); m.position.x = x0; if (sc) m.scale.y = m.scale.z = sc;   /* SFSW: as wide as the grip it sits against */ if (dir < 0) { m.scale.x = -1; m.traverse(o => { if (o.material) o.material.side = THREE.DoubleSide; }); } g.add(m); };
   if (st.chkFore) { wcheck(x - 0.02, 1, ckF); x += ckLen - 0.02; }
-  if (st.style === 'split' && st.chkSplit && L.split && L.split[1] - L.split[0] > 0.6) { wcheck(L.split[0] - 0.02, 1, ckS, D * 0.5 / 0.335); wcheck(L.split[1] + 0.02, -1, ckS, D * 0.49 / 0.335); }
+  if (st.style === 'split' && st.chkSplit && L.split && L.split[1] - L.split[0] > 0.6) { wcheck(L.split[0] - 0.02, 1, ckS, D * 0.36 / 0.335); wcheck(L.split[1] + 0.02, -1, ckS, D * 0.35 / 0.335);   /* SFSW: a little under the grip's width */ }
   L.handle1 = x;
   const bEnd = RL(), blank = tag(new THREE.Mesh(AXIS(new THREE.CylinderGeometry(blankR(bEnd), blankR(L.buttStart + 0.3), bEnd - L.buttStart - 0.3, 48, 1)), blankMat), 's-blank');
   blank.position.x = (bEnd + L.buttStart + 0.3) / 2; g.add(blank);
