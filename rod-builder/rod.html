@@ -758,7 +758,7 @@ async function build() {
     const m = tag(sleeve(at, at + lenIn, 0.011, wrapMat(r.canvas)), 's-wrap'); if (flip) { m.material.map.wrapS = THREE.RepeatWrapping; m.material.map.repeat.x = -1; } m.material.map.wrapT = THREE.RepeatWrapping; m.material.map.offset.y = window.__sfswWrapTurn != null ? window.__sfswWrapTurn : 0.32;   /* SFSW: a diamond faces the viewer, like the designer */ g.add(m); return [at, at + lenIn]; };
   // with a trim band, the butt-side trim fills the space from the wrap down to the foregrip
   if (window.__sfswHoldMain === undefined) window.__sfswHoldMain = !!window.frameElement;   // SFSW: inside the site, wait for the page's wrap before drawing one
-  L.wrap = st.mainOn && !GRIP && !window.__sfswHoldMain ? putWrap('main', x + (unrolled.main && unrolled.main.trimMM ? 0.02 : 0.6)) : null;
+  L.wrap = st.mainOn && !GRIP && !window.__sfswHoldMain ? putWrap('main', st.chkFore && unrolled.main && unrolled.main.trimMM ? x - 0.01 :   /* SFSW: the trim band butts right up to the trim ring */ x + (unrolled.main && unrolled.main.trimMM ? 0.02 : 0.6)) : null;
   if (!L.wrap) L.wrap = [x + 0.6, x + 4.6];
   // split wrap: centered in the gap between the rear grips, never longer than the gap (an eighth of an inch clear at each end)
   L.splitNote = '';
