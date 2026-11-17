@@ -82,6 +82,8 @@
     '.rb-dz-note{font-size:12.5px;color:var(--c-muted);margin:4px 0 10px;line-height:1.45}',
     '.rb-dz iframe{display:block;width:100%;min-height:0;border:0;background:transparent}',
     '.rb-on #wrap-preview{display:none!important}',
+    '.rb-wphoto{height:120px;margin:4px 0 14px;border-radius:var(--radius);border:1px solid var(--c-border);background:#0d0f12 center/cover no-repeat;cursor:zoom-in}',
+    '.rb-exs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;cursor:default}.rb-exs button{background:var(--c-dark3);border:1px solid var(--c-border);border-radius:999px;padding:4px 12px;color:var(--c-text);font-size:12.5px;cursor:pointer}.rb-exs button.on{border-color:var(--c-gold);color:var(--c-gold)}',
     '.rb-modes{margin-top:14px;display:flex;flex-direction:column;gap:8px}.rb-ex-h{font:600 11px var(--font-cond);letter-spacing:.16em;text-transform:uppercase;color:var(--c-muted);margin:4px 0 8px}',
     '.rb-ex-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px}.rb-ex-none{color:var(--c-muted);font-size:13px;padding:6px 0}',
     '.rb-exc{flex:0 0 200px;scroll-snap-align:start;display:flex;flex-direction:column;gap:6px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius);padding:6px;color:var(--c-text);font-size:13px;cursor:pointer;text-align:left}',
@@ -465,9 +467,10 @@
   var idByName = function (n) { var w = WRAPS.find(function (x) { return x.name === n; }); return w ? w.id : null; };
   var presetOf = function (id) { var w = wrapById(id); return w ? PRESET[w.name] : null; };
   var wrapSec = $('sec-rod-wraps'), colorSec = secOf('sec-wrap-color'), optList = $('rod-wrap-options');
-  var dzBox = null, dz = null, dzKind = null, dzReady = null, readT = null, lastKind = null, dzSimple = true, modeEl = null;
+  var dzBox = null, dz = null, dzKind = null, dzReady = null, readT = null, lastKind = null, dzSimple = true, modeEl = null, wphoto = null;
   if (!S.wrapMode) S.wrapMode = S.customDesign && S.customDesign.sfsw ? 'build' : 'example';
   if (wrapSec && optList && WRAPS.length) {
+    wphoto = el('div', 'rb-wphoto'); wphoto.title = 'See it bigger'; wphoto.hidden = true; optList.insertAdjacentElement('beforebegin', wphoto);
     optList.insertAdjacentHTML('beforebegin', '<div class="rb-presets-lbl">Our wraps · pick one to start</div>');
     [].forEach.call(wrapSec.querySelectorAll('p'), function (x) { if (/Design Your Own/.test(x.textContent)) x.style.display = 'none'; });   // the old pop-up designer's note
     dzBox = el('div', 'rb-dz', '<div class="rb-dz-head"><b>Wrap <em>Designer</em></b><span class="rb-dz-now"></span></div>' +
@@ -482,7 +485,7 @@
     dz.addEventListener('load', function () { setMore(); try { new dz.contentWindow.ResizeObserver(fitDz).observe(dz.contentDocument.querySelector('.wrap')); } catch (e) {} fitDz(); }); setMore();
     // three ways to get a wrap: one of our examples, build your own in the designer, or pick colors and let us lay it out (Random)
     modeEl = el('div', 'rb-modes');
-    modeEl.innerHTML = '<div class="rb-ex"><div class="rb-ex-h">Examples</div><div class="rb-ex-row"></div></div>' +
+    modeEl.innerHTML = '' +
       '<div class="option-item rb-mode" data-m="build"><div class="option-item-body"><span class="option-item-name">Build Your Wrap</span><span class="option-item-desc">Make it your own in the Wrap Designer: colors, thread counts, pattern and angle.</span></div><span class="option-item-price rb-mode-go">Open designer ▾</span></div>' +
       '<div class="rb-dz-slot"></div>' +
       '<div class="option-item rb-mode" data-m="random"><div class="option-item-body"><span class="option-item-name">Random</span><span class="option-item-desc">Pick a main color and supporting colors, and we lay out the wrap. Main + 2 supporting included · +$10 each extra supporting color.</span></div><span class="option-item-price rb-mode-go">Pick colors ▾</span></div>' +
@@ -581,14 +584,7 @@
   function renderModes() {
     if (!modeEl) return; var id = S.wrapId, pr = presetOf(id), w = wrapNamed(id), ph = wrapPhotos(w), recs = (pr && pr.recs) || [], m = S.wrapMode;
     modeEl.style.display = pr && !S.performanceOnly ? '' : 'none';
-    var row = modeEl.querySelector('.rb-ex-row'), n = Math.max(ph.length, recs.length);
-    row.innerHTML = n ? Array.apply(null, Array(n)).map(function (_, i) { var has = !!recs[i];
-      return '<button type="button" class="rb-exc' + (has ? '' : ' photo') + (m === 'example' && has && (recPick[id] || 0) === i ? ' on' : '') + '" data-i="' + i + '">' +
-        (ph[i] ? '<i style="background-image:url(&quot;' + ph[i] + '&quot;)"></i>' : '<i></i>') + '<span>' + (has ? 'Example ' + (i + 1) : 'Photo ' + (i + 1)) + '</span></button>'; }).join('')
-      : '<div class="rb-ex-none">Examples for this wrap are coming soon. Build your own below, or go Random.</div>';
-    [].forEach.call(row.querySelectorAll('.rb-exc'), function (b) { b.onclick = function () { var i = +b.dataset.i;
-      if (!recs[i]) return lightbox(w, i);   // photo only for now
-      recPick[id] = i; setMode('example', true); toDesigner(id, null, null); }; });
+    exButtons();
     [].forEach.call(modeEl.querySelectorAll('.rb-mode'), function (b) { b.classList.toggle('selected', b.dataset.m === m); });
     if (dzBox) dzBox.classList.toggle('rb-dz-off', m !== 'build');
     if (colorSec) colorSec.style.display = m === 'random' ? '' : 'none';
@@ -670,6 +666,21 @@
       var ph = wrapPhotos(w); if (!ph.length || o.querySelector('.rb-wth')) return;
       var th = el('span', 'rb-wth', ph.length > 1 ? '<b>' + ph.length + '</b>' : ''); th.style.backgroundImage = 'url("' + ph[0] + '")'; th.title = 'See photos';
       th.onclick = function (e) { e.stopPropagation(); lightbox(w); }; o.insertBefore(th, o.firstChild); });
+    exButtons();
+  }
+  // the picked wrap's examples (Example 1, 2, 3 … one per photo) sit in its own card; the photo slot above the list shows the one picked
+  function exButtons() {
+    if (!optList) return; var id = S.wrapId, w = wrapNamed(id), pr = presetOf(id), recs = (pr && pr.recs) || [], ph = wrapPhotos(w), n = Math.max(ph.length, recs.length), cur = recPick[id] || 0;
+    [].forEach.call(optList.querySelectorAll('.rb-exs'), function (x) { x.remove(); });
+    var card = [].find.call(optList.querySelectorAll('.option-item'), function (o) { return (o.getAttribute('onclick') || '').indexOf("'" + id + "'") > 0; });
+    if (card && n > 1 && !S.performanceOnly) {
+      var box = el('div', 'rb-exs'); box.addEventListener('click', function (e) { e.stopPropagation(); });
+      for (var i = 0; i < n; i++) { var b = el('button', (i === cur && S.wrapMode === 'example') || (i === cur && !recs.length) ? 'on' : '', 'Example ' + (i + 1)); b.type = 'button'; b.dataset.i = i;
+        b.onclick = function () { var k = +this.dataset.i; recPick[id] = k;
+          if (recs[k]) { setMode('example', true); toDesigner(id, null, null); } else { exButtons(); } }; box.appendChild(b); }
+      (card.querySelector('.option-item-body') || card).appendChild(box);
+    }
+    if (wphoto) { var src = ph[Math.min(cur, ph.length - 1)]; wphoto.hidden = !src; if (src) { wphoto.style.backgroundImage = 'url("' + src + '")'; wphoto.onclick = function () { lightbox(w, Math.min(cur, ph.length - 1)); }; } }
   }
   function lightbox(w, start) {
     var ph = wrapPhotos(w), i = Math.min(start || 0, Math.max(0, ph.length - 1)), box = el('div', 'rb-lb', '<button class="rb-lbx" aria-label="Close">×</button><img alt=""><div class="rb-lbt"></div>' +
