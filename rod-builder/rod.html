@@ -306,8 +306,8 @@ html,body{height:100%;overflow:hidden;background:#0a0e12}
     <label class="lbl savedPick dPick" for="dSaved">Use a saved build<select id="dSaved"></select></label></header>
   <div class="frames">
     <iframe id="f-main" src="taper.html" title="Wrap Designer for the wrap"></iframe>
-    <iframe id="f-split" src="taper.html" title="Wrap Designer for the split wrap"></iframe>
-    <iframe id="f-guide" src="guide.html" title="Guide Wrap Designer"></iframe>
+    <iframe id="f-split" data-src="taper.html" title="Wrap Designer for the split wrap"></iframe>
+    <iframe id="f-guide" data-src="guide.html" title="Guide Wrap Designer"></iframe>
   </div>
 </div>
 
@@ -539,7 +539,8 @@ async function crossFrame(k) {
   return f;
 }
 const ready = {};
-const whenReady = (k, test) => ready[k] || (ready[k] = new Promise(res => { const tick = () => { try { const w = F[k].contentWindow; if (w && test(w)) return res(w); } catch (e) {} setTimeout(tick, 120); }; tick(); }));
+const sfswStart = k => { const f = F[k]; if (!f || f.__go || !f.dataset.src) return; f.__go = 1; const go = () => { f.src = f.dataset.src; }; if (k === 'main') go(); else { const t0 = Date.now(), w8 = () => { if (window.__sfswHoldMain === false || Date.now() - t0 > 8000) go(); else setTimeout(w8, 150); }; w8(); } };   // SFSW: the main wrap engine first, the others after it (the split one only when asked for)
+const whenReady = (k, test) => ready[k] || (sfswStart(k), ready[k] = new Promise(res => { const tick = () => { try { const w = F[k].contentWindow; if (w && test(w)) return res(w); } catch (e) {} setTimeout(tick, 120); }; tick(); }));
 const taperReady = k => whenReady(k, w => w.WL_unrolled && w.__wlRod);
 const guideReady = () => whenReady('guide', w => w.WL_guideWrap);
 function setField(w, id, v) { const el = w.document.getElementById(id); if (!el) return; el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }
@@ -1863,9 +1864,11 @@ resize(); render(); requestAnimationFrame(loop);
 // pull the starting designs in once the designers have loaded
 const sfswBoot = (async () => {
   if (crossOnly()) for (const k of ['main', 'split']) { src[k] = 'cross'; await crossFrame(k); }
-  await fitTaper('main', 16, 4); await readWrap('main'); build();
+  await fitTaper('main', 16, 4); if (!window.frameElement) await readWrap('main'); build();   /* SFSW: inside the site the page sends the wrap, so don't paint the starter one */
+  window.__sfswLater = (async () => {   // SFSW: the rod is ready once the main wrap is; the split and guide wraps follow
   await fitTaper('split', 6, L.split ? Math.max(0.5, Math.round((L.split[1] - L.split[0] - 0.25) * 4) / 4) : 2.5); await readWrap('split');
   await readGuideWraps(); build();
+  })();
 })();
 
 // ---------- SFSW: the builder page around this frame sets the rod ----------

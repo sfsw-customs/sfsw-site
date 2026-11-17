@@ -684,8 +684,11 @@
     return it;
   };
   // start: the design from the cart (Edit), or the wrap already picked
-  if (dz) setTimeout(function () {
-    if (S.customDesign && S.customDesign.setup && S.customDesign.sfsw) toDesigner(S.wrapId, S.customDesign); else toDesigner(S.wrapId); }, 0);
+  // the colors section loads once the 3D rod has its wrap, so the rod gets the computer to itself first (at most 10 s)
+  if (dz) (function () { var t0 = Date.now(), go = function () {
+      if (S.customDesign && S.customDesign.setup && S.customDesign.sfsw) toDesigner(S.wrapId, S.customDesign); else toDesigner(S.wrapId); };
+    (function wait() { var f = stage && stage.querySelector('iframe'), inn = false; try { inn = f && f.contentWindow.__sfswHoldMain === false; } catch (e) {}
+      if (inn || !f || Date.now() - t0 > 10000) go(); else setTimeout(wait, 150); })(); })();
 
 
   // ───────────────────────── Custom grips: ring by ring ─────────────────────────
