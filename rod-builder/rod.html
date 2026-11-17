@@ -716,6 +716,8 @@ async function build() {
   }
   const seat = tag(seatModel || new THREE.Mesh(seatGeo, photoMat(photoTex(seatI), 0.35)), 's-seat');
   if ((seatModel && !seatModel.userData.noFlip) || (!seatModel && sd.flip)) { seat.scale.x = -Math.abs(seat.scale.x); seat.position.x = seatX + seatLen; if (!seatModel) seat.material.side = THREE.DoubleSide; } else seat.position.x = seatX;
+  const sfswTurn = { 'alps-vtg': Math.PI, 'alps-mvt': Math.PI, 'alps-triangle': Math.PI, 'alps-tri': Math.PI, 'at-alum': -Math.PI / 2, 'at-alum-spin': -Math.PI / 2 }[sd.id];   // SFSW: each seat turned to face the way it sits on the rod
+  if (sfswTurn) seat.rotation.x = sfswTurn;
   g.add(seat); x = seatX + seatLen - 0.15;
   if (sd.lock && st.lockOn) {   // one knurled aluminum ring, on the threads just behind the seat's nut
     // find where the threads end and the nut starts: the radius along the seat's butt end, in 0.04 in steps
