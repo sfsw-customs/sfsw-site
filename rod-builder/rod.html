@@ -347,8 +347,8 @@ const SEATS = {
     {id:'fuji-deluxe',name:'Fuji Deluxe',colors:['Silver','Grey'],lock:true},
     {id:'fuji-tvs',name:'Fuji TVS',p:1.8,lock:true},
     {id:'alps-vtg',name:'ALPS VTG',p:1.25,model:'alpsVtg',lock:true},
-    {id:'at-alum-spin',name:'AT Aluminum Spin',colors:['Silver','Black','Blue','Gunmetal','Red'],model:'alpsAlum'},   // SFSW: the clean 3D aluminum seat, no photo or logo
-    {id:'at-alum',name:'AT Aluminum',colors:C_ATALUM,model:'alpsAlum'},
+    {id:'at-alum-spin',name:'AT Aluminum Spin',colors:['Silver','Black','Blue','Gunmetal','Red'],model:'atSpin'},   // SFSW: the clean 3D aluminum seat, no photo or logo
+    {id:'at-alum',name:'AT Aluminum',colors:C_ATALUM,model:'atAlum'},
     {id:'alps-mvt',name:'ALPS MVT',colors:['Black','Silver','Blue','Purple','Red','Gold'],p:1.8,model:'alpsMvt'},
     {id:'alps-alum',name:'ALPS Aluminum',colors:C_ALPSALUM,model:'alpsAlum'},
     {id:'alps-triangle',name:'ALPS Triangle',colors:['Black','Blue','Silver','Gunmetal','Gold','Orange','SeaFoam'],model:'alpsTriangle'},
@@ -684,7 +684,7 @@ async function build() {
     const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.8, bumpMap: softBump(len), bumpScale: 0.3, side: THREE.DoubleSide });
     return tag(new THREE.Mesh(geo, mat), 's-grip'); };
   // seat at its distance from the butt; the rear grip(s) fill toward it from the butt cap
-  const seatModel = sd.model === 'alpsTriangle' ? alpsTriangleSeat(st.seatCol[sd.id], false) : sd.model === 'alpsTriangleIns' ? alpsTriangleSeat(st.seatCol[sd.id], true) : sd.model === 'alpsAlum' ? alpsTriangleSeat(st.seatCol[sd.id], false, true) : sd.model === 'alpsTrigger' ? alpsTriggerSeat(st.seatCol[sd.id]) : sd.model === 'atTrigger' ? alpsTriggerSeat(st.seatCol[sd.id], true) : sd.model === 'alpsMvt' ? alpsMvtSeat(st.seatCol[sd.id]) : sd.model === 'alpsVtg' ? alpsVtgSeat() : sd.model === 'fujiDT' ? fujiDTSeat(st.seatCol[sd.id]) : null;
+  const seatModel = sd.model === 'alpsTriangle' ? alpsTriangleSeat(st.seatCol[sd.id], false) : sd.model === 'alpsTriangleIns' ? alpsTriangleSeat(st.seatCol[sd.id], true) : sd.model === 'alpsAlum' ? alpsTriangleSeat(st.seatCol[sd.id], false, true) : sd.model === 'alpsTrigger' ? alpsTriggerSeat(st.seatCol[sd.id]) : sd.model === 'atTrigger' ? alpsTriggerSeat(st.seatCol[sd.id], true) : sd.model === 'alpsMvt' ? alpsMvtSeat(st.seatCol[sd.id]) : sd.model === 'atSpin' ? atSpinSeat(st.seatCol[sd.id]) : sd.model === 'atAlum' ? atAlumSeat(st.seatCol[sd.id]) : sd.model === 'alpsVtg' ? alpsVtgSeat() : sd.model === 'fujiDT' ? fujiDTSeat(st.seatCol[sd.id]) : null;
   // most seats are about 5.5 in long: every seat is set to that length (models are stretched to it, photos turned at it)
   const SEAT_LEN = 5.5;
   // the 3D seats are built hood-first from the butt; on Brett's rods the nuts and threads face the butt, so they're turned around
@@ -814,6 +814,57 @@ function faceted(prof, flats, mat, seg = 96) {
 // two lock nuts (hex on the Triangle, knurled on the INS) with a black O-ring, then the long threads into the fore grip.
 // The INS body is perforated on the two lower faces, showing the dark core; the flat reel-foot face stays solid.
 let knurlTex = null;
+// SFSW: AT Aluminum Spin, from Brett's side photo: a fixed hood, a body with the reel-foot channel scooped out of its top,
+// threads, the moving hood, a ridged lock nut and threads running into the fore grip. Same metal as the other aluminum seats.
+function atSpinSeat(col) {
+  const grp = new THREE.Group(), hex = MC[col] || '#c8ccd1', matte = col === 'Black';
+  const m = new THREE.MeshStandardMaterial({ color: hex, metalness: matte ? 0.45 : 0.92, roughness: matte ? 0.38 : 0.16 });
+  const sm = (a, b, t) => { t = Math.min(1, Math.max(0, (t - a) / (b - a))); return t * t * (3 - 2 * t); };
+  // a turned part, then optionally carved on top: carve(x, th) returns how far in (inches) to push the surface there
+  const part = (pts, x0, carve, seg = 96) => {
+    const g = AXIS(new THREE.LatheGeometry(pts.map(([x, r]) => new THREE.Vector2(r, x)), seg));
+    if (carve) { const pa = g.attributes.position, v = new THREE.Vector3();
+      for (let i = 0; i < pa.count; i++) { v.fromBufferAttribute(pa, i); const r = Math.hypot(v.y, v.z); if (r < 0.05) continue;
+        const d = carve(v.x, Math.atan2(v.z, v.y)); if (d > 0) { const k = Math.max(0.05, r - d) / r; pa.setY(i, v.y * k); pa.setZ(i, v.z * k); } }
+      g.computeVertexNormals(); }
+    const me = new THREE.Mesh(g, m); me.position.x = x0; grp.add(me); };
+  const top = th => sm(1.25, 0.55, Math.abs(th));   // 1 straight up, easing to 0 about 70 degrees around
+  const threads = (len, r) => { const p = [[0, 0], [0, r - 0.02]]; for (let i = 0; i * 0.055 + 0.055 < len; i++) p.push([0.02 + i * 0.055, r + 0.015], [0.045 + i * 0.055, r - 0.02]); p.push([len, r - 0.02], [len, 0]); return p; };
+  let x = 0;
+  // fixed hood: a cup open on top where the reel foot slides in
+  part([[0, 0], [0, 0.44], [0.04, 0.5], [0.5, 0.52], [0.6, 0.5], [0.62, 0.46], [0.62, 0]], x, (px, th) => 0.2 * top(th) * sm(0.62, 0.3, px)); x += 0.6;
+  // body: full round underneath, the reel-foot channel scooped out of the top, deepest at the hood and rising out near the threads
+  const bodyLen = 1.95;
+  part([[0, 0], [0, 0.47], [bodyLen - 0.35, 0.46], [bodyLen - 0.1, 0.43], [bodyLen, 0.41], [bodyLen, 0]], x, (px, th) => 0.17 * top(th) * sm(bodyLen - 0.2, bodyLen - 0.75, px)); x += bodyLen;
+  part(threads(0.72, 0.39), x); x += 0.72;
+  // moving hood: the same cup facing the other way
+  part([[0, 0], [0, 0.46], [0.02, 0.5], [0.12, 0.52], [0.56, 0.5], [0.6, 0.44], [0.6, 0]], x, (px, th) => 0.2 * top(th) * sm(0.3, 0.0, px)); x += 0.6;
+  // lock nut: ridged ring
+  const nut = [[0, 0], [0, 0.45]]; for (let i = 0; i < 10; i++) nut.push([0.03 + i * 0.07, 0.48], [0.06 + i * 0.07, 0.45]); nut.push([0.72, 0.45], [0.72, 0]);
+  part(nut, x); x += 0.72;
+  part(threads(0.75, 0.39), x); x += 0.75;
+  grp.userData.len = x - 0.2;
+  return grp;
+}
+// SFSW: AT Aluminum, from Brett's photo: flat, straight-sided hoods (not tapered like the ALPS), a straight body,
+// short threads, a moving hood, two faceted lock nuts and threads into the fore grip.
+function atAlumSeat(col) {
+  const grp = new THREE.Group(), hex = MC[col] || '#c8ccd1', matte = col === 'Black';
+  const m = new THREE.MeshStandardMaterial({ color: hex, metalness: matte ? 0.5 : 0.92, roughness: matte ? 0.35 : 0.16 });
+  const lat = (pts, x0, seg = 96, rot = 0) => { const me = new THREE.Mesh(AXIS(new THREE.LatheGeometry(pts.map(([x, r]) => new THREE.Vector2(r, x)), seg)), m); me.position.x = x0; me.rotation.x = rot; grp.add(me); };
+  const can = (len, r, c = 0.015) => [[0, 0], [0, r - c], [c, r], [len - c, r], [len, r - c], [len, 0]];
+  const threads = (len, r) => { const p = [[0, 0], [0, r - 0.02]]; for (let i = 0; i * 0.055 + 0.055 < len; i++) p.push([0.02 + i * 0.055, r + 0.015], [0.045 + i * 0.055, r - 0.02]); p.push([len, r - 0.02], [len, 0]); return p; };
+  let x = 0;
+  lat(can(0.8, 0.51), x); x += 0.8;            // fixed hood
+  lat(can(2.35, 0.44, 0.01), x); x += 2.35;    // body
+  lat(threads(0.16, 0.4), x); x += 0.16;
+  lat(can(0.77, 0.51), x); x += 0.77;          // moving hood
+  lat(can(0.37, 0.535, 0.03), x, 12, Math.PI / 12); x += 0.38;   // lock nuts: faceted
+  lat(can(0.35, 0.535, 0.03), x, 12); x += 0.36;
+  lat(threads(0.45, 0.42), x); x += 0.45;
+  grp.userData.len = x - 0.2;
+  return grp;
+}
 function alpsTriangleSeat(col, ins, round) {
   const grp = new THREE.Group(), hex = MC[col] || '#888', matte = col === 'Black';
   const m = new THREE.MeshStandardMaterial({ color: hex, metalness: matte ? 0.45 : 0.9, roughness: matte ? 0.4 : 0.2 });
