@@ -129,6 +129,7 @@
     '.rb-seg button:last-child{border-right:0}.rb-seg button[aria-pressed="true"]{background:var(--c-gold);color:#0a0e12}',
     '.rb-seg.rb-big button{padding:9px 16px}',
     '.rb-rg-tabs{display:flex;align-items:center;gap:12px;flex-wrap:wrap}',
+    '.rb-rg-top{display:flex;align-items:center;gap:10px 22px;flex-wrap:wrap}.rb-rg-sz{display:flex;align-items:center;gap:10px;color:var(--c-muted);font-size:14px}',
     '.rb-tp{font-family:var(--font-body,inherit);text-transform:none;letter-spacing:0;font-weight:600;font-size:11.5px;color:var(--c-gold-light);margin-left:6px}',
     '.rb-seg button[aria-pressed="true"] .rb-tp{color:#0a0e12}',
     '.rb-rg-price{font-size:13px;color:var(--c-text)}.rb-rg-price b{color:var(--c-gold);font-weight:700}',
@@ -831,10 +832,9 @@
   }
   function rgBuild() {
     rgEl = el('div', 'rb-rg');
-    rgEl.innerHTML = '<div class="rb-rg-lbl">Grip to design</div><div class="rb-seg rb-big" data-k="piece"></div>' +
+    rgEl.innerHTML = '<div class="rb-rg-lbl">Grip to design</div><div class="rb-rg-top"><div class="rb-seg rb-big" data-k="piece"></div><div class="rb-rg-sz">Ring size <div class="rb-seg" data-k="size"><button type="button" data-v="0.25">0.25 in</button><button type="button" data-v="0.5">0.5 in</button></div></div></div>' +
       '<div class="rb-rg-lbl"><span class="rb-rg-kind"></span>: <b class="rb-rg-name"></b></div><div class="rb-rg-tabs"><div class="rb-seg" data-k="tab"><button type="button" data-v="cork">Cork <span class="rb-tp">+$2.50 per 0.5 in added</span></button><button type="button" data-v="eva">EVA <span class="rb-tp">+$10 per color</span></button></div><span class="rb-rg-price"></span></div>' +
       '<div class="rb-chips"></div>' +
-      '<div class="rb-rg-row">Ring size <div class="rb-seg" data-k="size"><button type="button" data-v="0.25">0.25 in</button><button type="button" data-v="0.5">0.5 in</button></div></div>' +
       '<div class="rb-rg-lbl"><b class="rb-rg-now"></b> · tap a ring to give it this material and size</div><div class="rb-strip"></div>' +
       '<div class="rb-rg-row"><button type="button" class="rb-mini" data-a="fill">Fill this grip</button><button type="button" class="rb-mini" data-a="add">Add ring</button><button type="button" class="rb-mini" data-a="del">Remove last ring</button><span class="rb-rg-len"></span></div>';
     rgEl.addEventListener('click', function (e) {
@@ -875,7 +875,7 @@
     var evaOnly = RG_KIND[S.gripId] === 'eva';   // custom EVA grips are EVA rings only; custom cork grips can mix in EVA
     if (evaOnly) { rgUi.tab = 'eva'; if (!rgIsEva(rgUi.m)) rgUi.m = 'eva:black'; }
     seg('tab').style.display = evaOnly ? 'none' : '';
-    rgEl.querySelector('.rb-rg-price').innerHTML = evaOnly ? '<b>+$10</b> for each color after the first · any length, no extra cost'
+    rgEl.querySelector('.rb-rg-price').innerHTML = evaOnly ? '<b>+$10</b> for each additional color'
       : (rgUi.tab === 'eva' ? '<b>+$10</b> for each EVA color in the grip' : '<b>+$2.50</b> for every 0.5 in added past 2.5 in' + (S.gripRings && S.gripRings.g.full ? ' (fore grip)' : ''));
     [].forEach.call(seg('tab').children, function (b) { b.setAttribute('aria-pressed', b.dataset.v === rgUi.tab); });
     [].forEach.call(seg('size').children, function (b) { b.setAttribute('aria-pressed', +b.dataset.v === rgUi.t); });
@@ -963,7 +963,8 @@
 
   // ───────────────────────── Blanks: square cards ─────────────────────────
   // The blanks sit in a grid of square cards; the picked blank's lengths and powers open underneath the grid.
-  var _blanks = window.renderBlankCards, blOpen = {};
+  var _blanks = window.renderBlankCards, blOpen = {}, blShow = false;
+  window.SFSW_blPick = function (id) { if (id === S.blankId && blShow) { blShow = false; call('renderBlankCards'); return; } blShow = true; if (id === S.blankId) call('renderBlankCards'); else call('pickBlank', id); };
   window.SFSW_blMore = function (id) { blOpen[id] = !blOpen[id]; call('renderBlankCards'); };
   if (typeof _blanks === 'function' && val('BLANKS')) window.renderBlankCards = function () {
     var host = $('blank-cards'); if (!host) return _blanks.apply(this, arguments);
@@ -972,7 +973,7 @@
     var cards = B.map(function (b) {
       var sel = b.id === S.blankId, v = sel ? b.variants[S.variantIdx] : null;
       var tight = (b.madeInUSA ? 1 : 0) + (b.name.length > 16 ? 1 : 0) + (b.name.length > 30 ? 1 : 0);   // fewer description lines when the name or badge takes room
-      return '<div role="button" tabindex="0" class="rb-bl rb-t' + tight + (sel ? ' selected' : '') + (blOpen[b.id] ? ' open' : '') + '" data-id="' + b.id + '" onclick="pickBlank(\'' + b.id + '\')">' +
+      return '<div role="button" tabindex="0" class="rb-bl rb-t' + tight + (sel ? ' selected' : '') + (blOpen[b.id] ? ' open' : '') + '" data-id="' + b.id + '" onclick="SFSW_blPick(\'' + b.id + '\')">' +
         '<span class="rb-bl-name">' + esc(b.name) + '</span>' +
         (b.madeInUSA ? '<span class="rb-bl-usa">★ Made in USA</span>' : '') +
         (b.desc ? '<span class="rb-bl-desc">' + esc(b.desc) + '</span><button type="button" class="rb-bl-more" onclick="event.stopPropagation();SFSW_blMore(\'' + b.id + '\')">' + (blOpen[b.id] ? 'Show less' : 'Read more') + '</button>' : '') +
@@ -980,7 +981,7 @@
         '<span class="rb-bl-price">' + price(b) + '</span></span></div>';
     }).join('');
     var sb = B.find(function (b) { return b.id === S.blankId; }), rows = '';
-    if (sb) rows = '<div class="rb-bl-var"><div class="rb-bl-var-h">' + esc(sb.name) + ' · pick the length and power</div>' +
+    if (sb && blShow) rows = '<div class="rb-bl-var"><div class="rb-bl-var-h">' + esc(sb.name) + ' · pick the length and power</div>' +
       '<table class="variant-table"><thead><tr><th class="radio-th"></th><th>Length / Line WT</th><th>Lure WT</th><th>Blank WT</th></tr></thead><tbody>' +
       sb.variants.map(function (v, i) { var c = i === S.variantIdx;
         return '<tr class="variant-row ' + (c ? 'checked' : '') + '" onclick="pickVariant(\'' + sb.id + '\',' + i + ',' + (v.adder || 0) + ')"><td class="radio-cell"><span class="radio-dot"></span></td>' +
