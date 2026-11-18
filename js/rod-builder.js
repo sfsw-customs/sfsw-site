@@ -293,7 +293,7 @@
       s.panel.classList.toggle('on', k === cur); s.tabEl.classList.toggle('on', k === cur);
       s.tabEl.classList.toggle('done', k < reached && k !== cur || (k < cur)); s.tabEl.setAttribute('aria-selected', k === cur);
     });
-    lastView = null; view(STEPS[cur].view); if (tbEl) setTimeout(renderTB, 0);
+    lastView = null; view(STEPS[cur].view, true); if (tbEl) setTimeout(renderTB, 0);
     updTop();
     if (typeof placeLengths === 'function') { placeLengths(); moreLinks(); }
     if (scroll) { var y = top.getBoundingClientRect().top + scrollY - navH() - 6; if (Math.abs(scrollY - y) > 4) scrollTo({ top: y, behavior: 'smooth' }); }
@@ -312,7 +312,8 @@
   // ───────────────────────── the 3D rod ─────────────────────────
   var frame = el('iframe'); frame.title = '3D preview of the rod you are building'; frame.src = CFG.engine; stage.insertBefore(frame, stage.firstChild);
   var rod = null, lastView = null, lastSent = '';
-  function view(v) { if (!v || v === lastView) return; lastView = v; if (rod) rod.view(v); }
+  var stepAt = 0;
+  function view(v, step) { if (!v || (v === lastView && !step)) return; lastView = v; if (step) stepAt = Date.now(); if (rod) rod.view(v, !!step); }
   var poll = setInterval(function () {
     try { var w = frame.contentWindow; if (w && w.SFSW_rod) { rod = w.SFSW_rod; clearInterval(poll); clearTimeout(giveUp); lastSent = ''; sync(); var v = lastView; lastView = null; rod.ready.then(function () { setTimeout(function () { view(v || STEPS[cur].view); }, 300); }); } } catch (e) {}
   }, 200);
@@ -433,7 +434,7 @@
       if (s.notes.length) approx.innerHTML = '<b>3D preview:</b> ' + s.notes.join(', ') + (s.notes.length > 1 ? ' are' : ' is') + ' a close match in your colors. See the photos for the real thing.';
       if (!rod) return;
       var key = JSON.stringify(s.p); if (key === lastSent) return; lastSent = key;
-      rod.set(s.p);
+      var r0 = rod.set(s.p); if (r0 && r0.then && Date.now() - stepAt < 4000) r0.then(function () { if (rod && lastView) rod.view(lastView, true); });
     }, 90);
   }
 
