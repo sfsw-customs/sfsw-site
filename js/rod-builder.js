@@ -434,8 +434,8 @@
   // every pick on the page ends in updateAll(): follow it
   var _update = window.updateAll;
   window.updateAll = function () {
-    try {   // heat shrink only goes on foam (EVA) grips: hidden, and taken off the build, for cork grips
-      var foam = (call('getGrip') || {}).mat === 'eva', hs = document.querySelector('.rb-acc[data-rb="heatshrink"]');
+    try {   // heat shrink only goes on the foam split and full grips: hidden, and taken off the build, for every other grip
+      var gg = call('getGrip') || {}, foam = gg.mat === 'eva' && (gg.id === 'eva-split' || gg.id === 'eva-full'), /* foam split or full only (not custom) */ hs = document.querySelector('.rb-acc[data-rb="heatshrink"]');
       if (hs) hs.style.display = foam ? '' : 'none';
       if (!foam && S.heatShrinkId) { S.heatShrinkId = null; call('renderAccessories'); }
     } catch (e) {}
