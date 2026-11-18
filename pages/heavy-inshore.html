@@ -1366,6 +1366,7 @@ function pickGimbal(id) {
 }
 function pickGimbalColor(id, color) {
   S.gimbalColor[id] = color;
+  S.gimbalId = id;   // a color on another gimbal picks that gimbal too
   renderAccessories(); updateAll();
 }
 function pickButt(id) {
@@ -1375,6 +1376,7 @@ function pickButt(id) {
 }
 function pickButtColor(id, color) {
   S.buttColor[id] = color;
+  if (S.buttId !== id) { S.buttId = id; S.buttRubberCover = false; }   // a color on another butt picks that butt too
   renderButt(); updateAll();
 }
 function toggleRubberCover(e) {

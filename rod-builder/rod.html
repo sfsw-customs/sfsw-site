@@ -716,7 +716,7 @@ async function build() {
   }
   const seat = tag(seatModel || new THREE.Mesh(seatGeo, photoMat(photoTex(seatI), 0.35)), 's-seat');
   if ((seatModel && !seatModel.userData.noFlip) || (!seatModel && sd.flip)) { seat.scale.x = -Math.abs(seat.scale.x); seat.position.x = seatX + seatLen; if (!seatModel) seat.material.side = THREE.DoubleSide; } else seat.position.x = seatX;
-  const sfswTurn = { 'alps-vtg': Math.PI, 'alps-mvt': Math.PI, 'alps-triangle': Math.PI * 1.25, 'alps-tri': Math.PI * 0.5, 'at-alum-spin': -Math.PI / 2 }[sd.id];   // SFSW: each seat turned to face the way it sits on the rod
+  const sfswTurn = { 'alps-vtg': Math.PI, 'alps-mvt': Math.PI, 'alps-triangle': Math.PI, 'alps-tri': Math.PI, 'at-alum-spin': -Math.PI / 2 }[sd.id];   // SFSW: each seat turned to face the way it sits on the rod
   if (sfswTurn) seat.rotation.x = sfswTurn;
   g.add(seat); x = seatX + seatLen - 0.15;
   if (sd.lock && st.lockOn) {   // one knurled aluminum ring, on the threads just behind the seat's nut
@@ -757,7 +757,7 @@ async function build() {
   blank.position.x = (bEnd + L.buttStart + 0.3) / 2; g.add(blank);
   // wraps from the Wrap Designer
   const putWrap = (k, at, maxLen = Infinity) => { const r = unrolled[k]; if (!r) return null; const lenIn = Math.min(r.lengthMM / IN, maxLen), flip = r.from === 'tip';
-    const m = tag(sleeve(at, at + lenIn, 0.011, wrapMat(r.canvas)), 's-wrap'); if (flip) { m.material.map.wrapS = THREE.RepeatWrapping; m.material.map.repeat.x = -1; } m.material.map.wrapT = THREE.RepeatWrapping; m.material.map.offset.y = window.__sfswWrapTurn != null ? window.__sfswWrapTurn : 0.32;   /* SFSW: a diamond faces the viewer, like the designer */ g.add(m); return [at, at + lenIn]; };
+    const m = tag(sleeve(at, at + lenIn, 0.011, wrapMat(r.canvas)), 's-wrap'); if (flip) { m.material.map.wrapS = THREE.RepeatWrapping; m.material.map.repeat.x = -1; } m.material.map.wrapT = THREE.RepeatWrapping; m.material.map.offset.y = window.__sfswWrapTurn != null ? window.__sfswWrapTurn : 0.07;   /* SFSW: a diamond faces the viewer, like the designer */ g.add(m); return [at, at + lenIn]; };
   // with a trim band, the butt-side trim fills the space from the wrap down to the foregrip
   if (window.__sfswHoldMain === undefined) window.__sfswHoldMain = !!window.frameElement;   // SFSW: inside the site, wait for the page's wrap before drawing one
   L.wrap = st.mainOn && !GRIP && !window.__sfswHoldMain ? putWrap('main', st.chkFore && unrolled.main && unrolled.main.trimMM ? x - 0.01 :   /* SFSW: the trim band butts right up to the trim ring */ x + (unrolled.main && unrolled.main.trimMM ? 0.02 : 0.6)) : null;
@@ -874,7 +874,7 @@ function alpsTriangleSeat(col, ins, round) {
   const hoodIn = x => lat([[0, 0], [0, 0.62], [0.03, 0.63], [0.14, 0.61], [0.5, 0.53], [0.54, 0.5], [0.54, 0]], m, x);
   let x = 0;
   hoodOut(x); x += 0.52;
-  const bodyLen = 1.95, flats = [{ a: Math.PI / 2, d: 0.72 }, { a: Math.PI / 2 + 2.2, d: 0.86 }, { a: Math.PI / 2 - 2.2, d: 0.86 }];
+  const bodyLen = 1.95, flats = [{ a: Math.PI / 2, d: 0.78 }, { a: Math.PI / 2 + 2 * Math.PI / 3, d: 0.78 }, { a: Math.PI / 2 - 2 * Math.PI / 3, d: 0.78 }];   // SFSW: an even triangle seen down the rod
   if (ins) {
     // holes on the lower faces only; the top flat (where the reel foot sits) and the ends stay solid
     const W = 1024, H = 512, c = document.createElement('canvas'); c.width = W; c.height = H; const k = c.getContext('2d');
@@ -1289,8 +1289,10 @@ function alpsAlumButt(g, col, lathe) {
   return x0 + body;
 }
 let evaTile = null;
+MC.SfswGunmetal = '#71757d';
+const sfswBC = c => c === 'Black' ? 'Gunmetal' : c === 'Gunmetal' ? 'SfswGunmetal' : c;
 function buttCap(g, img) {
-  const b = BUTTS.find(x => x.id === st.butt), c = MC[st.buttCol[b.id]] || '#3a3d42', R = 0.6;
+  const b = BUTTS.find(x => x.id === st.butt), c = MC[sfswBC(st.buttCol[b.id])] || '#3a3d42', R = 0.6;
   // butt caps with a side photo are turned from the photo itself, rounded end at the butt
   if (img) { const foam = b.foam && evaTile;
     const geo = turned(img, null, b.dia || 1.2, { p: 1, uvTile: !!foam }), m = new THREE.Mesh(geo, foam ? new THREE.MeshStandardMaterial({ map: canvasTex(evaCanvas('black', evaTile, geo.userData.len)), roughness: 0.9 }) : photoMat(photoTex(img), 0.9));
@@ -1305,20 +1307,20 @@ function buttCap(g, img) {
     lathe([[0, 0], [0, 0.42], [0.03, 0.5], [0.09, 0.565], [0.18, 0.6], [0.3, 0.6], [0.62, 0.565], [0.62, 0]], new THREE.MeshStandardMaterial({ map: tx, roughness: 0.95, bumpMap: tx, bumpScale: 1.5 }), 0);
     return 0.62; }
   if (b.id === 'eva-butt') { lathe([...dome(0.6, R, 0.7), [0.6, R]], new THREE.MeshStandardMaterial({ color: 0x1d1e20, roughness: 0.95 }), 0); return 0.6; }
-  if (b.id === 'alps-aluminum-rubber-butt') return alpsAlumRubberButt(g, st.buttCol[b.id], lathe);
-  if (b.id === 'alps-aluminum-butt') return alpsAlumButt(g, st.buttCol[b.id], lathe);
+  if (b.id === 'alps-aluminum-rubber-butt') return alpsAlumRubberButt(g, sfswBC(st.buttCol[b.id]), lathe);
+  if (b.id === 'alps-aluminum-butt') return alpsAlumButt(g, sfswBC(st.buttCol[b.id]), lathe);
   if (b.id === 'alps-rubber-gimbal') return alpsRubberGimbal(g);
-  if (b.id === 'at-gimbal' || b.id === 'alps-gimbal') return alumGimbal(g, st.buttCol[b.id], lathe);
+  if (b.id === 'at-gimbal' || b.id === 'alps-gimbal') return alumGimbal(g, sfswBC(st.buttCol[b.id]), lathe);
   if (/gimbal/.test(b.id)) { // a gimbal: slotted end that locks into a fighting belt, then a collar into the grip
     const rub = b.id === 'alps-rubber-gimbal', mat = rub ? rubber() : metal(c);
     lathe([[0, 0], [0, R * 0.72], [0.05, R * 0.8], [0.7, R * 0.8], [0.78, R * 0.95], [1.25, R], [1.25, 0]], mat, 0);
     const slot = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.1, R * 1.7), new THREE.MeshStandardMaterial({ color: 0x0c0d0f, roughness: 0.9 }));
     slot.position.x = 0.18; g.add(slot); const slot2 = slot.clone(); slot2.rotation.x = Math.PI / 2; g.add(slot2); return 1.25; }
-  if (b.id === 'alps-tri-butt') return alpsTriButt(g, st.buttCol[b.id], lathe);
+  if (b.id === 'alps-tri-butt') return alpsTriButt(g, sfswBC(st.buttCol[b.id]), lathe);
   if (b.id === 'at-weighted-butt') {   // from the product photos: rubber dome on the end, glossy anodized body narrowing toward the grip
     const dome2 = []; for (let i = 0; i <= 16; i++) { const t = i / 16 * Math.PI / 2; dome2.push([0.48 * (1 - Math.cos(t)), 0.62 * Math.sin(t) + 0.0001]); }
     lathe([[0, 0], ...dome2, [0.5, 0.62], [0.5, 0]], pebbled(), 0);
-    const m = new THREE.MeshStandardMaterial({ color: c, metalness: st.buttCol[b.id] === 'Black' ? 0.5 : 0.9, roughness: 0.16 });
+    const m = new THREE.MeshStandardMaterial({ color: c, metalness: sfswBC(st.buttCol[b.id]) === 'Black' ? 0.5 : 0.9, roughness: 0.16 });
     lathe([[0, 0], [0, 0.62], [0.2, 0.6], [0.45, 0.56], [0.7, 0.53], [0.88, 0.52], [0.95, 0.53], [0.95, 0]], m, 0.49);
     return 1.44; }
   const coll = b.id === 'at-weighted-butt' ? 0.55 : 0.4, head = b.id === 'at-weighted-butt' ? 0.75 : 0.8;

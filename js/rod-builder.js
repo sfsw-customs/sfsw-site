@@ -89,6 +89,7 @@
     '.rb-rs.on{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.25)}.rb-rs b{margin-left:4px;color:var(--c-muted);font-weight:400;padding:0 2px}.rb-rs b:hover{color:#fff}',
     '.rb-rs.add{padding:8px 14px;border-style:dashed;color:var(--c-muted)}.rb-rs.add small{display:inline;color:var(--c-gold)}.rb-rs-tip{font-size:12px;color:var(--c-muted);margin-left:auto}',
     '.rb-len{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-len-l{flex:1;font-size:14px}.rb-len-l small{display:block;color:var(--c-muted);font-size:12px}.rb-len button{width:32px;height:32px;border-radius:50%;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);color:var(--c-text);font-size:18px;cursor:pointer}.rb-len button:disabled{opacity:.35;cursor:default}.rb-len b{min-width:52px;text-align:center;font-weight:600}.rb-len-fee{min-width:64px;text-align:right;color:var(--c-gold);font:600 13px var(--font-cond)}',
+    '.rb-tb-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:12px}.rb-tb-w{flex:0 1 360px}.rb-tb-now{font-size:14px;margin:4px 0}.rb-tb-note{color:var(--c-muted);font-size:14px}',
     '.rb-rnd-note{display:none;font-size:13px;color:var(--c-muted)}.rb-modes.rnd .rb-rnd-note{display:block}.rb-exs button.rb-exm{border-style:dashed}.rb-exs button.rb-exm.on{border-style:solid}','.rb-rpal{margin-top:4px}.rb-rp-h{font:600 11px var(--font-cond);letter-spacing:.14em;text-transform:uppercase;color:var(--c-muted);margin:10px 0 6px}',
     '.rb-rp{display:flex;flex-wrap:wrap;gap:6px}.rb-rp button{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.18);cursor:pointer;padding:0}.rb-rp button.on{box-shadow:0 0 0 2px var(--c-dark),0 0 0 4px var(--c-gold)}','.rb-wphoto{height:84px;margin:8px 0 2px;border-radius:var(--radius);border:1px solid var(--c-border);background:#0d0f12 center/cover no-repeat;cursor:zoom-in}',
     '.rb-exs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;cursor:default}.rb-exs button{background:var(--c-dark3);border:1px solid var(--c-border);border-radius:999px;padding:4px 12px;color:var(--c-text);font-size:12.5px;cursor:pointer}.rb-exs button.on{border-color:var(--c-gold);color:var(--c-gold)}',
@@ -215,6 +216,7 @@
       parts: [secOf('sec-seat')] },
     { title: 'Wrap', sub: 'Pick a wrap style, then start from one of our examples, build your own, or go Random and just pick colors.', view: 'wrap',
       parts: [secOf('sec-wrap-color'), secOf('sec-rod-wraps'), secOf('sec-split-wrap')] },
+    { title: 'Trim <em>Bands</em>', sub: 'The bands at both ends of the wrap that hold the thread down.', view: 'wrap', parts: [tbBox()] },
     { title: 'Guides', sub: 'Frame, ring material and frame color.', view: 'guides',
       parts: [secOf('sec-guides')] },
     { title: 'Guide <em>Wraps</em>', tab: 'Guide Wraps', sub: 'How each guide is wrapped onto the blank.', view: 'guides',
@@ -290,7 +292,7 @@
       s.panel.classList.toggle('on', k === cur); s.tabEl.classList.toggle('on', k === cur);
       s.tabEl.classList.toggle('done', k < reached && k !== cur || (k < cur)); s.tabEl.setAttribute('aria-selected', k === cur);
     });
-    lastView = null; view(STEPS[cur].view);
+    lastView = null; view(STEPS[cur].view); if (tbEl) setTimeout(renderTB, 0);
     updTop();
     if (typeof placeLengths === 'function') { placeLengths(); moreLinks(); }
     if (scroll) { var y = top.getBoundingClientRect().top + scrollY - navH() - 6; if (Math.abs(scrollY - y) > 4) scrollTo({ top: y, behavior: 'smooth' }); }
@@ -644,6 +646,25 @@
   }
   function renderLen() { var b = document.querySelector('.rb-len'); if (!b) return; var f = lenFee();
     b.querySelector('b').textContent = wrapLen() + ' in'; b.querySelector('.rb-len-fee').textContent = f ? '+$' + f : 'Included'; b.querySelector('[data-d="-1"]').disabled = wrapLen() <= BASE_LEN(); }
+  // Trim bands: on/off, width and thread color, written straight into the wrap design
+  var tbEl;   // (set by tbBox while the steps are built, earlier in the file)
+  function tbBox() { tbEl = el('div', 'cfg-section rb-tb'); tbEl.innerHTML = '<div class="rb-tb-body"></div>'; setTimeout(renderTB, 0); return tbEl; }
+  function tbCap() { var w = dw(); try { return w && w.wlCapture ? w.wlCapture() : null; } catch (e) { return null; } }
+  function tbSet(fn) { var w = dw(), c = tbCap(); if (!c || !c.trims) return; fn(c.trims); try { w.wlApply(c); } catch (e) {} clearTimeout(readT); readT = setTimeout(readDesign, 200); setTimeout(renderTB, 260); }
+  function renderTB() {
+    if (!tbEl) return; var body = tbEl.querySelector('.rb-tb-body'), c = tbCap(), w = dw();
+    if (S.wrapMode === 'random') { body.innerHTML = '<p class="rb-tb-note">Random wraps get trim bands in your main color. Pick an example or Customize on the Wrap step to choose them here.</p>'; return; }
+    if (!c || !c.trims) { body.innerHTML = '<p class="rb-tb-note">Loading…</p>'; setTimeout(renderTB, 600); return; }
+    var T = c.trims, groups = []; try { groups = w.WL_THREADS.BRANDS.sfsw.groups; } catch (e) {}
+    var nm = '—'; groups.forEach(function (g) { g[1].forEach(function (x) { if (String(x[1]).toLowerCase() === String(T.c).toLowerCase()) nm = x[0]; }); });
+    body.innerHTML = '<div class="rb-tb-row"><div class="rb-seg"><button type="button" data-on="1" aria-pressed="' + !!T.on + '">Trim bands</button><button type="button" data-on="0" aria-pressed="' + !T.on + '">No trim bands</button></div>' +
+      (T.on ? '<div class="rb-len rb-tb-w"><span class="rb-len-l">Width at each end</span><button type="button" data-w="-1">−</button><b>' + T.mm + ' mm</b><button type="button" data-w="1">+</button></div>' : '') + '</div>' +
+      (T.on ? '<div class="rb-tb-now">Trim color: <b>' + nm + '</b></div>' + groups.map(function (g) { return '<div class="rb-rp-h">' + g[0] + '</div><div class="rb-rp">' + g[1].map(function (x) {
+        return '<button type="button" data-c="' + x[1] + '" title="' + x[0] + '" class="' + (String(x[1]).toLowerCase() === String(T.c).toLowerCase() ? 'on' : '') + '" style="background:' + x[1] + '"></button>'; }).join('') + '</div>'; }).join('') : '');
+    [].forEach.call(body.querySelectorAll('[data-on]'), function (b) { b.onclick = function () { var on = b.dataset.on === '1'; tbSet(function (t) { t.on = on; }); }; });
+    [].forEach.call(body.querySelectorAll('[data-w]'), function (b) { b.onclick = function () { var d = +b.dataset.w; tbSet(function (t) { t.mm = Math.max(3, Math.min(40, (+t.mm || 20) + d)); }); }; });
+    [].forEach.call(body.querySelectorAll('[data-c]'), function (b) { b.onclick = function () { var col = b.dataset.c; tbSet(function (t) { t.c = col; }); }; });
+  }
   function setMode(m, quiet) {
     var was = S.wrapMode; S.wrapMode = m;
     if (m === 'build' && was !== 'build') { dzSimple = false; if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
