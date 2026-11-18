@@ -412,7 +412,7 @@
     if (dc) { main = dc[0]; sup = dc.slice(1); }
     p.mainOn = true;
     var ABW = (val('ROD_WRAPS') || []).find(function (w) { return w.id === 'abalone'; }) || { colors: ['Classic'] };
-    var abSpec = function (idx) { var c = ABW.colors[idx || 0] || 'Classic'; return { abalone: { img: BASE + 'rod-parts/abalone/' + c.toLowerCase() + '.jpg' }, pattern: 'diamond', axes: 2, stripes: [{ c: '#141414', t: 6 }], trims: { on: true, mm: 2.5, c: '#c9a24a', bands: [], ends: [] }, len: CFG.wrap ? wrapLen() : undefined }; };   // abalone under clear coat, thin gold trim
+    var AT = abTrim(), abSpec = function (idx) { var c = ABW.colors[idx || 0] || 'Classic'; return { abalone: { img: BASE + 'rod-parts/abalone/' + c.toLowerCase() + '.jpg' }, pattern: 'diamond', axes: 2, stripes: [{ c: '#141414', t: 6 }], trims: { on: AT.on, mm: AT.mm, c: AT.c, bands: [], ends: [] }, len: CFG.wrap ? wrapLen() : undefined }; };   // abalone under clear coat, thin gold trim
     if (S.wrapId === 'abalone') p.main = abSpec(S.abaloneColorIdx);
     else if (!rnd && S.customDesign && S.customDesign.setup && S.customDesign.sfsw) p.main = { full: S.customDesign.setup, kind: S.customDesign.sfsw };
     else if (!rnd && wrapLen() === BASE_LEN() && LOOK[(wrapNamed(S.wrapId) || {}).name]) p.main = { full: LOOK[wrapNamed(S.wrapId).name], kind: 'taper' };   // until the designer is up: the wrap's own design
@@ -653,11 +653,12 @@
   // Trim bands: on/off, width and thread color, written straight into the wrap design
   var tbEl;   // (set by tbBox while the steps are built, earlier in the file)
   function tbBox() { tbEl = el('div', 'cfg-section rb-tb'); tbEl.innerHTML = '<div class="rb-tb-body"></div>'; setTimeout(renderTB, 0); return tbEl; }
-  function tbCap() { var w = dw(); try { return w && w.wlCapture ? w.wlCapture() : null; } catch (e) { return null; } }
-  function tbSet(fn) { var w = dw(), c = tbCap(); if (!c || !c.trims) return; fn(c.trims); try { w.wlApply(c); } catch (e) {} clearTimeout(readT); readT = setTimeout(readDesign, 200); setTimeout(renderTB, 260); }
+  function abTrim() { return S.abTrim || (S.abTrim = { on: true, mm: 10, c: '#dabd66' }); }   // abalone's own trim bands (default 9130 Metallic Gold)
+  function tbCap() { if (S.wrapId === 'abalone') return { trims: abTrim() }; var w = dw(); try { return w && w.wlCapture ? w.wlCapture() : null; } catch (e) { return null; } }
+  function tbSet(fn) { if (S.wrapId === 'abalone') { fn(abTrim()); updateAll(); setTimeout(renderTB, 60); return; } var w = dw(), c = tbCap(); if (!c || !c.trims) return; fn(c.trims); try { w.wlApply(c); } catch (e) {} clearTimeout(readT); readT = setTimeout(readDesign, 200); setTimeout(renderTB, 260); }
   function renderTB() {
     if (!tbEl) return; var body = tbEl.querySelector('.rb-tb-body'), c = tbCap(), w = dw();
-    if (S.wrapMode === 'random') { body.innerHTML = '<p class="rb-tb-note">Random wraps get trim bands in your main color. Pick an example or Customize on the Wrap step to choose them here.</p>'; return; }
+    if (S.wrapMode === 'random' && S.wrapId !== 'abalone') { body.innerHTML = '<p class="rb-tb-note">Random wraps get trim bands in your main color. Pick an example or Customize on the Wrap step to choose them here.</p>'; return; }
     if (!c || !c.trims) { body.innerHTML = '<p class="rb-tb-note">Loading…</p>'; setTimeout(renderTB, 600); return; }
     var T = c.trims, groups = []; try { groups = w.WL_THREADS.BRANDS.sfsw.groups; } catch (e) {}
     var nm = '—'; groups.forEach(function (g) { g[1].forEach(function (x) { if (String(x[1]).toLowerCase() === String(T.c).toLowerCase()) nm = x[0]; }); });
