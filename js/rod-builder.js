@@ -91,6 +91,7 @@
     '.rb-rs.add{padding:8px 14px;border-style:dashed;color:var(--c-muted)}.rb-rs.add small{display:inline;color:var(--c-gold)}.rb-rs-tip{font-size:12px;color:var(--c-muted);margin-left:auto}',
     '.rb-len{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-len-l{flex:1;font-size:14px}.rb-len-l small{display:block;color:var(--c-muted);font-size:12px}.rb-len button{width:32px;height:32px;border-radius:50%;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);color:var(--c-text);font-size:18px;cursor:pointer}.rb-len button:disabled{opacity:.35;cursor:default}.rb-len b{min-width:52px;text-align:center;font-weight:600}.rb-len-fee{min-width:64px;text-align:right;color:var(--c-gold);font:600 13px var(--font-cond)}',
     '.rb-tb-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:12px}.rb-tb-w{flex:0 1 360px}.rb-tb-now{font-size:14px;margin:4px 0}.rb-tb-note{color:var(--c-muted);font-size:14px}',
+    '.rb-wflow{display:flex!important;flex-direction:column;gap:6px}.rb-wflat{display:contents!important}.rb-wflow>.rb-modes{margin:2px 0 8px}',
     '.rb-rnd-note{display:none;font-size:13px;color:var(--c-muted)}.rb-modes.rnd .rb-rnd-note{display:block}.rb-exs button.rb-exm{border-style:dashed}.rb-exs button.rb-exm.on{border-style:solid}','.rb-rpal{margin-top:4px}.rb-rp-h{font:600 11px var(--font-cond);letter-spacing:.14em;text-transform:uppercase;color:var(--c-muted);margin:10px 0 6px}',
     '.rb-rp{display:flex;flex-wrap:wrap;gap:6px}.rb-rp button{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.18);cursor:pointer;padding:0}.rb-rp button.on{box-shadow:0 0 0 2px var(--c-dark),0 0 0 4px var(--c-gold)}','.rb-wphoto{height:84px;margin:8px 0 2px;border-radius:var(--radius);border:1px solid var(--c-border);background:#0d0f12 center/cover no-repeat;cursor:zoom-in}',
     '.rb-exs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;cursor:default}.rb-exs button{background:var(--c-dark3);border:1px solid var(--c-border);border-radius:999px;padding:4px 12px;color:var(--c-text);font-size:12.5px;cursor:pointer}.rb-exs button.on{border-color:var(--c-gold);color:var(--c-gold)}',
@@ -506,7 +507,7 @@
     modeEl.innerHTML = (CFG.wrap ? '<div class="rb-len"><span class="rb-len-l">Wrap length <small>' + BASE_LEN() + ' in included · +$10 each added inch</small></span><button type="button" data-d="-1" aria-label="Shorter">−</button><b></b><button type="button" data-d="1" aria-label="Longer">+</button><span class="rb-len-fee"></span></div>' : '') +
 
       '<div class="rb-dz-slot"></div>' +
-      '<div class="rb-rnd-note">Random: pick a main color and supporting colors, and we lay out the wrap. Main + 2 supporting included · +$10 each extra supporting color.</div>' +
+      '<div class="rb-rnd-note">Builder\u2019s Choice: pick a main color and supporting colors, and we lay out the wrap. Main + 2 supporting included · +$10 each extra supporting color.</div>' +
       '<div class="rb-rnd-slot"><div class="rb-rpal"></div></div>';
     ($('wrap-abalone-colors') || optList).insertAdjacentElement('afterend', modeEl);
     modeEl.querySelector('.rb-dz-slot').appendChild(dzBox);
@@ -603,6 +604,17 @@
     return function (n) { return m[n] || '#1e1617'; }; }
   var recPick = {};   // which photo design each wrap is on
   function recOf(pr, id) { return pr && pr.recs ? pr.recs[Math.min(recPick[id] || 0, pr.recs.length - 1)] : null; }
+  // Customize / Builder's Choice open right under the picked wrap: the list is laid out by order (moving the designer would reload it)
+  function placeModes(card) {
+    if (!modeEl || !optList) return; var par = optList.parentNode; if (modeEl.parentNode !== par) return;
+    par.classList.add('rb-wflow'); optList.classList.add('rb-wflat');
+    var k = 0, after = null;
+    [].forEach.call(par.children, function (c) {
+      if (c === optList) { [].forEach.call(optList.children, function (x) { x.style.order = (k += 2); if (x === card) after = k; }); return; }
+      if (c === modeEl) return; c.style.order = (k += 2);
+    });
+    modeEl.style.order = after != null ? after + 1 : k + 1;
+  }
   function renderModes() {
     if (!modeEl) return; var id = S.wrapId, pr = presetOf(id), w = wrapNamed(id), ph = wrapPhotos(w), recs = (pr && pr.recs) || [], m = S.wrapMode;
     modeEl.style.display = pr ? '' : 'none';
@@ -766,10 +778,11 @@
         w.colors.forEach(function (c, k) { var b = el('button', (S.abaloneColorIdx || 0) === k ? 'on' : '', c); b.type = 'button';
           b.onclick = function () { call('pickAbaloneColor', String(k)); setTimeout(exButtons, 30); }; box.appendChild(b); });
       }
-      if (pr) [['build', 'Customize'], ['random', 'Random']].forEach(function (x) { var b = el('button', 'rb-exm' + (S.wrapMode === x[0] ? ' on' : ''), x[1]); b.type = 'button';
+      if (pr) [['build', 'Customize'], ['random', 'Builder\u2019s Choice']].forEach(function (x) { var b = el('button', 'rb-exm' + (S.wrapMode === x[0] ? ' on' : ''), x[1]); b.type = 'button';
         b.onclick = function () { setMode(S.wrapMode === x[0] ? 'example' : x[0]); exButtons(); }; box.appendChild(b); });
       (card.querySelector('.option-item-body') || card).appendChild(box);
     }
+    placeModes(card);
     if (wphoto) { var src = ph[Math.min(cur, ph.length - 1)]; wphoto.hidden = !src; wphoto.classList.toggle('rb-wph-full', id === 'abalone'); if (src) { wphoto.style.backgroundImage = 'url("' + src + '")'; wphoto.onclick = function () { lightbox(w, Math.min(cur, ph.length - 1)); }; } updTop(); }
   }
   function lightbox(w, start) {
