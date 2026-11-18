@@ -216,7 +216,7 @@
       parts: [secOf('sec-seat')] },
     { title: 'Wrap', sub: 'Pick a wrap style, then start from one of our examples, build your own, or go Random and just pick colors.', view: 'wrap',
       parts: [secOf('sec-wrap-color'), secOf('sec-rod-wraps'), secOf('sec-split-wrap')] },
-    { title: 'Trim <em>Bands</em>', sub: 'The bands at both ends of the wrap that hold the thread down.', view: 'wrap', parts: [tbBox()] },
+    { title: 'Trim Bands', sub: 'The bands at both ends of the wrap that hold the thread down.', view: 'wrap', parts: [tbBox()] },
     { title: 'Guides', sub: 'Frame, ring material and frame color.', view: 'guides',
       parts: [secOf('sec-guides')] },
     { title: 'Guide <em>Wraps</em>', tab: 'Guide Wraps', sub: 'How each guide is wrapped onto the blank.', view: 'guides',
