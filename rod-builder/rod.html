@@ -519,7 +519,7 @@ function sleeve(x0, x1, over, mat, seg = 64) {
   g.setIndex(idx); g.computeVertexNormals(); return new THREE.Mesh(g, mat);
 }
 const wrapMat = canvas => { const t = new THREE.CanvasTexture(canvas); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy());
-  /* SFSW: no glare on the wrap, so the threads read like the designer */ const sh = !!(t.image && t.image.__sfswShiny);   /* SFSW: abalone sits under glossy clear coat */ return new THREE.MeshPhysicalMaterial({ map: t, roughness: sh ? 0.3 : 0.62, metalness: 0, clearcoat: sh ? 1 : 0.25, clearcoatRoughness: sh ? 0.06 : 0.45, envMapIntensity: sh ? 0.9 : 0.55, specularIntensity: sh ? 0.7 : 0.35, alphaTest: 0.5, side: THREE.DoubleSide }); };
+  /* SFSW: no glare on the wrap, so the threads read like the designer */ const sh = !!(t.image && t.image.__sfswShiny);   /* SFSW: abalone sits under glossy clear coat */ return new THREE.MeshPhysicalMaterial({ map: t, roughness: sh ? 0.3 : 0.62, metalness: 0, clearcoat: sh ? 1 : 0.25, clearcoatRoughness: sh ? 0.06 : 0.45, envMapIntensity: sh ? 0.55 : 0.55, specularIntensity: sh ? 0.5 : 0.35, alphaTest: 0.5, side: THREE.DoubleSide }); };
 const hexRGB = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 
 // ---------- the designers: real WrapLab tools in the drawer, read straight off their pages ----------
@@ -1970,11 +1970,11 @@ const sfswBoot = (async () => {
   function loadImg(u) { return abImg[u] || (abImg[u] = new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = u; })); }
   async function paintAbalone(r, url, trimMM) {
     const im = await loadImg(url); if (!im) return; const c = r.canvas, x = c.getContext('2d'), W = c.width, H = c.height;
-    const t = Math.round((trimMM || 0) / (r.lengthMM || 1) * W), x0 = t, x1 = W - t, th = H * 1.6, tw = im.width * th / im.height;   // big shell pieces, like the real wraps
+    const t = Math.round((trimMM || 0) / (r.lengthMM || 1) * W), x0 = t, x1 = W - t, th = H * 1.05, tw = im.width * th / im.height;   // big shell pieces, like the real wraps
     x.save(); x.beginPath(); x.rect(x0, 0, x1 - x0, H); x.clip();
     for (let yy = 0, row = 0; yy < H; yy += th, row++) for (let xx = x0 - (row % 2) * tw / 2, col = 0; xx < x1; xx += tw, col++) {
       x.save(); x.translate(xx + ((col + row) % 2 ? tw : 0), yy); x.scale((col + row) % 2 ? -1 : 1, 1); x.drawImage(im, 0, 0, tw, th); x.restore(); }
-    x.fillStyle = 'rgba(255,255,255,0.05)'; x.fillRect(x0, 0, x1 - x0, H); x.restore();
+    x.restore();
     r.abalone = true; c.__sfswShiny = true;
   }
   async function setGuideWrap(spec) {
