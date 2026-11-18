@@ -848,6 +848,7 @@ const guideFrameSlug = () => {
 // ── ROD WRAPS (decorative patterns) ──
 // photoCount = how many gallery images live at ../preview/rod-wraps/{photoSlug||id}-{n}.png
 const ROD_WRAPS = [
+  {id:"trim-band",    name:"Trim Band",                                 adder:0,   photoCount:0},
   {id:"diam-2",       name:"Diamond — 2 Axis",                          adder:0,   photoSlug:"wrap-2axis-d",     photoCount:3},
   {id:"chev-2",       name:"Chevron — 2 Axis",                          adder:0,   photoSlug:"chev-2",           photoCount:2},
   {id:"dragon",       name:"Dragon Scale",                              adder:0,   photoSlug:"dragon",           photoCount:3},
@@ -964,7 +965,7 @@ const S = {
   tipUpgrade: null,           // null | 'sic' | 'torzite' — eligibility depends on selected guide
   mainIdx:  0,                // Main thread color (WRAP_COLORS)
   supportIdxs: [],            // Supporting colors (indices into WRAP_COLORS). First 2 included, each additional +$10.
-  wrapId:  ROD_WRAPS[0].id,
+  wrapId:  'diam-2',   // the rod opens on Diamond — 2 Axis
   customDesign: null,         // customer's own wrap from the Wrap Designer (priced as the matching ROD_WRAPS option)
   wrapUserSelected: false,
   wrapPhotoIdx: 0,            // 0-based index of current rod-wrap photo

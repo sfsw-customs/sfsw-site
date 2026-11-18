@@ -341,7 +341,7 @@
   var TRIM_AS = { 'at-trim': 'step', 'alps-trim': 'dimple', 'matagi-trim': 'slim' };
   var TRIM_COL = { Gunsmoke: 'Gunmetal', 'Pale Gold': 'Champagne', 'Dark Gunmetal': 'Gunmetal' };
   // rod wraps the 3D rod can lay thread for; the rest show the thread colors as a plain wrap
-  var WRAP_AS = { 'diam-2': ['diamond', 2], 'chev-2': ['chevron', 2], 'chev-4': ['chevron', 4], 'diam-4': ['diamond', 4], 'dec-4': ['diamond', 4],
+  var WRAP_AS = { 'trim-band': ['trim', 2], 'diam-2': ['diamond', 2], 'chev-2': ['chevron', 2], 'chev-4': ['chevron', 4], 'diam-4': ['diamond', 4], 'dec-4': ['diamond', 4],
     'closed-4': ['diamond', 8], 'axis-16': ['diamond', 16], 'dragon': ['dragon', 8], '2axis-dragon': ['dragon', 8, true], 'trim-bands': ['trim', 2] };
   var hexOf = function (i) { var W = val('WRAP_COLORS') || [], c = W[i]; return c && /^#[0-9a-f]{6}$/i.test(c.hex) ? c.hex.toLowerCase() : '#1a1a1a'; };
   var rings = function (pieces) { var out = []; (pieces || []).forEach(function (p) { var n = +p.inches || 0, m = CORK_AS[p.patternId] || 'burl';
@@ -464,6 +464,10 @@
   // and into the build; the price is the wrap style the design matches.
   var BASE = CFG.engine.replace(/[^\/]*$/, '');
   var PRESET = {
+    'Trim Band': { k: 'taper', p: 'trim', a: 2, recs: [   // a trim band on its own, with a design in the middle
+      { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], tb: { mm: 50.8, c: '862 Twilight Black',
+        bands: [['9100 Metallic Yellow Gold', 4], ['862 Twilight Black', 2], ['807 White', 1, 'mid', '862 Twilight Black'], ['807 White', 2], ['', 3, 'fade'], ['862 Twilight Black', 6], ['9100 Metallic Yellow Gold', 4], ['9100 Metallic Yellow Gold', 1, 'mid', '862 Twilight Black']],
+        ends: [['9100 Metallic Yellow Gold', 6]] } } ] },
     'Diamond — 2 Axis': { k: 'taper', p: 'diamond', a: 2, recs: [   // one design per photo, in photo order; the first stripe is the center
       { trim: '479 Gulfstream',
         stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 4], ['9860 Metallic Silver', 4], ['841 Iron Ore', 4], ['479 Gulfstream', 6], ['862S Metallic Twist Black/Silver', 2],
@@ -567,6 +571,7 @@
   function wrapIdFor(cap, kind) {
     var ax = +cap.axes || 2;
     if (kind === 'cross') return idByName(/snowflake/i.test(cap.pat || '') && ax < 4 ? 'Snowflake Wrap' : ax >= 4 ? '4 Axis Cross Wrap' : '2 Axis Cross Wrap');
+    if (cap.pattern === 'trim') return idByName('Trim Band');
     if (cap.pattern === 'dragon') return idByName(cap.dragon && cap.dragon.over && cap.dragon.over.on ? '2 Axis Wrap Over Dragon Scales' : 'Dragon Scale');
     if (ax >= 16) return idByName('16 Axis Wrap');
     if (ax >= 8) return idByName('8 Axis Wrap');
@@ -600,6 +605,8 @@
   // a preset into the designer: its pattern and axis lines, keeping the customer's colors and the wrap's size on this blank
   var applyN = 0;
   var designCols = function () { return S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign.colors.map(function (c) { return c.hex; }) : null; };
+  function tbOf(T, hx) { var it = function (x) { var o = { c: x[0] ? hx(x[0]) : '', t: x[1] }; if (x[2] === 'fade') o.fade = true; else if (x[2]) { o.saw = x[2]; o.c2 = hx(x[3]); } return o; };
+    return { on: true, mm: T.mm, c: hx(T.c), bands: T.bands.map(it), ends: (T.ends || []).map(it) }; }
   function threadHex(w) { var m = {}; try { w.WL_THREADS.BRANDS.sfsw.groups.forEach(function (g) { g[1].forEach(function (x) { m[x[0]] = x[1]; }); }); } catch (e) {}
     return function (n) { return m[n] || '#1e1617'; }; }
   var recPick = {};   // which photo design each wrap is on
@@ -683,9 +690,27 @@
     [].forEach.call(body.querySelectorAll('[data-w]'), function (b) { b.onclick = function () { var d = +b.dataset.w; tbSet(function (t) { t.mm = Math.max(3, Math.min(40, (+t.mm || 20) + d)); }); }; });
     [].forEach.call(body.querySelectorAll('[data-c]'), function (b) { b.onclick = function () { var col = b.dataset.c; tbSet(function (t) { t.c = col; }); }; });
   }
+  // Customize starts from a plain 3-color wrap of the picked style, with the threads set so the diamonds
+  // take up as much of the wrap as the open space between them
+  async function genericDesign() {
+    var w = dw(), pr = presetOf(S.wrapId); if (!w || !w.wlCapture || !pr || pr.k !== 'taper' || !/diamond|chevron/.test(pr.p)) return;
+    var hx = threadHex(w), cols = [hx('479 Gulfstream'), hx('807 White'), hx('9130 Metallic Gold')], sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+    var put = function (T) { var c = w.wlCapture(); c.pattern = pr.p; c.axes = pr.a; c.nOverride = null; c.chevTo = null;
+      c.center = { on: false, c: cols[0], t: 1 }; c.inner = { on: false, pattern: 'diamond', place: 'center', auto: true, stripes: [] };
+      var a = Math.round(T * 0.45), b = Math.round(T * 0.3); c.stripes = [{ c: cols[0], t: a }, { c: cols[1], t: b }, { c: cols[2], t: Math.max(1, T - a - b) }];
+      if (c.trims) { c.trims.c = cols[0]; c.trims.bands = []; c.trims.ends = []; }
+      c.unit = 'in'; c.len = wrapLen().toFixed(2); w.wlApply(c); return c; };
+    var open = async function (T) { var c = put(T); await sleep(220); var r = w.WL_unrolled(900, 240); if (!r) return 0.5;
+      var B = [1, 3, 5].map(function (i) { return parseInt((c.blankC || '#101010').slice(i, i + 2), 16); }), x = r.canvas.getContext('2d'), W = r.canvas.width, H = r.canvas.height;
+      var t0 = Math.round((r.trimMM || 0) / (r.lengthMM || 1) * W) + 3, d = x.getImageData(t0, 0, Math.max(1, W - 2 * t0), H).data, bl = 0, n = 0;
+      for (var i = 0; i < d.length; i += 16) { n++; if (d[i + 3] < 10 || Math.abs(d[i] - B[0]) + Math.abs(d[i + 1] - B[1]) + Math.abs(d[i + 2] - B[2]) < 18) bl++; }
+      return bl / n; };
+    var lo = 6, hi = 90; for (var k = 0; k < 7; k++) { var mid = Math.round((lo + hi) / 2); if (await open(mid) > 0.5) lo = mid; else hi = mid; }
+    put(Math.round((lo + hi) / 2)); clearTimeout(readT); readT = setTimeout(readDesign, 250);
+  }
   function setMode(m, quiet) {
     var was = S.wrapMode; S.wrapMode = m;
-    if (m === 'build' && was !== 'build') { dzSimple = false; if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
+    if (m === 'build' && was !== 'build') { genericDesign(); dzSimple = false; if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
     if (m === 'random' && was !== 'random') { S.supportIdxs = (S.supportIdxs || []).slice(0, 2); call('renderSupportingRows'); }   // Random starts at main + 2 supporting
     renderModes(); if (quiet) return;
     if (was === 'random' && m !== 'random') { clearTimeout(readT); readT = setTimeout(readDesign, 50); }
@@ -708,7 +733,7 @@
     if (WS && !restore) { cap.unit = 'in'; cap.len = (+wrapLen()).toFixed(2); cap.dB = (+WS.dB).toFixed(1); cap.dT = (+WS.dT).toFixed(1); cap.dM = ((+WS.dB + +WS.dT) / 2).toFixed(1); }
     if (!restore && dzKind === 'cross') noCustom(w);
     if (!restore && REC) { var hx0 = threadHex(w);   // the wrap's own design goes in first, so nothing else ever shows
-      cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } }
+      cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } if (REC.tb) cap.trims = tbOf(REC.tb, hx0); }
     else if (!restore && !prev && dzKind === 'taper') { cap.stripes = JSON.parse(JSON.stringify(START.stripes)); if (cap.trims) { cap.trims.c = START.trim; cap.trims.bands = []; cap.trims.ends = []; } }
     if (!restore) snap(w, cap);
     try { w.wlApply(cap); } catch (e) {}
@@ -736,6 +761,7 @@
         var hx = threadHex(w), R = REC;
         c2.stripes = R.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; });
         if (c2.trims) { c2.trims.c = hx(R.trim || R.stripes[0][0]); c2.trims.bands = []; c2.trims.ends = []; }
+        if (R.tb) c2.trims = tbOf(R.tb, hx);
       } else if (dzKind === 'cross' || switched || first) { (c2.stripes || []).forEach(function (x, i) { x.c = cols[i % cols.length]; }); if (c2.trims) { c2.trims.c = cols[0]; c2.trims.bands = []; c2.trims.ends = []; } }
       try { w.wlApply(snap(w, c2)); } catch (e) {}
     }
