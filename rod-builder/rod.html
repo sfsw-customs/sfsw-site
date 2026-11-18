@@ -716,7 +716,7 @@ async function build() {
   }
   const seat = tag(seatModel || new THREE.Mesh(seatGeo, photoMat(photoTex(seatI), 0.35)), 's-seat');
   if ((seatModel && !seatModel.userData.noFlip) || (!seatModel && sd.flip)) { seat.scale.x = -Math.abs(seat.scale.x); seat.position.x = seatX + seatLen; if (!seatModel) seat.material.side = THREE.DoubleSide; } else seat.position.x = seatX;
-  const sfswTurn = { 'alps-vtg': Math.PI, 'alps-mvt': Math.PI, 'alps-triangle': Math.PI, 'alps-tri': Math.PI, 'at-alum-spin': -Math.PI / 2 }[sd.id];   // SFSW: each seat turned to face the way it sits on the rod
+  const sfswTurn = { 'alps-vtg': Math.PI, 'alps-mvt': Math.PI, 'alps-triangle': Math.PI / 2, 'alps-tri': Math.PI / 2, 'at-alum-spin': -Math.PI / 2 }[sd.id];   // SFSW: each seat turned to face the way it sits on the rod
   if (sfswTurn) seat.rotation.x = sfswTurn;
   g.add(seat); x = seatX + seatLen - 0.15;
   if (sd.lock && st.lockOn) {   // one knurled aluminum ring, on the threads just behind the seat's nut
@@ -757,7 +757,7 @@ async function build() {
   blank.position.x = (bEnd + L.buttStart + 0.3) / 2; g.add(blank);
   // wraps from the Wrap Designer
   const putWrap = (k, at, maxLen = Infinity) => { const r = unrolled[k]; if (!r) return null; const lenIn = Math.min(r.lengthMM / IN, maxLen), flip = r.from === 'tip';
-    const m = tag(sleeve(at, at + lenIn, 0.011, wrapMat(r.canvas)), 's-wrap'); if (flip) { m.material.map.wrapS = THREE.RepeatWrapping; m.material.map.repeat.x = -1; } m.material.map.wrapT = THREE.RepeatWrapping; m.material.map.offset.y = window.__sfswWrapTurn != null ? window.__sfswWrapTurn : 0.01;   /* SFSW: a diamond faces the viewer, like the designer */ g.add(m); return [at, at + lenIn]; };
+    const m = tag(sleeve(at, at + lenIn, 0.011, wrapMat(r.canvas)), 's-wrap'); if (flip) { m.material.map.wrapS = THREE.RepeatWrapping; m.material.map.repeat.x = -1; } m.material.map.wrapT = THREE.RepeatWrapping; m.material.map.offset.y = window.__sfswWrapTurn != null ? window.__sfswWrapTurn : 0.0;   /* SFSW: a diamond faces the viewer, like the designer */ g.add(m); return [at, at + lenIn]; };
   // with a trim band, the butt-side trim fills the space from the wrap down to the foregrip
   if (window.__sfswHoldMain === undefined) window.__sfswHoldMain = !!window.frameElement;   // SFSW: inside the site, wait for the page's wrap before drawing one
   L.wrap = st.mainOn && !GRIP && !window.__sfswHoldMain ? putWrap('main', st.chkFore && unrolled.main && unrolled.main.trimMM ? x - 0.01 :   /* SFSW: the trim band butts right up to the trim ring */ x + (unrolled.main && unrolled.main.trimMM ? 0.02 : 0.6)) : null;
