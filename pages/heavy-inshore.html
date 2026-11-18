@@ -853,7 +853,7 @@ const ROD_WRAPS = [
   {id:"dragon",       name:"Dragon Scale",                              adder:0,   photoSlug:"dragon",           photoCount:3},
   {id:"chev-4",       name:"Chevron — 4 Axis",                          adder:0,   photoSlug:"wrap-4axis-c",     photoCount:8},
   {id:"diam-4",       name:"Diamond — 4 Axis",                          adder:0,   photoSlug:"wrap-4axis-d",     photoCount:9},
-  {id:"abalone",      name:"Abalone Wrap",                              adder:50,  splitPrice:50, photo:"../preview/rod-wraps/abalone.png", colors:["Classic","Blue","Purple","Red","Teal","Lava","Green","Gold"]},
+  {id:"abalone",      name:"Abalone Wrap",                              adder:50,  splitPrice:50, photo:"../preview/rod-wraps/abalone-colors.jpg", colors:["Classic","Blue","Purple","Red","Teal","Lava","Green","Gold"]},
   {id:"dec-4",        name:"4 Axis Decorative Chevron or Diamond",      adder:50,  photoSlug:"wrap-4axis-dec",   photoCount:3},
   {id:"closed-4",     name:"8 Axis Wrap",                               adder:75,  photoSlug:"wrap-8axis-c",     photoCount:5},
   {id:"axis-16",      name:"16 Axis Wrap",                              adder:100, photoSlug:"wrap-16axis",      photoCount:1},
@@ -1455,14 +1455,6 @@ function renderWraps() {
         </div>
         <span class="option-item-price">${w.adder===0?'Included':'+$'+w.adder}</span>
       </div>`;
-      if (w.id === 'abalone' && S.wrapId === 'abalone' && w.colors) {
-        html += `<div style="margin:4px 0 6px;padding:8px 10px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius)">
-          <label style="font-family:var(--font-cond);font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--c-gold);display:block;margin-bottom:6px">Shell Cover</label>
-          <select onchange="pickAbaloneColor(this.value)" style="width:100%;background:var(--c-dark2);color:var(--c-text);border:1px solid var(--c-border);border-radius:4px;padding:6px 8px;font-family:var(--font-cond);font-size:13px;font-weight:600;letter-spacing:.05em;cursor:pointer">
-            ${w.colors.map((c,i) => `<option value="${i}" ${i===S.abaloneColorIdx?'selected':''}>${c}</option>`).join('')}
-          </select>
-        </div>`;
-      }
       return html;
     }).join('');
   }

@@ -519,7 +519,7 @@ function sleeve(x0, x1, over, mat, seg = 64) {
   g.setIndex(idx); g.computeVertexNormals(); return new THREE.Mesh(g, mat);
 }
 const wrapMat = canvas => { const t = new THREE.CanvasTexture(canvas); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy());
-  /* SFSW: no glare on the wrap, so the threads read like the designer */ return new THREE.MeshPhysicalMaterial({ map: t, roughness: 0.62, metalness: 0, clearcoat: 0.25, clearcoatRoughness: 0.45, envMapIntensity: 0.55, specularIntensity: 0.35, alphaTest: 0.5, side: THREE.DoubleSide }); };
+  /* SFSW: no glare on the wrap, so the threads read like the designer */ const sh = !!(t.image && t.image.__sfswShiny);   /* SFSW: abalone sits under glossy clear coat */ return new THREE.MeshPhysicalMaterial({ map: t, roughness: sh ? 0.3 : 0.62, metalness: 0, clearcoat: sh ? 1 : 0.25, clearcoatRoughness: sh ? 0.06 : 0.45, envMapIntensity: sh ? 0.9 : 0.55, specularIntensity: sh ? 0.7 : 0.35, alphaTest: 0.5, side: THREE.DoubleSide }); };
 const hexRGB = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 
 // ---------- the designers: real WrapLab tools in the drawer, read straight off their pages ----------
@@ -556,6 +556,7 @@ const unrolled = {};
 async function readWrap(k) {
   const w = await whenReady(fk(k), w => w.WL_unrolled && w.__wlRod); const r = w.WL_unrolled(sfswLow ? 2800 : 4096, sfswLow ? 700 : 1024);
   if (r) try { const bc = (w.wlCapture().blankC || '#101010'), B = [1, 3, 5].map(i => parseInt(bc.slice(i, i + 2), 16)), x = r.canvas.getContext('2d'), im = x.getImageData(0, 0, r.canvas.width, r.canvas.height), d = im.data;   /* SFSW: the blank between the arms is part of the matte wrap */ for (let i = 0; i < d.length; i += 4) if (d[i + 3] === 0) { d[i] = B[0]; d[i + 1] = B[1]; d[i + 2] = B[2]; d[i + 3] = 255; } x.putImageData(im, 0, 0); } catch (e) {}   // SFSW: sharp wrap on the 3D rod if (!r) return null;
+  if (r && window.__sfswAb && window.__sfswAb[k]) await window.__sfswAb[k](r);   // SFSW: abalone shell
   unrolled[k] = r; drawPrev($(k + 'Prev'), r.canvas);
   const box = $(k + 'Box').querySelector('b'); if (box) box.textContent = src[k] === 'cross' ? 'Cross Wrap Designer' : (k === 'split' ? 'Split wrap' : 'Wrap Designer');
   if (src[k] === 'cross') $(k + 'Sum').textContent = `${r.label} · ${(r.lengthMM / IN).toFixed(2)} in`;
@@ -1959,7 +1960,22 @@ const sfswBoot = (async () => {
     }
     if (spec.blank) o.blankC = spec.blank;
     try { w.wlApply(o); } catch (e) { console.warn('wrap', k, e); }
-    await wait(120); await readWrap(k); return true;
+    const ab = window.__sfswAb || (window.__sfswAb = {}), mm = o.trims && o.trims.on ? +o.trims.mm : 0;   // every re-read of this wrap paints the shell again
+    ab[k] = spec.abalone ? (rr => paintAbalone(rr, spec.abalone.img, mm).catch(e => console.warn('abalone', e))) : null;
+    await wait(120); await readWrap(k);
+    return true;
+  }
+  // SFSW: abalone shell laid between the trim bands (the photo, mirrored tile to tile so there are no seams)
+  const abImg = {};
+  function loadImg(u) { return abImg[u] || (abImg[u] = new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = u; })); }
+  async function paintAbalone(r, url, trimMM) {
+    const im = await loadImg(url); if (!im) return; const c = r.canvas, x = c.getContext('2d'), W = c.width, H = c.height;
+    const t = Math.round((trimMM || 0) / (r.lengthMM || 1) * W), x0 = t, x1 = W - t, th = H * 1.6, tw = im.width * th / im.height;   // big shell pieces, like the real wraps
+    x.save(); x.beginPath(); x.rect(x0, 0, x1 - x0, H); x.clip();
+    for (let yy = 0, row = 0; yy < H; yy += th, row++) for (let xx = x0 - (row % 2) * tw / 2, col = 0; xx < x1; xx += tw, col++) {
+      x.save(); x.translate(xx + ((col + row) % 2 ? tw : 0), yy); x.scale((col + row) % 2 ? -1 : 1, 1); x.drawImage(im, 0, 0, tw, th); x.restore(); }
+    x.fillStyle = 'rgba(255,255,255,0.05)'; x.fillRect(x0, 0, x1 - x0, H); x.restore();
+    r.abalone = true; c.__sfswShiny = true;
   }
   async function setGuideWrap(spec) {
     const key = JSON.stringify(spec); if (last.gw === key) return false; last.gw = key;
@@ -2012,7 +2028,7 @@ const sfswBoot = (async () => {
   // custom grips: the page's ring designer paints its strips with the rod's own cork and EVA textures
   const ringKit = async () => { loadRingTex(); for (let i = 0; i < 300 && !(corkReady && evaRingReady); i++) await wait(100); return corkReady && evaRingReady; };
   const paintRings = (cv, rings, ppi) => { const len = rings.reduce((a, r) => a + r.t, 0) || 1; stripPaint(cv, rings, len, ppi); };
-  window.__sfswDbg = () => ({ camera, controls, rod, THREE });   // for tests
+  window.__sfswDbg = () => ({ camera, controls, rod, THREE, unrolled });   // for tests
   window.SFSW_rod = { set(p) { want = p; return pump(); }, fit, ringKit, paintRings, mem: () => JSON.parse(JSON.stringify(renderer.info.memory)), view(v, now) { try { goView(v, now); } catch (e) {} }, state: () => clone(st), ready: sfswBoot };
   try { parent.postMessage({ sfswRod: 'ready' }, location.origin); } catch (e) {}
 }

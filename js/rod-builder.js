@@ -82,6 +82,7 @@
     '.rb-dz-note{font-size:12.5px;color:var(--c-muted);margin:4px 0 10px;line-height:1.45}',
     '.rb-dz iframe{display:block;width:100%;min-height:0;border:0;background:transparent}',
     '.rb-on #wrap-preview{display:none!important}',
+    '.rb-wphoto.rb-wph-full{height:150px;background-size:contain;background-color:#07090c}',
     '.rb-top .rb-wphoto{display:none}.rb-top.rb-wtop .rb-wphoto{display:block}',
     '.rb-rbar{display:none;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 2px;padding:8px;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-top.rb-rtop .rb-rbar{display:flex}',
     '.rb-rs{display:flex;align-items:center;gap:8px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:999px;padding:4px 10px 4px 4px;color:var(--c-text);font-size:13px;cursor:pointer;text-align:left}',
@@ -410,12 +411,15 @@
     var rnd = S.wrapMode === 'random', dc = !rnd && S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign.colors.map(function (c) { return c.hex; }) : null;
     if (dc) { main = dc[0]; sup = dc.slice(1); }
     p.mainOn = true;
-    if (!rnd && S.customDesign && S.customDesign.setup && S.customDesign.sfsw) p.main = { full: S.customDesign.setup, kind: S.customDesign.sfsw };
+    var ABW = (val('ROD_WRAPS') || []).find(function (w) { return w.id === 'abalone'; }) || { colors: ['Classic'] };
+    var abSpec = function (idx) { var c = ABW.colors[idx || 0] || 'Classic'; return { abalone: { img: BASE + 'rod-parts/abalone/' + c.toLowerCase() + '.jpg' }, pattern: 'diamond', axes: 2, stripes: [{ c: '#141414', t: 6 }], trims: { on: true, mm: 2.5, c: '#c9a24a', bands: [], ends: [] }, len: CFG.wrap ? wrapLen() : undefined }; };   // abalone under clear coat, thin gold trim
+    if (S.wrapId === 'abalone') p.main = abSpec(S.abaloneColorIdx);
+    else if (!rnd && S.customDesign && S.customDesign.setup && S.customDesign.sfsw) p.main = { full: S.customDesign.setup, kind: S.customDesign.sfsw };
     else if (!rnd && wrapLen() === BASE_LEN() && LOOK[(wrapNamed(S.wrapId) || {}).name]) p.main = { full: LOOK[wrapNamed(S.wrapId).name], kind: 'taper' };   // until the designer is up: the wrap's own design
     else p.main = wrapSpec(S.wrapId, main, sup, rnd ? null : S.customDesign, notes, 'rod wrap');
     if (p.main && !p.main.full && CFG.wrap) p.main.len = wrapLen();
     var sw = call('isSplitGrip') ? call('getSplitWrap') : null;
-    p.splitOn = !!sw; if (sw) p.split = wrapSpec(sw.id, main, sup, null, notes, 'split wrap');
+    p.splitOn = !!sw; if (sw) p.split = sw.id === 'abalone' ? abSpec(S.splitAbaloneColorIdx) : wrapSpec(sw.id, main, sup, null, notes, 'split wrap');
     p.gw = guideWrapSpec(S.guideWrapId, main, sup, notes);
     return { p: p, notes: notes };
   }
@@ -753,14 +757,18 @@
     var card = [].find.call(optList.querySelectorAll('.option-item'), function (o) { return (o.getAttribute('onclick') || '').indexOf("'" + id + "'") > 0; });
     if (card) {
       var box = el('div', 'rb-exs'); box.addEventListener('click', function (e) { e.stopPropagation(); });
-      for (var i = 0; i < n; i++) { var b = el('button', i === cur && S.wrapMode === 'example' ? 'on' : '', 'Example ' + (i + 1)); b.type = 'button'; b.dataset.i = i;
+      for (var i = 0; i < (id === 'abalone' ? 0 : n); i++) { var b = el('button', i === cur && S.wrapMode === 'example' ? 'on' : '', 'Example ' + (i + 1)); b.type = 'button'; b.dataset.i = i;
         b.onclick = function () { var k = +this.dataset.i; recPick[id] = k; var was = S.wrapMode;
           if (recs[k]) { setMode('example', true); toDesigner(id, null, null); } else { setMode('example', was === 'example'); exButtons(); } }; box.appendChild(b); }
-      [['build', 'Customize'], ['random', 'Random']].forEach(function (x) { var b = el('button', 'rb-exm' + (S.wrapMode === x[0] ? ' on' : ''), x[1]); b.type = 'button';
+      if (id === 'abalone' && w && w.colors) {   // abalone: pick the shell color here (no thread colors)
+        w.colors.forEach(function (c, k) { var b = el('button', (S.abaloneColorIdx || 0) === k ? 'on' : '', c); b.type = 'button';
+          b.onclick = function () { call('pickAbaloneColor', String(k)); setTimeout(exButtons, 30); }; box.appendChild(b); });
+      }
+      if (pr) [['build', 'Customize'], ['random', 'Random']].forEach(function (x) { var b = el('button', 'rb-exm' + (S.wrapMode === x[0] ? ' on' : ''), x[1]); b.type = 'button';
         b.onclick = function () { setMode(S.wrapMode === x[0] ? 'example' : x[0]); exButtons(); }; box.appendChild(b); });
       (card.querySelector('.option-item-body') || card).appendChild(box);
     }
-    if (wphoto) { var src = ph[Math.min(cur, ph.length - 1)]; wphoto.hidden = !src; if (src) { wphoto.style.backgroundImage = 'url("' + src + '")'; wphoto.onclick = function () { lightbox(w, Math.min(cur, ph.length - 1)); }; } updTop(); }
+    if (wphoto) { var src = ph[Math.min(cur, ph.length - 1)]; wphoto.hidden = !src; wphoto.classList.toggle('rb-wph-full', id === 'abalone'); if (src) { wphoto.style.backgroundImage = 'url("' + src + '")'; wphoto.onclick = function () { lightbox(w, Math.min(cur, ph.length - 1)); }; } updTop(); }
   }
   function lightbox(w, start) {
     var ph = wrapPhotos(w), i = Math.min(start || 0, Math.max(0, ph.length - 1)), box = el('div', 'rb-lb', '<button class="rb-lbx" aria-label="Close">×</button><img alt=""><div class="rb-lbt"></div>' +
@@ -787,8 +795,8 @@
     FM.forEach(function (x) { W.push({ name: x[0], hex: x[1], group: 'uv-metallic', metallic: true, adder: 10 }); });
     if (S.mainIdx >= W.length) S.mainIdx = 0; S.supportIdxs = (S.supportIdxs || []).filter(function (i) { return i < W.length; }); })();
   function designerAfterUpdate() {
-    var ab = !presetOf(S.wrapId);   // Abalone (no designer): its thread colors are picked on the page
-    if (colorSec) colorSec.style.display = (ab || !dz) ? '' : 'none';
+    var ab = !presetOf(S.wrapId);   // Abalone: no designer and no thread colors (its shell color is picked in its card)
+    if (colorSec) colorSec.style.display = (!ab && !dz) ? '' : 'none';
     if (S.wrapMode === 'random') updTop();
     if (modeEl) modeEl.style.display = !ab ? '' : 'none';
     if (dzNow) { var w = wrapById(S.wrapId); dzNow.textContent = w ? 'Priced as ' + w.name + ' · ' + (w.adder ? '+$' + w.adder : 'Included') : ''; }
