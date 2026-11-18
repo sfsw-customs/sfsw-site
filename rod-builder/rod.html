@@ -757,7 +757,7 @@ async function build() {
   blank.position.x = (bEnd + L.buttStart + 0.3) / 2; g.add(blank);
   // wraps from the Wrap Designer
   const putWrap = (k, at, maxLen = Infinity) => { const r = unrolled[k]; if (!r) return null; const lenIn = Math.min(r.lengthMM / IN, maxLen), flip = r.from === 'tip';
-    const m = tag(sleeve(at, at + lenIn, 0.011, wrapMat(r.canvas)), 's-wrap'); if (flip) { m.material.map.wrapS = THREE.RepeatWrapping; m.material.map.repeat.x = -1; } m.material.map.wrapT = THREE.RepeatWrapping; m.material.map.offset.y = window.__sfswWrapTurn != null ? window.__sfswWrapTurn : 0.07;   /* SFSW: a diamond faces the viewer, like the designer */ g.add(m); return [at, at + lenIn]; };
+    const m = tag(sleeve(at, at + lenIn, 0.011, wrapMat(r.canvas)), 's-wrap'); if (flip) { m.material.map.wrapS = THREE.RepeatWrapping; m.material.map.repeat.x = -1; } m.material.map.wrapT = THREE.RepeatWrapping; m.material.map.offset.y = window.__sfswWrapTurn != null ? window.__sfswWrapTurn : 0.01;   /* SFSW: a diamond faces the viewer, like the designer */ g.add(m); return [at, at + lenIn]; };
   // with a trim band, the butt-side trim fills the space from the wrap down to the foregrip
   if (window.__sfswHoldMain === undefined) window.__sfswHoldMain = !!window.frameElement;   // SFSW: inside the site, wait for the page's wrap before drawing one
   L.wrap = st.mainOn && !GRIP && !window.__sfswHoldMain ? putWrap('main', st.chkFore && unrolled.main && unrolled.main.trimMM ? x - 0.01 :   /* SFSW: the trim band butts right up to the trim ring */ x + (unrolled.main && unrolled.main.trimMM ? 0.02 : 0.6)) : null;
@@ -2012,6 +2012,7 @@ const sfswBoot = (async () => {
   // custom grips: the page's ring designer paints its strips with the rod's own cork and EVA textures
   const ringKit = async () => { loadRingTex(); for (let i = 0; i < 300 && !(corkReady && evaRingReady); i++) await wait(100); return corkReady && evaRingReady; };
   const paintRings = (cv, rings, ppi) => { const len = rings.reduce((a, r) => a + r.t, 0) || 1; stripPaint(cv, rings, len, ppi); };
+  window.__sfswDbg = () => ({ camera, controls, rod, THREE });   // for tests
   window.SFSW_rod = { set(p) { want = p; return pump(); }, fit, ringKit, paintRings, mem: () => JSON.parse(JSON.stringify(renderer.info.memory)), view(v, now) { try { goView(v, now); } catch (e) {} }, state: () => clone(st), ready: sfswBoot };
   try { parent.postMessage({ sfswRod: 'ready' }, location.origin); } catch (e) {}
 }
