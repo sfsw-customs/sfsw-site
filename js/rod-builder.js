@@ -218,7 +218,7 @@
       parts: [secOf('sec-seat')] },
     { title: 'Wrap', sub: 'Pick a wrap style, then start from one of our examples, build your own, or go Random and just pick colors.', view: 'wrap',
       parts: [secOf('sec-wrap-color'), secOf('sec-rod-wraps'), secOf('sec-split-wrap')] },
-    { title: 'Trim Bands', sub: 'The bands at both ends of the wrap that hold the thread down.', view: 'wrap', parts: [tbBox()] },
+    { skip: function () { return S.wrapId === 'trim-band'; }, title: 'Trim Bands', sub: 'The bands at both ends of the wrap that hold the thread down.', view: 'wrap', parts: [tbBox()] },
     { title: 'Guides', sub: 'Frame, ring material and frame color.', view: 'guides',
       parts: [secOf('sec-guides')] },
     { title: 'Guide <em>Wraps</em>', tab: 'Guide Wraps', sub: 'How each guide is wrapped onto the blank.', view: 'guides',
@@ -271,9 +271,9 @@
     p.appendChild(el('h2', 'rb-step-title', s.title)); p.appendChild(el('div', 'rb-step-sub', s.sub));
     s.parts.forEach(function (x) { p.appendChild(x); });
     var nav = el('div', 'rb-nav'), next = STEPS[i + 1];
-    if (i) { var b = el('button', 'btn btn-outline rb-back', '← Back'); b.type = 'button'; b.onclick = function () { go(i - 1, true); }; nav.appendChild(b); }
+    if (i) { var b = el('button', 'btn btn-outline rb-back', '← Back'); b.type = 'button'; b.onclick = function () { go(stepBy(i, -1), true); }; nav.appendChild(b); }
     if (next) { var n = el('button', 'btn btn-primary rb-next', 'Next: ' + (next.tab || next.title) + ' →'); n.type = 'button';
-      n.onclick = function () { go(i + 1, true); }; nav.appendChild(n); }
+      n.onclick = function () { go(stepBy(i, 1), true); }; nav.appendChild(n); s.nextEl = n; }
     if (s.last) p.classList.add('rb-step-last');
     p.appendChild(nav); panels.appendChild(p); s.panel = p;
   });
@@ -288,6 +288,13 @@
     return 0; }
   function setTop() { top.style.setProperty('--rb-top', navH() + 'px'); }
   setTop(); addEventListener('resize', setTop);
+  function skipOn(k) { return !!(STEPS[k] && STEPS[k].skip && STEPS[k].skip()); }
+  function stepBy(i, d) { var k = i + d; while (k > 0 && k < STEPS.length - 1 && skipOn(k)) k += d; return k; }
+  function syncSkips() {   // hidden steps (Trim Bands with the Trim Band wrap): no tab, and Next / Back step over them
+    STEPS.forEach(function (s, k) { if (s.tabEl) s.tabEl.style.display = skipOn(k) ? 'none' : '';
+      if (s.nextEl) { var nx = STEPS[stepBy(k, 1)]; s.nextEl.innerHTML = 'Next: ' + (nx.tab || nx.title) + ' →'; } });
+    if (skipOn(cur)) go(stepBy(cur, 1));
+  }
   function go(i, scroll) {
     cur = Math.max(0, Math.min(STEPS.length - 1, i)); reached = Math.max(reached, cur);
     STEPS.forEach(function (s, k) {
@@ -312,7 +319,7 @@
 
   // ───────────────────────── the 3D rod ─────────────────────────
   var frame = el('iframe'); frame.title = '3D preview of the rod you are building'; frame.src = CFG.engine; stage.insertBefore(frame, stage.firstChild);
-  var rod = null, lastView = null, lastSent = '';
+  var rod = null, lastView = null, lastSent = '', dzBusy = false, lastMain = null, busyT = null;
   var stepAt = 0;
   function view(v, step) { if (!v || (v === lastView && !step)) return; lastView = v; if (step) stepAt = Date.now(); if (rod) rod.view(v, !!step); }
   var poll = setInterval(function () {
@@ -416,10 +423,12 @@
     var ABW = (val('ROD_WRAPS') || []).find(function (w) { return w.id === 'abalone'; }) || { colors: ['Classic'] };
     var AT = abTrim(), abSpec = function (idx) { var c = ABW.colors[idx || 0] || 'Classic'; return { abalone: { img: BASE + 'rod-parts/abalone/' + c.toLowerCase() + '.jpg' }, pattern: 'diamond', axes: 2, stripes: [{ c: '#141414', t: 6 }], trims: { on: AT.on, mm: AT.mm, c: AT.c, bands: [], ends: [] }, len: CFG.wrap ? wrapLen() : undefined }; };   // abalone under clear coat, thin gold trim
     if (S.wrapId === 'abalone') p.main = abSpec(S.abaloneColorIdx);
+    else if (dzBusy && !rnd && presetOf(S.wrapId) && lastMain) p.main = lastMain;
     else if (!rnd && S.customDesign && S.customDesign.setup && S.customDesign.sfsw) p.main = { full: S.customDesign.setup, kind: S.customDesign.sfsw };
     else if (!rnd && wrapLen() === BASE_LEN() && LOOK[(wrapNamed(S.wrapId) || {}).name]) p.main = { full: LOOK[wrapNamed(S.wrapId).name], kind: 'taper' };   // until the designer is up: the wrap's own design
     else p.main = wrapSpec(S.wrapId, main, sup, rnd ? null : S.customDesign, notes, 'rod wrap');
     if (p.main && !p.main.full && CFG.wrap) p.main.len = wrapLen();
+    lastMain = p.main;
     var sw = call('isSplitGrip') ? call('getSplitWrap') : null;
     p.splitOn = !!sw; if (sw) p.split = sw.id === 'abalone' ? abSpec(S.splitAbaloneColorIdx) : wrapSpec(sw.id, main, sup, null, notes, 'split wrap');
     p.gw = guideWrapSpec(S.guideWrapId, main, sup, notes);
@@ -434,6 +443,7 @@
       approx.hidden = !s.notes.length;
       if (s.notes.length) approx.innerHTML = '<b>3D preview:</b> ' + s.notes.join(', ') + (s.notes.length > 1 ? ' are' : ' is') + ' a close match in your colors. See the photos for the real thing.';
       if (!rod) return;
+      if (dzBusy && S.wrapMode !== 'random' && presetOf(S.wrapId)) return;   // a new wrap is being laid out: one update when it's ready, not two
       var key = JSON.stringify(s.p); if (key === lastSent) return; lastSent = key;
       var r0 = rod.set(s.p); if (r0 && r0.then && Date.now() - stepAt < 4000) r0.then(function () { if (rod && lastView) rod.view(lastView, true); });
     }, 90);
@@ -585,6 +595,7 @@
     return best;
   }
   function readDesign() {
+    dzBusy = false;
     var w = dw(); if (!w || !w.wlCapture || !presetOf(S.wrapId) || S.wrapMode === 'random') return;
     var cap; try { cap = clean(w.wlCapture()); } catch (e) { return; }
     var kind = dzKind, cols = colorsOf(cap, kind), name = function (h) { try { return (w.WL_THREADS && w.WL_THREADS.name(h)) || h; } catch (e) { return h; } };
@@ -717,6 +728,7 @@
     updateAll();
   }
   async function toDesigner(id, restore, prevCols) {
+    dzBusy = true; clearTimeout(busyT); busyT = setTimeout(function () { dzBusy = false; }, 6000);   // (safety: never hold the rod for long)
     if (!dz) return; var n = ++applyN;
     var pr = presetOf(id);
     dzBox.style.display = pr ? '' : 'none';
@@ -767,7 +779,7 @@
       if (pr.p !== 'trim' && c2.trims && !(R && R.tb)) c2.trims.mm = 20;   // the Trim Band's wide band doesn't carry over
       try { w.wlApply(snap(w, c2)); } catch (e) {}
     }
-    clearTimeout(readT); readT = setTimeout(readDesign, 450);
+    clearTimeout(readT); readT = setTimeout(readDesign, 120);
   }
   if (dz) {
     var _pick = window.pickWrap, _render = window.renderWraps;
@@ -793,7 +805,12 @@
     exButtons();
   }
   // the picked wrap's examples (Example 1, 2, 3 … one per photo) sit in its own card; the photo slot above the list shows the one picked
+  var modeWrap = null;
   function exButtons() {
+    if (optList && S.wrapMode === 'build' && modeWrap && modeWrap !== S.wrapId && !dzBusy) {   // another wrap picked while the designer was open: close it and go to that wrap
+      S.wrapMode = 'example'; dzSimple = true; if (dzBox) dzBox.classList.add('rb-dz-off');
+      setTimeout(function () { var c = optList.querySelector('.option-item.selected'); if (c) { var y = c.getBoundingClientRect().top + scrollY - navH() - (top ? top.offsetHeight : 0) - 16; scrollTo({ top: y, behavior: 'smooth' }); } }, 60); }
+    modeWrap = S.wrapId;
     if (!optList) return; var id = S.wrapId, w = wrapNamed(id), pr = presetOf(id), recs = (pr && pr.recs) || [], ph = wrapPhotos(w), n = Math.max(ph.length, recs.length), cur = recPick[id] || 0;
     [].forEach.call(optList.querySelectorAll('.rb-exs'), function (x) { x.remove(); });
     var card = [].find.call(optList.querySelectorAll('.option-item'), function (o) { return (o.getAttribute('onclick') || '').indexOf("'" + id + "'") > 0; });
@@ -810,7 +827,7 @@
         b.onclick = function () { setMode(S.wrapMode === x[0] ? 'example' : x[0]); exButtons(); }; box.appendChild(b); });
       (card.querySelector('.option-item-body') || card).appendChild(box);
     }
-    placeModes(card);
+    placeModes(card); syncSkips();
     if (wphoto) { var src = ph[Math.min(cur, ph.length - 1)]; wphoto.hidden = !src; wphoto.classList.toggle('rb-wph-full', id === 'abalone'); if (src) { wphoto.style.backgroundImage = 'url("' + src + '")'; wphoto.onclick = function () { lightbox(w, Math.min(cur, ph.length - 1)); }; } updTop(); }
   }
   function lightbox(w, start) {
