@@ -1,10 +1,20 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<script>try{ if(window.frameElement&&frameElement.id==='sfsw-designer'){ window.WL={plan:'builder',cust:null}; document.documentElement.setAttribute('data-theme','dark'); document.documentElement.classList.add('sfsws'); document.documentElement.classList.add('sfswd'); } }catch(e){}</script>
+<script>try{ if(window.frameElement&&/^sfsw-(designer|trims)$/.test(frameElement.id)){ if(frameElement.id==='sfsw-trims') document.documentElement.classList.add('sfswtb','sfswtf'); window.WL={plan:'builder',cust:null}; document.documentElement.setAttribute('data-theme','dark'); document.documentElement.classList.add('sfsws'); document.documentElement.classList.add('sfswd'); } }catch(e){}</script>
 <style>
 .sfswd{--bg:#0a0e12;--panel:#111820;--line:rgba(255,255,255,.12);--fg:#e8e4dc;--muted:#8a9aaa;--ink:#c9941a;--accent:#c9941a;--accent-soft:rgba(201,148,26,.12);--thread-a:#c9941a;--grid:#1a2430;color-scheme:dark}
 .sfswd body{background:#0a0e12}
+/* SFSW: the Trim Band wrap's designer is only its trim band settings */
+html.sfswd.sfswtb section.panel:not(:has(#trimWrap)),html.sfswd.sfswtb .view.scroll{display:none!important}
+html.sfswd.sfswtb section.panel :is(div,label,button,p,small,span,select,input,h2,h3):not(:has(#trimWrap)):not(#trimWrap):not(#trimWrap *):not(.tbTitle):not(.tbNote){display:none!important}
+html.sfswd.sfswtb .f:has(>#trimWrap){display:block!important}
+/* SFSW: a roomier color picker */
+.sfswd .cpop{width:min(560px,calc(100vw - 24px))!important;max-height:none!important}
+.sfswd .cpop .clist{max-height:min(560px,70vh)!important}
+/* SFSW: the wrap list picks the pattern and axis lines, so the designer doesn't offer them */
+.sfswd .dsrow .mirrow,.sfswd .f:has(>#pattern),.sfswd .f:has(>#axes),.sfswd .f.dsinl:has(#tsize),.sfswd .f:has(>#pat){display:none!important}
+.sfswd #openBox{margin:10px 0 6px}
 /* SFSW: no thread size choice for customers */
 .sfswd .f.dsinl:has(>#tsize),.sfswd #thrSize,.sfswd .f:has(>#trimWrap),.sfswd #sizeRow,.sfswd #sizeNote{display:none!important}
 /* SFSW: the 3D rod on the page shows the wrap, so no flat preview here */
@@ -1784,7 +1794,7 @@ function drawStripeUI(){
     names.forEach((_,r)=>$('rc'+r).addEventListener('input',e=>{ stripes[r].c=e.target.value; run(); if(curPat().custom) drawCustomUI(); }));
     if(curPat().custom){   // your own pattern: add and remove colors
       $('stripes').querySelectorAll('.stripe[data-g="r"]').forEach((ch,r)=>{ if(names.length>1) ch.insertAdjacentHTML('beforeend',`<button type="button" data-cx="${r}" aria-label="Remove color ${r+1}">×</button>`); });
-      $('addTrim').insertAdjacentHTML('beforebegin','<button type="button" class="addbtn" id="custAddC">+ Add color</button>');
+      $('addTrim').insertAdjacentHTML('beforebegin','<button type="button" class="addbtn" id="custAddC">+ Add thread line</button>');
       $('custAddC').onclick=()=>{ const pal=['#f2c21b','#1aaba0','#7838c0','#2a8040','#f07830','#b0b4b8','#d83888','#2a90c8']; const nr=names.length;
         stripes.splice(nr,0,{c:pal[nr%pal.length],t:0}); drawStripeUI(); run(); };
       $('stripes').querySelectorAll('[data-cx]').forEach(b=>b.onclick=()=>{ const r=+b.dataset.cx; stripes.splice(r,1);
@@ -1799,7 +1809,7 @@ function drawStripeUI(){
   $('stripes').innerHTML = stripes.map((st,i)=> i===0 ? ''
       : i===1 ? `<span class="stripe" data-g="r" data-k="1"><span class="grip" title="Drag to swap colors" aria-hidden="true">⋮⋮</span><input type="color" id="sc1" value="${st.c}" aria-label="Center color"><input type="number" id="st1" min="3" step="2" value="${2*Math.round(st.t)+1}" aria-label="Threads in the center"><small class="slab">center threads</small></span>`
       : `<span class="stripe" data-g="r" data-k="${i}"><span class="grip" title="Drag to swap colors" aria-hidden="true">⋮⋮</span><input type="color" id="sc${i}" value="${st.c}" aria-label="Color ${i}"><input type="number" id="st${i}" min="1" step="1" value="${st.t}" aria-label="Threads of color ${i}"><button type="button" data-x="${i}" aria-label="Remove color ${i}">×</button></span>`).join('')
-    + `<button type="button" class="addbtn" id="addStripe">+ Add color</button>`;
+    + `<button type="button" class="addbtn" id="addStripe">+ Add thread line</button>`;
   stripes.forEach((st,i)=>{ if(i===0) return;
     $('sc'+i).addEventListener('input',e=>{st.c=e.target.value; sync(); run();});
     // the center box is the total around the center line: the setup thread plus the same number each side
@@ -1879,7 +1889,7 @@ function drawBetweenUI(){
   const chips = B.kind==='pattern'
     ? grp.map((g,gi)=>`<span class="stripe"><input type="color" id="btc${gi}" value="${B.colors.list[g.idx[0]]}" aria-label="Pattern between ${g.name} color"><small class="slab" data-cnfor="btc${gi}" data-base="${g.name}">${roleLbl(g.name,B.colors.list[g.idx[0]])}</small></span>`).join('')
     : B.stripes.map((s,i)=>`<span class="stripe" data-i="${i}"><input type="color" id="btc${i}" value="${s.c}" aria-label="Pattern between color ${i+1}"><input type="number" id="btt${i}" min="1" step="1" value="${s.t}" aria-label="Threads of pattern between color ${i+1}"><small class="slab">${B.kind==='chevron'?'threads':i===0?'Center':'each side'}</small><button type="button" data-bx="${i}" aria-label="Remove color ${i+1}">×</button></span>`).join('')
-      +`<button type="button" class="addbtn" id="btAdd">+ Add color</button>`;
+      +`<button type="button" class="addbtn" id="btAdd">+ Add thread line</button>`;
   w.innerHTML=box+`<div class="btpanel">
     <div class="bthead"><span>Pattern between</span><span class="seg" id="btKind"><button type="button" data-v="diamond" aria-pressed="${B.kind==='diamond'}">Diamond</button><button type="button" data-v="chevron" aria-pressed="${B.kind==='chevron'}">Chevron</button><button type="button" data-v="pattern" aria-pressed="${B.kind==='pattern'}">Cross wrap</button></span></div>
     ${B.kind==='pattern'?`<label class="f" style="margin-top:8px">Which pattern<select id="btPat">${names.map(n=>`<option${n===B.pat?' selected':''}>${n}</option>`).join('')}</select></label>`:''}

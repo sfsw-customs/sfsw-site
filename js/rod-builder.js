@@ -218,7 +218,7 @@
       parts: [secOf('sec-seat')] },
     { title: 'Wrap', sub: 'Pick a wrap style, then start from one of our examples, build your own, or go Random and just pick colors.', view: 'wrap',
       parts: [secOf('sec-wrap-color'), secOf('sec-rod-wraps'), secOf('sec-split-wrap')] },
-    { skip: function () { return S.wrapId === 'trim-band'; }, title: 'Trim Bands', sub: 'The bands at both ends of the wrap that hold the thread down.', view: 'wrap', parts: [tbBox()] },
+    { skip: function () { return S.wrapId === 'trim-band'; }, title: 'Trim Bands', sub: 'The bands at both ends of the wrap that hold the thread down.', view: 'trim', parts: [tbBox()] },
     { title: 'Guides', sub: 'Frame, ring material and frame color.', view: 'guides',
       parts: [secOf('sec-guides')] },
     { title: 'Guide <em>Wraps</em>', tab: 'Guide Wraps', sub: 'How each guide is wrapped onto the blank.', view: 'guides',
@@ -360,7 +360,7 @@
     var trims = { on: true, mm: 12, c: main, bands: sup[0] ? [{ c: sup[0], t: 3 }] : [], ends: sup[1] ? [{ c: sup[1], t: 2 }] : [] };
     var stripes = sup.length ? [{ c: main, t: 6 }].concat(sup.map(function (c, i) { return { c: c, t: i ? 2 : 3 }; })) : [{ c: main, t: 8 }];
     if (design) {
-      if (!/cross/i.test(design.kind || '') && design.setup && Array.isArray(design.setup.stripes)) return { setup: design.setup };
+      if (!/cross/i.test(design.kind || '') && design.setup && Array.isArray(design.setup.stripes)) return underOn() ? { setup: design.setup, blank: S.under.c } : { setup: design.setup };
       notes.push('your ' + label + ' design'); return { pattern: 'trim', axes: 2, stripes: stripes, trims: trims };
     }
     var m = WRAP_AS[id];
@@ -431,7 +431,8 @@
     lastMain = p.main;
     var sw = call('isSplitGrip') ? call('getSplitWrap') : null;
     p.splitOn = !!sw; if (sw) p.split = sw.id === 'abalone' ? abSpec(S.splitAbaloneColorIdx) : wrapSpec(sw.id, main, sup, null, notes, 'split wrap');
-    p.gw = guideWrapSpec(S.guideWrapId, main, sup, notes);
+    p.gw = S.guideWrapUserSelected ? guideWrapSpec(S.guideWrapId, main, sup, notes)
+      : { under: false, underC: '#1a1a1a', footC: '#1a1a1a', bands: [], trims: [] };   // plain black foot wraps until a guide wrap is picked (wrap examples don't change them)
     return { p: p, notes: notes };
   }
 
@@ -503,27 +504,36 @@
   var presetOf = function (id) { var w = wrapById(id); return w ? PRESET[w.name] : null; };
   var wrapSec = $('sec-rod-wraps'), colorSec = secOf('sec-wrap-color'), optList = $('rod-wrap-options');
   var dzBox = null, dz = null, dzKind = null, dzReady = null, readT = null, lastKind = null, dzSimple = true, modeEl = null, wphoto = null;
+  if (!S.under) S.under = { on: false, c: null };
   if (!S.wrapMode) S.wrapMode = S.customDesign && S.customDesign.sfsw ? 'build' : 'example';
   if (wrapSec && optList && WRAPS.length) {
     wphoto = el('div', 'rb-wphoto'); wphoto.title = 'See it bigger'; wphoto.hidden = true; optList.insertAdjacentElement('beforebegin', wphoto);
     optList.insertAdjacentHTML('beforebegin', '<div class="rb-presets-lbl">Our wraps · pick one to start</div>');
     [].forEach.call(wrapSec.querySelectorAll('p'), function (x) { if (/Design Your Own/.test(x.textContent)) x.style.display = 'none'; });   // the old pop-up designer's note
     dzBox = el('div', 'rb-dz', '<div class="rb-dz-head"><b>Wrap <em>Designer</em></b><span class="rb-dz-now"></span></div>' +
-      '<div class="rb-dz-note">Tap a color to change it, set the thread counts, and open Customize more for the pattern and angle. Every change shows on the 3D rod. 3 colors included · +$10 each extra color · metallics included · Ultra-UV metallics +$10 each.</div><div class="rb-dz-load">Loading the designer…</div>');
+      '<div class="rb-dz-note">Tap a color to change it, set the thread counts, and open Customize more for the pattern and angle. Every change shows on the 3D rod. 4 different colors included (the same color in more thread lines is free) · +$10 each extra color · metallics included · Ultra-UV metallics +$10 each.</div><div class="rb-dz-load">Loading the designer…</div>');
     dz = el('iframe'); dz.id = 'sfsw-designer'; dz.title = 'Wrap Designer'; dz.setAttribute('scrolling', 'no');
     dzBox.appendChild(dz);
-    var moreBtn = el('button', 'rb-more'); moreBtn.type = 'button'; dzBox.appendChild(moreBtn);
+    var moreBtn = el('button', 'rb-more'); moreBtn.type = 'button'; moreBtn.style.display = 'none'; dzBox.appendChild(moreBtn); dzSimple = false;
     var setMore = function () { moreBtn.innerHTML = (dzSimple ? 'Customize more <small>pattern, angle, thread size, trim bands</small><i>▾</i>' : 'Fewer options <i>▴</i>');
-      try { dz.contentDocument.documentElement.classList.toggle('sfsws', dzSimple); } catch (e) {} };
+      try { dz.contentDocument.documentElement.classList.toggle('sfsws', dzSimple); dz.contentDocument.documentElement.classList.toggle('sfswtb', S.wrapId === 'trim-band'); } catch (e) {} };
     moreBtn.onclick = function () { dzSimple = !dzSimple; setMore(); setTimeout(fitDz, 60); };
-    var fitDz = function () { try { var d = dz.contentDocument, w = d.querySelector('.wrap'); if (w) dz.style.height = Math.ceil(w.getBoundingClientRect().bottom + d.defaultView.scrollY) + 4 + 'px'; } catch (e) {} };
-    dz.addEventListener('load', function () { setMore(); try { new dz.contentWindow.ResizeObserver(fitDz).observe(dz.contentDocument.querySelector('.wrap')); } catch (e) {} fitDz(); }); setMore();
+    var fitDz = function () { try { var d = dz.contentDocument, w = d.querySelector('.wrap'); if (!w) return; var b = w.getBoundingClientRect().bottom;
+      [].forEach.call(d.querySelectorAll('.cpop'), function (pp) { if (pp.offsetParent) b = Math.max(b, pp.getBoundingClientRect().bottom + 12); });   // room for an open color picker
+      dz.style.height = Math.ceil(b + d.defaultView.scrollY) + 4 + 'px'; } catch (e) {} };
+    dz.addEventListener('load', function () { setMore();
+      try { var dd = dz.contentDocument, ob = dd.getElementById('openBox'), iw = dd.getElementById('innerWrap'); if (ob && iw) iw.parentNode.insertBefore(ob, iw);   // Color filler right under the thread colors
+        underBox(dd, iw);
+        dd.addEventListener('change', function (e) { if (!e.target || e.target.id !== 'innerOn' || !e.target.checked) return;   // a pattern between starts with a thread line to customize
+          setTimeout(function () { try { var w = dz.contentWindow, c = w.wlCapture(); if (c.inner && c.inner.on && !(c.inner.stripes || []).length) { c.inner.stripes = [{ c: (c.stripes[0] || {}).c || '#1e1617', t: 2 }]; w.wlApply(c); } } catch (x) {} }, 30); }, true);
+      } catch (e) {}
+      try { new dz.contentWindow.ResizeObserver(fitDz).observe(dz.contentDocument.querySelector('.wrap')); new dz.contentWindow.MutationObserver(function () { setTimeout(fitDz, 0); }).observe(dz.contentDocument.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'hidden', 'class'] }); } catch (e) {} fitDz(); }); setMore();
     // three ways to get a wrap: one of our examples, build your own in the designer, or pick colors and let us lay it out (Random)
     modeEl = el('div', 'rb-modes');
     modeEl.innerHTML = (CFG.wrap ? '<div class="rb-len"><span class="rb-len-l">Wrap length <small>' + BASE_LEN() + ' in included · +$10 each added inch</small></span><button type="button" data-d="-1" aria-label="Shorter">−</button><b></b><button type="button" data-d="1" aria-label="Longer">+</button><span class="rb-len-fee"></span></div>' : '') +
 
       '<div class="rb-dz-slot"></div>' +
-      '<div class="rb-rnd-note">Builder\u2019s Choice: pick a main color and supporting colors, and we lay out the wrap. Main + 2 supporting included · +$10 each extra supporting color.</div>' +
+      '<div class="rb-rnd-note">Builder\u2019s Choice: pick a main color and supporting colors, and we lay out the wrap. Main + 3 supporting included (4 colors) · +$10 each extra color.</div>' +
       '<div class="rb-rnd-slot"><div class="rb-rpal"></div></div>';
     ($('wrap-abalone-colors') || optList).insertAdjacentElement('afterend', modeEl);
     modeEl.querySelector('.rb-dz-slot').appendChild(dzBox);
@@ -596,8 +606,31 @@
     W.forEach(function (c, i) { if (c.group === 'uv-metallic' || !/^#[0-9a-f]{6}$/i.test(c.hex)) return; var v = parseInt(c.hex.slice(1), 16), d = Math.pow(r - (v >> 16), 2) * .3 + Math.pow(g - (v >> 8 & 255), 2) * .59 + Math.pow(b - (v & 255), 2) * .11; if (d < bd) { bd = d; best = i; } });
     return best;
   }
+  // Underwrap (+$20): a thread color under the wrap only. The designer's "Blank color" becomes it; the rod's blank keeps its own color.
+  var UNDER_FEE = 20, under0 = null;
+  function underBox(dd, iw) {
+    var bc = dd.getElementById('blankC'); if (!bc || !iw || dd.getElementById('sfswUnder')) return;
+    if (under0 == null) under0 = bc.value || '#101010';
+    var lab = bc.closest('label'), box = dd.createElement('div'); box.id = 'sfswUnder';
+    box.innerHTML = '<label class="chk"><input type="checkbox" id="underOn"> Underwrap <small style="color:var(--muted)">+$' + UNDER_FEE + ' · a thread color laid under the wrap (the blank keeps its color)</small></label><div class="sfswUrow"></div>';
+    iw.parentNode.insertBefore(box, iw);
+    if (lab) { [].slice.call(lab.childNodes).forEach(function (n) { if (n.nodeType === 3 && /Blank color/.test(n.textContent)) n.textContent = 'Underwrap color '; }); box.querySelector('.sfswUrow').appendChild(lab); }
+    var cb = box.querySelector('#underOn');
+    var put = function (hex) { bc.value = hex; bc.dispatchEvent(new Event('input', { bubbles: true })); bc.dispatchEvent(new Event('change', { bubbles: true })); };
+    cb.addEventListener('change', function () { S.under.on = cb.checked; underSync(); put(cb.checked ? (S.under.c || threadHex(dw())('862 Twilight Black') || '#1e1617') : under0); clearTimeout(readT); readT = setTimeout(readDesign, 120); });
+    bc.addEventListener('input', function () { if (S.under.on && bc.value !== under0) S.under.c = bc.value; });
+    underSync();
+  }
+  function underOk() { var d = S.customDesign, st = d && d.setup; return S.wrapId !== 'trim-band' && !(st && st.pattern === 'dragon') && S.wrapId !== 'abalone'; }
+  function underSync() {   // no Underwrap on the dragon scale wraps (they have their metallic) or the Trim Band
+    try { var dd = dz.contentDocument, box = dd.getElementById('sfswUnder'), cb = dd.getElementById('underOn'), bc = dd.getElementById('blankC'); if (!box) return;
+      var ok = underOk(); box.style.display = ok ? '' : 'none'; if (!ok && S.under.on) { S.under.on = false; if (bc && under0) { bc.value = under0; bc.dispatchEvent(new Event('input', { bubbles: true })); } }
+      cb.checked = S.under.on; var row = box.querySelector('.sfswUrow'); if (row) row.style.display = S.under.on ? '' : 'none'; } catch (e) {}
+  }
+  function underOn() { return !!(S.under.on && S.wrapMode === 'build' && designOn() && underOk() && S.under.c); }
+  window.SFSW_underwrap = underOn;
   function readDesign() {
-    dzBusy = false;
+    dzBusy = false; underSync();
     var w = dw(); if (!w || !w.wlCapture || !presetOf(S.wrapId) || S.wrapMode === 'random') return;
     var cap; try { cap = clean(w.wlCapture()); } catch (e) { return; }
     var kind = dzKind, cols = colorsOf(cap, kind), name = function (h) { try { return (w.WL_THREADS && w.WL_THREADS.name(h)) || h; } catch (e) { return h; } };
@@ -655,7 +688,7 @@
   var rndBar, rndPal, rndSlot = 'main';
   function rndName(i) { var c = (val('WRAP_COLORS') || [])[i]; return c ? c.name : '—'; }
   function renderRandom() {
-    var W = val('WRAP_COLORS') || []; if (!rndBar || !W.length) return; var sup = S.supportIdxs || (S.supportIdxs = []), inc = 2, fee = 10;
+    var W = val('WRAP_COLORS') || []; if (!rndBar || !W.length) return; var sup = S.supportIdxs || (S.supportIdxs = []), inc = 3, fee = 10;
     if (rndSlot !== 'main' && !(rndSlot < sup.length)) rndSlot = 'main';
     var slot = function (k, i, label) { var c = W[i] || {}, on = rndSlot === k;
       return '<button type="button" class="rb-rs' + (on ? ' on' : '') + '" data-k="' + k + '"><i style="background:' + (c.hex || '#333') + '"></i><span><small>' + label + '</small>' + (c.name || '—') + '</span>' +
@@ -689,10 +722,40 @@
   function abTrim() { return S.abTrim || (S.abTrim = { on: true, mm: 10, c: '#dabd66' }); }   // abalone's own trim bands (default 9130 Metallic Gold)
   function tbCap() { if (S.wrapId === 'abalone') return { trims: abTrim() }; var w = dw(); try { return w && w.wlCapture ? w.wlCapture() : null; } catch (e) { return null; } }
   function tbSet(fn) { if (S.wrapId === 'abalone') { fn(abTrim()); updateAll(); setTimeout(renderTB, 60); return; } var w = dw(), c = tbCap(); if (!c || !c.trims) return; fn(c.trims); try { w.wlApply(c); } catch (e) {} clearTimeout(readT); readT = setTimeout(readDesign, 200); setTimeout(renderTB, 260); }
+  // the Trim Bands tab: the designer's own trim band settings, in a second designer that shows only them;
+  // what's set there goes onto the wrap (only the trims; the wrap itself stays put)
+  var tf = null, tfReady = null, tfT = null, tfSync = false;
+  function tfFit() { try { var d = tf.contentDocument, w = d.querySelector('.wrap'); var b = w.getBoundingClientRect().bottom;
+    [].forEach.call(d.querySelectorAll('.cpop'), function (pp) { if (pp.offsetParent) b = Math.max(b, pp.getBoundingClientRect().bottom + 12); });
+    tf.style.height = Math.ceil(b + 8) + 'px'; } catch (e) {} }
+  function tfPull() {   // the main wrap's trims into the trims designer
+    var w = dw(), fw = tf && tf.contentWindow; if (!w || !w.wlCapture || !fw || !fw.wlApply) return;
+    try { tfSync = true; fw.wlApply(clean(w.wlCapture())); } catch (e) {} setTimeout(function () { tfSync = false; tfFit(); }, 60);
+  }
+  function tfPush() {   // the trims designer's trims onto the main wrap
+    if (tfSync) return; var w = dw(), fw = tf && tf.contentWindow; if (!w || !w.wlApply || !fw || !fw.wlCapture) return;
+    clearTimeout(tfT); tfT = setTimeout(function () { try { var c = w.wlCapture(), t = fw.wlCapture().trims; if (!t || JSON.stringify(t) === JSON.stringify(c.trims)) return;
+      c.trims = JSON.parse(JSON.stringify(t)); w.wlApply(c); clearTimeout(readT); readT = setTimeout(readDesign, 150); } catch (e) {} }, 180);
+  }
+  function tbFrame(body) {
+    if (!tf) {
+      tf = el('iframe'); tf.id = 'sfsw-trims'; tf.title = 'Trim band settings'; tf.setAttribute('scrolling', 'no'); tf.style.cssText = 'display:block;width:100%;height:420px;border:0;background:transparent';
+      tfReady = new Promise(function (res) { tf.addEventListener('load', function () { var tries = 0, t = setInterval(function () { var fw = tf.contentWindow;
+        if ((fw && fw.wlCapture && fw.wlApply) || ++tries > 80) { clearInterval(t); try { var dd = tf.contentDocument; dd.documentElement.classList.remove('sfsws');
+          ['input', 'change', 'click'].forEach(function (ev) { dd.addEventListener(ev, function () { setTimeout(tfPush, 0); }, true); });
+          new fw.MutationObserver(function () { setTimeout(tfFit, 0); }).observe(dd.body, { childList: true, subtree: true, attributes: true }); } catch (e) {}
+          res(); } }, 100); }); });
+      tf.src = BASE + 'taper.html';
+    }
+    if (tf.parentNode !== body) { body.innerHTML = ''; body.appendChild(tf); }
+    tfReady.then(function () { tfPull(); setTimeout(tfFit, 200); });
+  }
+  addEventListener('message', function (e) { if (tf && e.source === tf.contentWindow && e.data && e.data.wlH) tfFit(); });
   function renderTB() {
     if (!tbEl) return; var body = tbEl.querySelector('.rb-tb-body'), c = tbCap(), w = dw();
     if (S.wrapMode === 'random' && S.wrapId !== 'abalone') { body.innerHTML = '<p class="rb-tb-note">Random wraps get trim bands in your main color. Pick an example or Customize on the Wrap step to choose them here.</p>'; return; }
     if (!c || !c.trims) { body.innerHTML = '<p class="rb-tb-note">Loading…</p>'; setTimeout(renderTB, 600); return; }
+    if (S.wrapId !== 'abalone') return tbFrame(body);
     var T = c.trims, groups = []; try { groups = w.WL_THREADS.BRANDS.sfsw.groups; } catch (e) {}
     var nm = '—'; groups.forEach(function (g) { g[1].forEach(function (x) { if (String(x[1]).toLowerCase() === String(T.c).toLowerCase()) nm = x[0]; }); });
     body.innerHTML = '<div class="rb-tb-row"><div class="rb-seg"><button type="button" data-on="1" aria-pressed="' + !!T.on + '">Trim bands</button><button type="button" data-on="0" aria-pressed="' + !T.on + '">No trim bands</button></div>' +
@@ -721,10 +784,11 @@
     var lo = 6, hi = 90; for (var k = 0; k < 7; k++) { var mid = Math.round((lo + hi) / 2); if (await open(mid) > 0.5) lo = mid; else hi = mid; }
     put(Math.round((lo + hi) / 2)); clearTimeout(readT); readT = setTimeout(readDesign, 250);
   }
+  window.SFSW_designColors = function () { var d = designOn(); return d && d.colors ? d.colors.length : null; };
   function setMode(m, quiet) {
     var was = S.wrapMode; S.wrapMode = m;
     if (m === 'build' && was !== 'build') { genericDesign(); dzSimple = false; if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
-    if (m === 'random' && was !== 'random') { S.supportIdxs = (S.supportIdxs || []).slice(0, 2); call('renderSupportingRows'); }   // Random starts at main + 2 supporting
+    if (m === 'random' && was !== 'random') { S.supportIdxs = (S.supportIdxs || []).slice(0, 3); call('renderSupportingRows'); }   // Builder's Choice starts at main + 3 supporting
     renderModes(); if (quiet) return;
     if (was === 'random' && m !== 'random') { clearTimeout(readT); readT = setTimeout(readDesign, 50); }
     updateAll();
@@ -830,7 +894,7 @@
         b.onclick = function () { setMode(S.wrapMode === x[0] ? 'example' : x[0]); exButtons(); }; box.appendChild(b); });
       (card.querySelector('.option-item-body') || card).appendChild(box);
     }
-    placeModes(card); syncSkips();
+    placeModes(card); syncSkips(); try { dz.contentDocument.documentElement.classList.toggle('sfswtb', S.wrapId === 'trim-band'); } catch (e) {}
     if (wphoto) { var src = ph[Math.min(cur, ph.length - 1)]; wphoto.hidden = !src; wphoto.classList.toggle('rb-wph-full', id === 'abalone'); if (src) { wphoto.style.backgroundImage = 'url("' + src + '")'; wphoto.onclick = function () { lightbox(w, Math.min(cur, ph.length - 1)); }; } updTop(); }
   }
   function lightbox(w, start) {
@@ -875,11 +939,12 @@
   function designOn() { return S.wrapMode !== 'random' && presetOf(S.wrapId) && S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign : null; }
   var metFee = function () { var d = designOn(); if (d) return d.colors.filter(function (c) { return c.uv; }).length * 10;   // Ultra-UV (Fuji) metallics +$10, Pro-Wrap metallics included
     var W = val('WRAP_COLORS') || []; return [S.mainIdx].concat(S.supportIdxs || []).reduce(function (a, i) { return a + (W[i] && W[i].group === 'uv-metallic' ? 10 : 0); }, 0); };
-  window.calcUVMetallicFee = function () { return metFee() + lenFee(); };   // (the wrap length rides along here)
+  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0); };   // (the wrap length rides along here)
   var _order = window.buildOrderItem;
   if (typeof _order === 'function') window.buildOrderItem = function () {
     var it = _order.apply(this, arguments), d = designOn();
     if (lenFee() && it.lines) it.lines.push({ label: 'Wrap Length', value: wrapLen() + ' in  +$' + lenFee() });
+    if (underOn() && it.lines) { var un; try { un = dw().WL_THREADS.name(S.under.c); } catch (e) {} it.lines.push({ label: 'Underwrap', value: (un || S.under.c) + '  +$' + UNDER_FEE }); }
     if (!d) return it;
     var fee = call('supportExtraFee') || 0, extra = Math.max(0, d.colors.length - 3), mets = d.colors.filter(function (c) { return c.uv; }).length;
     var notes = []; if (fee) notes.push('+$' + fee + ' for ' + extra + ' extra color' + (extra > 1 ? 's' : '')); if (mets) notes.push('+$' + mets * 10 + ' for ' + mets + ' Ultra-UV metallic' + (mets > 1 ? 's' : ''));
@@ -1200,7 +1265,7 @@
               return '<button type="button" title="' + c.name + '" class="' + (i === ci ? 'on' : '') + '" style="background:' + c.hex + '" onclick="pickGuideColor(' + i + ')"></button>'; }).join('') +
               '</span><span class="rb-gd-v">' + cols[ci].name + '</span></div>'
           : (cols.length === 1 ? '<div class="rb-gd-row"><span class="rb-gd-k">Frame color</span><span class="rb-gd-sw"><button type="button" class="on" style="background:' + cols[0].hex + '"></button></span><span class="rb-gd-v">' + cols[0].name + ' only' + '</span></div>' : '');
-        var tipHtml = ups.length ? '<div class="rb-gd-row"><span class="rb-gd-k">Upgrade the tip</span><span class="rb-gd-tips">' + ups.map(function (k) {
+        var tipHtml = ups.length ? '<div class="rb-gd-row"><span class="rb-gd-k">Upgrade the tip</span><span class="rb-gd-tips">' + ups.slice().sort(function (a, b) { return (fee[a] || 0) - (fee[b] || 0); }).map(function (k) {
             return '<button type="button" class="' + (S.tipUpgrade === k ? 'on' : '') + '" onclick="pickTipUpgrade(event,\'' + k + '\')"><span class="rb-gd-box"></span>' + TIP_NAMES[k] + ' <b>+$' + fee[k] + '</b></button>'; }).join('') + '</span></div>' : '';
         det = '<div class="rb-gd-det"><div class="rb-gd-det-h">' + picked.name + ' <span>' + money(picked.adder) + '</span></div>' +
           (picked.desc ? '<div class="rb-gd-desc">' + picked.desc + '</div>' : '') + colorHtml + tipHtml + '</div>';

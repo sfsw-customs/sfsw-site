@@ -387,7 +387,7 @@
           </div>
           <div class="cfg-section-body" id="sec-wrap-color">
             <div class="wrap-note" id="color-included-note">
-              One main color and 2 supporting colors included. +$10 for each additional color
+              One main color and 3 supporting colors included. +$10 for each additional color
             </div>
             <div class="wrap-color-row">
               <div class="wrap-color-row-head">
@@ -399,7 +399,7 @@
             <div id="supporting-color-rows"></div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:.5rem">
               <button type="button" class="btn btn-outline" id="add-support-btn" style="font-size:12px;padding:8px 14px">+ Add Supporting Color</button>
-              <span style="font-size:11px;color:var(--c-muted)" id="support-price-hint">First 2 supporting colors included · each additional +$10</span>
+              <span style="font-size:11px;color:var(--c-muted)" id="support-price-hint">First 3 supporting colors included · each additional +$10</span>
             </div>
           </div>
         </div>
@@ -932,7 +932,7 @@ const BUTT_OPTIONS = [
 ];
 const RUBBER_COVER_FEE = 5;
 
-const SUPPORT_INCLUDED_COUNT = 2;
+const SUPPORT_INCLUDED_COUNT = 3;   // main + 3 supporting = 4 colors included
 const EXTRA_COLOR_FEE = 10;
 
 const variantLabel = v => `${v.length} · ${v.lineWt}`;
@@ -1014,7 +1014,8 @@ const guideWrapAdder = () => {
 };
 const effectiveSupportIncluded = () => SUPPORT_INCLUDED_COUNT;
 const effectiveExtraColorFee   = () => EXTRA_COLOR_FEE;
-const extraSupportCount = () => Math.max(0, S.supportIdxs.length - effectiveSupportIncluded());
+const extraSupportCount = () => (window.SFSW_designColors && SFSW_designColors() != null) ? Math.max(0, SFSW_designColors() - 1 - effectiveSupportIncluded())   // a design: its different thread colors
+  : Math.max(0, new Set(S.supportIdxs.filter(i => i !== S.mainIdx)).size - effectiveSupportIncluded());   // only different colors count; the same color again is free
 const supportExtraFee   = () => extraSupportCount() * effectiveExtraColorFee();
 
 const lockingRingActive = () => {
@@ -1489,7 +1490,7 @@ function renderGuideWraps() {
 
   if (S.guideWrapPhotoIdx >= gw.photos.length) S.guideWrapPhotoIdx = 0;
   const src = gw.photos[S.guideWrapPhotoIdx];
-  /* old preview photo removed */
+  if (src) imgEl.src = encodeURI(src);
   imgEl.alt = gw.name;
   imgEl.onerror = () => { imgEl.style.opacity = 0.2; };
   imgEl.style.opacity = 1;
@@ -2235,7 +2236,7 @@ function updateAll() {
   }
   const includedNote = document.getElementById('color-included-note');
   if (includedNote) {
-    includedNote.textContent = 'One main color and 2 supporting colors included.'
+    includedNote.textContent = 'One main color and 3 supporting colors included.'
       + ' +$' + effectiveExtraColorFee() + ' for each additional color';
   }
 

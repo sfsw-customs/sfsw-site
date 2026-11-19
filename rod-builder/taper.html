@@ -1,10 +1,20 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<script>try{ if(window.frameElement&&frameElement.id==='sfsw-designer'){ window.WL={plan:'builder',cust:null}; document.documentElement.setAttribute('data-theme','dark'); document.documentElement.classList.add('sfsws'); document.documentElement.classList.add('sfswd'); } }catch(e){}</script>
+<script>try{ if(window.frameElement&&/^sfsw-(designer|trims)$/.test(frameElement.id)){ if(frameElement.id==='sfsw-trims') document.documentElement.classList.add('sfswtb','sfswtf'); window.WL={plan:'builder',cust:null}; document.documentElement.setAttribute('data-theme','dark'); document.documentElement.classList.add('sfsws'); document.documentElement.classList.add('sfswd'); } }catch(e){}</script>
 <style>
 .sfswd{--bg:#0a0e12;--panel:#111820;--line:rgba(255,255,255,.12);--fg:#e8e4dc;--muted:#8a9aaa;--ink:#c9941a;--accent:#c9941a;--accent-soft:rgba(201,148,26,.12);--thread-a:#c9941a;--grid:#1a2430;color-scheme:dark}
 .sfswd body{background:#0a0e12}
+/* SFSW: the Trim Band wrap's designer is only its trim band settings */
+html.sfswd.sfswtb section.panel:not(:has(#trimWrap)),html.sfswd.sfswtb .view.scroll{display:none!important}
+html.sfswd.sfswtb section.panel :is(div,label,button,p,small,span,select,input,h2,h3):not(:has(#trimWrap)):not(#trimWrap):not(#trimWrap *):not(.tbTitle):not(.tbNote){display:none!important}
+html.sfswd.sfswtb .f:has(>#trimWrap){display:block!important}
+/* SFSW: a roomier color picker */
+.sfswd .cpop{width:min(560px,calc(100vw - 24px))!important;max-height:none!important}
+.sfswd .cpop .clist{max-height:min(560px,70vh)!important}
+/* SFSW: the wrap list picks the pattern and axis lines, so the designer doesn't offer them */
+.sfswd .dsrow .mirrow,.sfswd .f:has(>#pattern),.sfswd .f:has(>#axes),.sfswd .f.dsinl:has(#tsize),.sfswd .f:has(>#pat){display:none!important}
+.sfswd #openBox{margin:10px 0 6px}
 /* SFSW: no thread size choice for customers */
 .sfswd .f.dsinl:has(>#tsize),.sfswd #thrSize,.sfswd .f:has(>#trimWrap),.sfswd #sizeRow,.sfswd #sizeNote{display:none!important}
 /* SFSW: the 3D rod on the page shows the wrap, so no flat preview here */
@@ -550,7 +560,7 @@ function drawInnerUI(){
     <div class="innerhead"><span>Pattern between</span>
       <span class="seg" id="innerPat"><button type="button" data-v="diamond" aria-pressed="${IN.pattern==='diamond'}">Diamond</button><button type="button" data-v="chevron" aria-pressed="${IN.pattern==='chevron'}">Chevron</button></span></div>
     <div class="stripes" id="innerList">${IN.stripes.map((st,i)=>`<span class="stripe" data-i="${i}"><span class="grip" title="Drag to move" aria-hidden="true">⋮⋮</span><input type="color" id="ic${i}" value="${st.c}" aria-label="Pattern between color ${i+1}"><input type="number" id="it${i}" min="1" step="1" value="${st.t}" aria-label="Threads of pattern between color ${i+1}"><small style="color:var(--muted);padding-right:2px"${IN.pattern!=='chevron'&&i>0?` data-cnfor="ic${i}"`:''}>${IN.pattern==='chevron'?'threads':i===0?'Center':(colorName(st.c)||'each side')}</small><button type="button" data-ix="${i}" aria-label="Remove pattern between color ${i+1}">×</button></span>`).join('')}
-      <button type="button" class="addbtn" id="innerAddC">+ Add color</button></div>
+      <button type="button" class="addbtn" id="innerAddC">+ Add thread line</button></div>
     <div id="innerPlaceRow" hidden style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:13px;color:var(--muted)">Place it</span><span class="seg" id="innerPlace"><button type="button" data-v="center">Centered in the space</button><button type="button" data-v="against">Against the main pattern</button></span></div>
     <div id="innerDirRow" hidden style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:13px;color:var(--muted)">These chevrons point toward</span><span class="seg" id="innerDir"><button type="button" data-v="tip">Tip</button><button type="button" data-v="butt">Butt</button></span></div>
     <div class="innernote" id="innerNote"></div></div>`;
@@ -569,7 +579,7 @@ function drawInnerUI(){
 function drawStripeUI(){
   const cen = '';   // the first color is the center; no separate center option
   $('stripes').innerHTML = cen + stripes.map((st,i)=>`<span class="stripe" data-i="${i}"><span class="grip" title="Drag to move" aria-hidden="true">⋮⋮</span><input type="color" id="sc${i}" value="${st.c}" aria-label="Color ${i+1}"><input type="number" id="st${i}" min="1" step="1" value="${st.t}" aria-label="Number of threads of color ${i+1}"><small style="color:var(--muted);padding-right:2px"${state.pattern!=='chevron'&&i>0?` data-cnfor="sc${i}"`:''}>${state.pattern==='chevron'?'threads':i===0?'Center':(colorName(st.c)||'each side')}</small><button type="button" data-x="${i}" aria-label="Remove color ${i+1}">×</button></span>`).join('')
-    + `<button type="button" class="addbtn" id="addStripe">+ Add color</button>`;
+    + `<button type="button" class="addbtn" id="addStripe">+ Add thread line</button>`;
   if($('cenOn')){
     $('cenOn').addEventListener('change',e=>{ state.center.on=e.target.checked; drawStripeUI(); render(); });
     if($('cenC')) $('cenC').addEventListener('input',e=>{ state.center.c=e.target.value; render(); });
@@ -817,16 +827,16 @@ window.WL_unrolled=function(W,H){ const r=window.__wlRod; if(!r) return null;
     const a=t&&t[2]?0.5*(u+t[2]*vv)*Math.hypot(stp,Cc/r.n):(py+0.5)/H*Cc; return r.shade(WL_TWIST.rgb(c,a,fr,t&&t[3]||0),fr,k); };
   const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d'), im=x.createImageData(W,H), d=im.data, end=r.pos[r.steps];
   // with a trim band the wrap runs from the outside of one trim band to the outside of the other
-  const Wt=WLTrim.width(r.trims,r.tw), za=r.trimOnly?0:(Wt?-Wt:0), zb=r.trimOnly?Math.max(Wt,1):(Wt?end+Wt:r.L), rgb={};
-  for(let px=0;px<W;px++){ const z=za+(px+0.5)/W*(zb-za), [u,stp]=r.zToU(z), td=r.trimOnly?z:(Wt?(z<0?-z:z>end?z-end:-1):-1);
-    if(td>=0){ for(let py=0;py<H;py++){ const o=(py*W+px)*4, t=WLTrim.at(r.trims,td,r.tw,(py+0.5)/H,z<0?-1:1,r.blankHex,r.D(z));
+  const Wt=WLTrim.width(r.trims,r.tw), za=0, zb=r.trimOnly?Math.max(Wt,1):(Wt?end:r.L), Wo=r.trimOnly?0:Math.min(Wt,end/2), rgb={};
+  for(let px=0;px<W;px++){ const z=za+(px+0.5)/W*(zb-za), [u,stp]=r.zToU(z), td=r.trimOnly?z:(Wo?(z<Wo?Wo-z:z>end-Wo?z-(end-Wo):-1):-1);
+    if(td>=0){ for(let py=0;py<H;py++){ const o=(py*W+px)*4, t=WLTrim.at(r.trims,td,r.tw,(py+0.5)/H,z<Wo?-1:1,r.blankHex,r.D(z));
         if(!t){ d[o+3]=0; continue; } const col=TWS(px,py,rgb[t[0]]||(rgb[t[0]]=[1,3,5].map(i=>parseInt(t[0].slice(i,i+2),16))),t[1],1); d[o]=col[0]; d[o+1]=col[1]; d[o+2]=col[2]; d[o+3]=255; } continue; }
     if(r.dragon && z>=0 && z<=end+1e-6){ for(let py=0;py<H;py++){ const o=(py*W+px)*4, vv=(py+0.5)/H*r.n, c=r.dragon(u,vv,stp,z); if(c){ d[o]=Math.min(255,c[0]); d[o+1]=Math.min(255,c[1]); d[o+2]=Math.min(255,c[2]); d[o+3]=255; continue; }
         const t=r.surf(u,vv,stp); if(!t){ d[o+3]=0; continue; } const col=t[0]<0?r.fillRGB:TWS(px,py,r.cols[t[0]],t[1],1,t,u,vv,stp); d[o]=col[0]; d[o+1]=col[1]; d[o+2]=col[2]; d[o+3]=255; } continue; }
     for(let py=0;py<H;py++){ const o=(py*W+px)*4, vv=(py+0.5)/H*r.n, t=(z>=0&&z<=end+1e-6)?r.surf(u,vv,stp):null;
       if(!t){ d[o+3]=0; continue; } const col=t[0]<0?r.fillRGB:TWS(px,py,r.cols[t[0]],t[1],1,t,u,vv,stp);
       d[o]=col[0]; d[o+1]=col[1]; d[o+2]=col[2]; d[o+3]=255; } }
-  x.putImageData(im,0,0); return {canvas:c,lengthMM:zb-za,from:r.from,trimMM:Wt}; };
+  x.putImageData(im,0,0); return {canvas:c,lengthMM:zb-za,from:r.from,trimMM:r.trimOnly?Wt:Wo}; };
 function drawHow({at,tw,mod,dir,chev,n,st0,C0,cols,blank,cum,inner}){
   if(state.pattern==='trim'){ const st=WLTrim.steps(state.trims,c=>`<i class="dot" style="background:${c}"></i>`,$('blankC').value,state.tsize);
     $('howGrid').innerHTML=st.length?`<figure class="stepfig"><figcaption><b>Trim band</b><br>From the middle of the trim band out:<ol style="margin:6px 0 0;padding-left:20px">${st.map(t=>`<li>${t}</li>`).join('')}</ol></figcaption></figure>`:'<p class="sub">Add a trim band to see the steps.</p>';
