@@ -734,6 +734,7 @@
     if (!restore && dzKind === 'cross') noCustom(w);
     if (!restore && REC) { var hx0 = threadHex(w);   // the wrap's own design goes in first, so nothing else ever shows
       cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } if (REC.tb) cap.trims = tbOf(REC.tb, hx0); }
+    if (!restore && pr.p !== 'trim' && cap.trims && !(REC && REC.tb)) cap.trims.mm = 20;
     else if (!restore && !prev && dzKind === 'taper') { cap.stripes = JSON.parse(JSON.stringify(START.stripes)); if (cap.trims) { cap.trims.c = START.trim; cap.trims.bands = []; cap.trims.ends = []; } }
     if (!restore) snap(w, cap);
     try { w.wlApply(cap); } catch (e) {}
@@ -763,6 +764,7 @@
         if (c2.trims) { c2.trims.c = hx(R.trim || R.stripes[0][0]); c2.trims.bands = []; c2.trims.ends = []; }
         if (R.tb) c2.trims = tbOf(R.tb, hx);
       } else if (dzKind === 'cross' || switched || first) { (c2.stripes || []).forEach(function (x, i) { x.c = cols[i % cols.length]; }); if (c2.trims) { c2.trims.c = cols[0]; c2.trims.bands = []; c2.trims.ends = []; } }
+      if (pr.p !== 'trim' && c2.trims && !(R && R.tb)) c2.trims.mm = 20;   // the Trim Band's wide band doesn't carry over
       try { w.wlApply(snap(w, c2)); } catch (e) {}
     }
     clearTimeout(readT); readT = setTimeout(readDesign, 450);
