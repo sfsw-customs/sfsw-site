@@ -489,7 +489,9 @@
       { trim: '862 Twilight Black',
         stripes: [['9100 Metallic Yellow Gold', 1], ['862 Twilight Black', 4], ['9100 Metallic Yellow Gold', 3], ['813 Silver Shiner', 6], ['862 Twilight Black', 6],
           ['9100 Metallic Yellow Gold', 6], ['819 Ghost Grey', 2], ['862 Twilight Black', 2], ['9100 Metallic Yellow Gold', 2]] } ] }, 'Chevron — 2 Axis': { k: 'taper', p: 'chevron', a: 2 },
-    'Dragon Scale': { k: 'taper', p: 'dragon', a: 8 }, 'Chevron — 4 Axis': { k: 'taper', p: 'chevron', a: 4 },
+    'Dragon Scale': { k: 'taper', p: 'dragon', a: 8, recs: [   // photo 1: metallic green scales, photo 3: metallic silver
+      { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9520 Metallic Green', line: '862 Twilight Black' } },
+      { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9860 Metallic Silver', line: '862 Twilight Black' } } ] }, 'Chevron — 4 Axis': { k: 'taper', p: 'chevron', a: 4 },
     'Diamond — 4 Axis': { k: 'taper', p: 'diamond', a: 4 }, '4 Axis Decorative Chevron or Diamond': { k: 'taper', p: 'diamond', a: 4 },
     '8 Axis Wrap': { k: 'taper', p: 'diamond', a: 8 }, '16 Axis Wrap': { k: 'taper', p: 'diamond', a: 16 },
     '2 Axis Wrap Over Dragon Scales': { k: 'taper', p: 'dragon', a: 8, over: true },
@@ -745,8 +747,8 @@
     if (WS && !restore) { cap.unit = 'in'; cap.len = (+wrapLen()).toFixed(2); cap.dB = (+WS.dB).toFixed(1); cap.dT = (+WS.dT).toFixed(1); cap.dM = ((+WS.dB + +WS.dT) / 2).toFixed(1); }
     if (!restore && dzKind === 'cross') noCustom(w);
     if (!restore && REC) { var hx0 = threadHex(w);   // the wrap's own design goes in first, so nothing else ever shows
-      cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } if (REC.tb) cap.trims = tbOf(REC.tb, hx0); }
-    if (!restore && pr.p !== 'trim' && cap.trims && !(REC && REC.tb)) cap.trims.mm = 20;
+      cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } if (REC.tb) cap.trims = tbOf(REC.tb, hx0); if (REC.dragon && cap.dragon) { cap.dragon.metal = hx0(REC.dragon.metal); cap.dragon.line = hx0(REC.dragon.line); } }
+    if (!restore && pr.p !== 'trim' && cap.trims && !(REC && REC.tb)) { cap.trims.mm = 20; cap.trims.bands = []; cap.trims.ends = []; }
     else if (!restore && !prev && dzKind === 'taper') { cap.stripes = JSON.parse(JSON.stringify(START.stripes)); if (cap.trims) { cap.trims.c = START.trim; cap.trims.bands = []; cap.trims.ends = []; } }
     if (!restore) snap(w, cap);
     try { w.wlApply(cap); } catch (e) {}
@@ -775,8 +777,9 @@
         c2.stripes = R.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; });
         if (c2.trims) { c2.trims.c = hx(R.trim || R.stripes[0][0]); c2.trims.bands = []; c2.trims.ends = []; }
         if (R.tb) c2.trims = tbOf(R.tb, hx);
+        if (R.dragon && c2.dragon) { c2.dragon.metal = hx(R.dragon.metal); c2.dragon.line = hx(R.dragon.line); }
       } else if (dzKind === 'cross' || switched || first) { (c2.stripes || []).forEach(function (x, i) { x.c = cols[i % cols.length]; }); if (c2.trims) { c2.trims.c = cols[0]; c2.trims.bands = []; c2.trims.ends = []; } }
-      if (pr.p !== 'trim' && c2.trims && !(R && R.tb)) c2.trims.mm = 20;   // the Trim Band's wide band doesn't carry over
+      if (pr.p !== 'trim' && c2.trims && !(R && R.tb)) { c2.trims.mm = 20; c2.trims.bands = []; c2.trims.ends = []; }   // the Trim Band's wide band doesn't carry over
       try { w.wlApply(snap(w, c2)); } catch (e) {}
     }
     clearTimeout(readT); readT = setTimeout(readDesign, 120);
@@ -790,7 +793,7 @@
       dressWraps(); return r; };
   }
   // each wrap gets a small photo (tap for the full photos), split into Included and Upgrades
-  function wrapPhotos(w) { if (!w) return []; if (w.photo) return [w.photo]; var a = []; for (var i = 1; i <= (w.photoCount || 0); i++) a.push('../preview/rod-wraps/' + (w.photoSlug || w.id) + '-' + i + '.png'); return a; }
+  function wrapPhotos(w) { if (!w) return []; if (w.photo) return [w.photo]; var a = []; if (w.photoNums) return w.photoNums.map(function (i) { return '../preview/rod-wraps/' + (w.photoSlug || w.id) + '-' + i + '.png'; }); for (var i = 1; i <= (w.photoCount || 0); i++) a.push('../preview/rod-wraps/' + (w.photoSlug || w.id) + '-' + i + '.png'); return a; }
   function dressWraps() {
     if (!optList) return; var upg = false;
     [].forEach.call(optList.querySelectorAll('.option-item'), function (o) {
