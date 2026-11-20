@@ -1951,6 +1951,7 @@ const sfswBoot = (async () => {
   async function setWrap(k, spec) {
     const key = JSON.stringify(spec); if (last[k] === key) return false; last[k] = key;
     if (spec.full) {   // a design from the SFSW Wrap Designer, exactly as the customer made it (regular or cross wrap)
+      if (window.__sfswAb) window.__sfswAb[k] = null;   // no sheet / shell over a designer wrap
       src[k] = spec.kind === 'cross' ? 'cross' : 'taper'; if (src[k] === 'cross') await crossFrame(k);
       const w = await whenReady(fk(k), w => w.WL_unrolled && w.__wlRod); w.__wlFitted = true;
       try { w.wlApply(clone(spec.full)); } catch (e) { console.warn('design', k, e); }
@@ -1972,7 +1973,7 @@ const sfswBoot = (async () => {
     if (spec.blank) o.blankC = spec.blank;
     try { w.wlApply(o); } catch (e) { console.warn('wrap', k, e); }
     const ab = window.__sfswAb || (window.__sfswAb = {}), mm = o.trims && o.trims.on ? +o.trims.mm : 0;   // every re-read of this wrap paints the shell again
-    ab[k] = spec.abalone ? (rr => paintAbalone(rr, spec.abalone.img, mm).catch(e => console.warn('abalone', e))) : spec.veil ? (rr => paintVeil(rr, spec.veil.colors || [], mm)) : null;
+    ab[k] = spec.abalone ? (rr => paintAbalone(rr, spec.abalone.img, mm).catch(e => console.warn('abalone', e))) : spec.veil ? (rr => paintVeil(rr, spec.veil.colors || [], mm, spec.veil.name || '')) : null;
     await wait(120); await readWrap(k);
     return true;
   }
@@ -1989,24 +1990,20 @@ const sfswBoot = (async () => {
     r.abalone = true; c.__sfswShiny = true;
   }
   // SFSW: Builder's Choice — a cloth sheet over the wrap (between the trim bands) with the customer's colors and "Builder's Choice" on it
-  function paintVeil(r, cols, trimMM) {
+  function paintVeil(r, cols, trimMM, wname) {
     const c = r.canvas, x = c.getContext('2d'), W = c.width, H = c.height, L = r.lengthMM || 1;
     const t = Math.round((trimMM || 0) / L * W), x0 = t, x1 = W - t, pxX = W / L, circ = Math.PI * 15, pxY = H / circ;   // px per mm along the rod and around it
     x.save(); x.beginPath(); x.rect(x0, 0, x1 - x0, H); x.clip();
-    const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#1b1f25'); g.addColorStop(.5, '#2a2f37'); g.addColorStop(1, '#1b1f25');
-    x.fillStyle = g; x.fillRect(x0, 0, x1 - x0, H);
-    for (let i = 0; i < 9; i++) {   // soft folds in the cloth
-      const fx = x0 + (x1 - x0) * (i + .5) / 9 + Math.sin(i * 2.3) * 40 * pxX / 18, fw = (30 + 25 * Math.abs(Math.sin(i * 1.7))) * pxX;
-      const fg = x.createLinearGradient(fx - fw, 0, fx + fw, 0); fg.addColorStop(0, 'rgba(0,0,0,0)'); fg.addColorStop(.45, 'rgba(255,255,255,.05)'); fg.addColorStop(.55, 'rgba(0,0,0,.12)'); fg.addColorStop(1, 'rgba(0,0,0,0)');
-      x.fillStyle = fg; x.fillRect(fx - fw, 0, fw * 2, H); }
-    const step = Math.max(2, Math.round(pxX * .35));   // a fine weave
-    x.fillStyle = 'rgba(255,255,255,.025)'; for (let xx = x0; xx < x1; xx += step * 2) x.fillRect(xx, 0, step, H);
-    const mid = (x0 + x1) / 2, bw = 1.6 * pxX, gap = .6 * pxX, set = cols.length * (bw + gap), off = 30 * pxX;   // the customer's colors as thin bands, each side of the words
-    [-1, 1].forEach(sd => cols.forEach((cc, i) => { const bx = sd < 0 ? mid - off - set + i * (bw + gap) : mid + off + (cols.length - 1 - i) * (bw + gap); x.fillStyle = cc; x.fillRect(bx, 0, bw, H); }));
-    [-1, 1].forEach(sd => cols.forEach((cc, i) => { const bx = sd < 0 ? x0 + 6 * pxX + i * (bw + gap) : x1 - 6 * pxX - (i + 1) * (bw + gap) + gap; x.fillStyle = cc; x.fillRect(bx, 0, bw, H); }));
-    const fh = 5.2 * pxY, sx = pxX / pxY;   // the words, the same size around and along the rod
-    [H * .5, 0, H].forEach(cy => { x.save(); x.translate(mid, cy); x.scale(sx, -1);   /* the texture runs upside down on the rod */ x.font = '700 ' + Math.round(fh) + 'px "Barlow Condensed","Oswald","Arial Narrow",Arial,sans-serif';
-      x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = 'rgba(0,0,0,.45)'; x.fillText('BUILDER’S CHOICE', 3, -4); x.fillStyle = '#d4a73c'; x.fillText('BUILDER’S CHOICE', 0, 0); x.restore(); });
+    x.fillStyle = '#111316'; x.fillRect(x0, 0, x1 - x0, H);   // plain black
+    const mid = (x0 + x1) / 2, fh = 5.2 * pxY, sx = pxX / pxY;   // the words, the same size around and along the rod, with the customer's colors as dots to their right
+    [H * .5, 0, H].forEach(cy => { x.save(); x.translate(mid, cy); x.scale(sx, -1);   /* the texture runs upside down on the rod */
+      x.font = '700 ' + Math.round(fh) + 'px "Barlow Condensed","Oswald","Arial Narrow",Arial,sans-serif'; x.textBaseline = 'middle';
+      const label = 'BUILDER’S CHOICE', nm = (wname || '').toUpperCase(), nw = nm ? x.measureText(nm).width + fh * .7 : 0, tw = x.measureText(label).width, rad = fh * .3, gap = fh * .28, dw = cols.length ? cols.length * 2 * rad + (cols.length - 1) * gap + fh * .55 : 0, left0 = -(nw + tw + dw) / 2, left = left0 + nw;   // wrap name | BUILDER'S CHOICE | color dots
+      x.textAlign = 'left'; if (nm) { x.fillStyle = '#e6e8eb'; x.fillText(nm, left0, 0); x.fillStyle = 'rgba(255,255,255,.35)'; x.fillRect(left - fh * .38, -fh * .32, Math.max(1, fh * .05), fh * .6); }
+      x.fillStyle = '#d4a73c'; x.fillText(label, left, 0);
+      cols.forEach((cc, i) => { const cx = left + tw + fh * .55 + rad + i * (2 * rad + gap); x.beginPath(); x.arc(cx, -fh * .04, rad, 0, Math.PI * 2); x.fillStyle = cc; x.fill();
+        x.lineWidth = Math.max(1, fh * .04); x.strokeStyle = 'rgba(255,255,255,.35)'; x.stroke(); });
+      x.restore(); });
     x.restore(); c.__sfswShiny = false;
   }
   async function setGuideWrap(spec) {

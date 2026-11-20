@@ -428,7 +428,7 @@
     else if (!rnd && wrapLen() === BASE_LEN() && LOOK[(wrapNamed(S.wrapId) || {}).name]) p.main = { full: LOOK[wrapNamed(S.wrapId).name], kind: 'taper' };   // until the designer is up: the wrap's own design
     else p.main = wrapSpec(S.wrapId, main, sup, rnd ? null : S.customDesign, notes, 'rod wrap');
     if (p.main && !p.main.full && CFG.wrap) p.main.len = wrapLen();
-    if (rnd && p.main && !p.main.full && S.wrapId !== 'abalone') p.main.veil = { colors: [main].concat(sup).filter(Boolean) };   // Builder's Choice: a sheet over the wrap with their colors
+    if (rnd && p.main && !p.main.full && S.wrapId !== 'abalone') p.main.veil = { colors: [main].concat(sup).filter(Boolean), name: ((wrapNamed(S.wrapId) || {}).name || '').replace(/\s*\u2014\s*/g, ' - ') };   // Builder's Choice: a sheet over the wrap with their colors
     lastMain = p.main;
     var sw = call('isSplitGrip') ? call('getSplitWrap') : null;
     p.splitOn = !!sw; if (sw) p.split = sw.id === 'abalone' ? abSpec(S.splitAbaloneColorIdx) : wrapSpec(sw.id, main, sup, null, notes, 'split wrap');
@@ -906,6 +906,7 @@
     if (optList && S.wrapMode === 'build' && modeWrap && modeWrap !== S.wrapId && !dzBusy) {   // another wrap picked while the designer was open: close it and go to that wrap
       S.wrapMode = 'example'; dzSimple = true; if (dzBox) dzBox.classList.add('rb-dz-off');
       setTimeout(function () { var c = optList.querySelector('.option-item.selected'); if (c) { var y = c.getBoundingClientRect().top + scrollY - navH() - (top ? top.offsetHeight : 0) - 16; scrollTo({ top: y, behavior: 'smooth' }); } }, 60); }
+    if (S.wrapMode === 'random' && modeWrap && modeWrap !== S.wrapId) { S.wrapMode = 'example'; setTimeout(function () { renderModes(); updTop(); updateAll(); }, 0); }   // another wrap picked: leave Builder's Choice, show that wrap's example
     modeWrap = S.wrapId;
     if (!optList) return; var id = S.wrapId, w = wrapNamed(id), pr = presetOf(id), recs = (pr && pr.recs) || [], ph = wrapPhotos(w), n = Math.max(ph.length, recs.length), cur = recPick[id] || 0;
     [].forEach.call(optList.querySelectorAll('.rb-exs'), function (x) { x.remove(); });
