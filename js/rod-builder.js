@@ -588,6 +588,7 @@
     if (!dragon || over) (cap.stripes || []).forEach(function (x) { add(x.c, +x.t || 0); });
     if (cap.center && cap.center.on) add(cap.center.c);
     if (cap.inner && cap.inner.on) (cap.inner.stripes || []).forEach(function (x) { add(x.c); });
+    if (cap.inner && cap.inner.on && cap.inner.fillOn && cap.inner.pattern !== 'chevron') (cap.inner.fill || []).forEach(function (x) { add(x.c); });   // filler colors count too
     if (cap.arms === 'cover') add(cap.fillC);
     var T = cap.trims; if (T && T.on !== false) { add(T.c); (T.bands || []).forEach(function (x) { add(x.c); }); (T.ends || []).forEach(function (x) { add(x.c); }); }
     return out;
@@ -665,7 +666,7 @@
       var c0 = w.wlCapture(), a0 = +c0.axes, a1 = +b.dataset.v, id = axisWrap(c0.pattern, a1); if (!id || a1 === a0) { if (!id) { e.preventDefault(); e.stopImmediatePropagation(); } return; }
       setTimeout(function () { try {
         var c = w.wlCapture(), k = a0 / a1, sc = function (L) { return (L || []).map(function (x) { return { c: x.c, t: Math.max(1, Math.round(x.t * k)) }; }); };
-        c.axes = a1; c.stripes = sc(c0.stripes); if (c.inner && c0.inner) c.inner.stripes = sc(c0.inner.stripes);
+        c.axes = a1; c.stripes = sc(c0.stripes); if (c.inner && c0.inner) { c.inner.stripes = sc(c0.inner.stripes); c.inner.fill = sc(c0.inner.fill); }
         w.wlApply(c);
         S.wrapId = id; S.wrapUserSelected = true; modeWrap = id; call('renderWraps'); exButtons(); updateAll();
         clearTimeout(readT); readT = setTimeout(readDesign, 150);

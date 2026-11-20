@@ -566,6 +566,7 @@ function drawInnerUI(){
       <span class="seg" id="innerPat"><button type="button" data-v="diamond" aria-pressed="${IN.pattern==='diamond'}">Diamond</button><button type="button" data-v="chevron" aria-pressed="${IN.pattern==='chevron'}">Chevron</button></span></div>
     <div class="stripes" id="innerList">${IN.stripes.map((st,i)=>`<span class="stripe" data-i="${i}"><span class="grip" title="Drag to move" aria-hidden="true">⋮⋮</span><input type="color" id="ic${i}" value="${st.c}" aria-label="Pattern between color ${i+1}"><input type="number" id="it${i}" min="1" step="1" value="${st.t}" aria-label="Threads of pattern between color ${i+1}"><small style="color:var(--muted);padding-right:2px"${IN.pattern!=='chevron'&&i>0?` data-cnfor="ic${i}"`:''}>${IN.pattern==='chevron'?'threads':i===0?'Center':(colorName(st.c)||'each side')}</small><button type="button" data-ix="${i}" aria-label="Remove pattern between color ${i+1}">×</button></span>`).join('')}
       <button type="button" class="addbtn" id="innerAddC">+ Add thread line</button></div>
+    ${IN.pattern==='diamond'?`<div id="innerFillBox" style="margin-top:12px"><label class="chk"><input type="checkbox" id="innerFillOn"${IN.fillOn?' checked':''}> Filler over it <small style="color:var(--muted)">(thread lines that carry on from the edge of the main pattern and lie over the pattern between)</small></label>${IN.fillOn?`<div class="stripes" id="innerFillList" style="margin-top:8px">${(IN.fill||[]).map((st,i)=>`<span class="stripe"><input type="color" id="if${i}" value="${st.c}" aria-label="Filler color ${i+1}"><input type="number" id="ift${i}" min="1" step="1" value="${st.t}" aria-label="Threads of filler color ${i+1}"><small style="color:var(--muted);padding-right:2px" data-cnfor="if${i}">${colorName(st.c)||''}</small><button type="button" data-fx="${i}" aria-label="Remove filler color ${i+1}">×</button></span>`).join('')}<button type="button" class="addbtn" id="innerFillAdd">+ Add thread line</button></div>`:''}</div>`:''}
     <div id="innerPlaceRow" hidden style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:13px;color:var(--muted)">Place it</span><span class="seg" id="innerPlace"><button type="button" data-v="center">Centered in the space</button><button type="button" data-v="against">Against the main pattern</button></span></div>
     <div id="innerDirRow" hidden style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:13px;color:var(--muted)">These chevrons point toward</span><span class="seg" id="innerDir"><button type="button" data-v="tip">Tip</button><button type="button" data-v="butt">Butt</button></span></div>
     <div class="innernote" id="innerNote"></div></div>`;
@@ -580,6 +581,10 @@ function drawInnerUI(){
   sortable($('innerList'), IN.stripes, ()=>{ itouch(); drawInnerUI(); render(); });
   w.querySelectorAll('button[data-ix]').forEach(b=>b.onclick=()=>{ if(IN.stripes.length>1){ IN.stripes.splice(+b.dataset.ix,1); itouch(); drawInnerUI(); render(); } });
   $('innerAddC').onclick=()=>{ IN.stripes.push({c:'#ffffff',t:IN.stripes[IN.stripes.length-1]?.t||2}); itouch(); drawInnerUI(); render(); };
+  if($('innerFillOn')) $('innerFillOn').addEventListener('change',e=>{ IN.fillOn=e.target.checked; if(IN.fillOn && !(IN.fill||[]).length) IN.fill=[{c:(stripes[stripes.length-1]||{}).c||'#1e1617',t:4}]; drawInnerUI(); render(); });
+  (IN.fill||[]).forEach((st,i)=>{ const c=$('if'+i), n=$('ift'+i); if(c) c.addEventListener('input',e=>{ st.c=e.target.value; render(); }); if(n) n.addEventListener('input',e=>{ st.t=Math.max(1,parseInt(e.target.value)||1); render(); }); });
+  w.querySelectorAll('button[data-fx]').forEach(b=>b.onclick=()=>{ IN.fill.splice(+b.dataset.fx,1); if(!IN.fill.length) IN.fillOn=false; drawInnerUI(); render(); });
+  if($('innerFillAdd')) $('innerFillAdd').onclick=()=>{ IN.fill.push({c:'#ffffff',t:IN.fill[IN.fill.length-1]?.t||2}); drawInnerUI(); render(); };
 }
 function drawStripeUI(){
   const cen = '';   // the first color is the center; no separate center option
@@ -673,6 +678,7 @@ function render(){
   const blank=hex($('blankC').value);
   // Pattern between: the open space runs F mark-units wide, centered c units past each main line (x = dir*(u-v) or dir*(u+v)).
   const IN=state.inner, inOn=IN.on && !fill && IN.stripes.length>0;
+  const SF=(inOn && !chevMode && IN.pattern!=='chevron' && IN.fillOn && (IN.fill||[]).length)?IN.fill:[], cumX=cum.slice(); SF.forEach(s=>{ cumX.push(cumX[cumX.length-1]+s.t*tw*TF(s.c)); cols.push(hex(s.c)); }); const bandX=cumX[cumX.length-1], nF=S.length+IN.stripes.length;   // SFSW: the filler over the pattern between
   const st1=pos[1]-pos[0], F=2-bandW/st1; let cIn=chevMode ? bandW/st1+F/2 : 1; const flipC=chevMode && chevSign()!==(state.from==='butt'?1:-1);   // flipC: chevrons turned the other way, so the open space sits on the other side of each mark
   const chev2=IN.pattern==='chevron', tw2=state.tsize/sinT*(chev2?1:2);
   if(inOn && IN.auto){ // take half the open space so blank still shows around it, split evenly between its colors
@@ -697,6 +703,7 @@ function render(){
   // which thread is at lengthwise distance d (mm) behind the start line: returns [order, colorIdx, frac] or null
   const at=d=>{
     let rep=0;
+    if(SF.length && d>=bandW && d<bandX){ let j=0; while(j<SF.length-1 && d>=cumX[S.length+j+1]) j++; const k=S.length+j, q=(d-cumX[k])/(tw*TF(SF[j].c)); return [k,nF+j,q%1,k*131+Math.floor(q)]; }   // SFSW: filler threads, past the main bands
     if(d>=bandW){ if(!fill) return null; const pw=bandW-c0; rep=Math.floor((d-c0)/pw); d-=rep*pw; }   // repeats skip the center
     let k=0; while(k<S.length-1 && d>=cum[k+1]) k++;
     const fr=((d-cum[k])/(tw*TF(S[k].c)))%1;
@@ -767,7 +774,7 @@ function render(){
   // Trim Band: Far fits the band to the picture, Mid and Close go in from there
   const cssHT=trimOnly ? Math.round(Math.min(cssW*0.92*Dmax/(0.86*Zt), (state.zoom||70)*1.5)) : (state.zoom||70), cssWT=Math.round(cssHT*0.86*Zt/Dmax);   // always true scale, so the thread angle on screen is the real angle
   const fillRGB=hex($('fillC').value);
-  const MET=window.SFSW_METALLIC||new Set(), metc=S.concat(state.inner.on?state.inner.stripes:[]).map(st=>MET.has((st.c||'').toLowerCase())), blankMet=MET.has($('blankC').value.toLowerCase()), fillMet=MET.has($('fillC').value.toLowerCase());
+  const MET=window.SFSW_METALLIC||new Set(), metc=S.concat(state.inner.on?state.inner.stripes:[]).concat(SF).map(st=>MET.has((st.c||'').toLowerCase())), blankMet=MET.has($('blankC').value.toLowerCase()), fillMet=MET.has($('fillC').value.toLowerCase());
   // metallic look: high contrast (dark away from the light, bright tinted shine where it faces it) with a fine glint
   let twA=0, twI=0; const TWX_=(c,a,fr)=>window.WL_TWIST?WL_TWIST.rgb(c,a,fr,twI):c;   // twA: mm around the rod at the pixel being drawn   // Metallic Twist threads: dashes of their two colors
   const metShade=(base,s,light,x,y,fr)=>{ base=TWX_(base,twA,fr); const h=Math.sin(x*12.9898+y*78.233)*43758.5453, g=h-Math.floor(h);
@@ -1123,7 +1130,7 @@ document.querySelectorAll('.howbox').forEach(d=>d.addEventListener('toggle',()=>
       pattern:state.pattern, dragon:{line:$('dgLine').value,metal:$('dgMetal').value,over:{...state.over}}, axes:state.axes, angle:state.angle, mode:state.mode, nOverride:state.nOverride ?? null,
       tsize:state.tsize, blankC:$('blankC').value, arms:state.arms, fillC:$('fillC').value, fill:$('fill').checked,
       stripes:stripes.map(s=>({c:s.c,t:s.t})), c1:1, center:{...state.center}, chevTo:state.chevTo, trims:JSON.parse(JSON.stringify(state.trims)),
-      inner:{on:state.inner.on,pattern:state.inner.pattern,chevTo:state.inner.chevTo||null,place:state.inner.place||'center',auto:state.inner.auto,stripes:state.inner.stripes.map(s=>({c:s.c,t:s.t}))} };
+      inner:{on:state.inner.on,pattern:state.inner.pattern,chevTo:state.inner.chevTo||null,place:state.inner.place||'center',auto:state.inner.auto,stripes:state.inner.stripes.map(s=>({c:s.c,t:s.t})),fillOn:!!state.inner.fillOn,fill:(state.inner.fill||[]).map(s=>({c:s.c,t:s.t}))} };
   }
   const press=(id,v)=>[...$(id).children].forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.v===String(v) || +b.dataset.v===+v)));
   function apply(o){
@@ -1143,6 +1150,7 @@ document.querySelectorAll('.howbox').forEach(d=>d.addEventListener('toggle',()=>
     state.chevTo = o.chevTo==='tip'||o.chevTo==='butt' ? o.chevTo : null;
     state.center = {on:false,c:(o.center&&o.center.c)||'#1a1a1a',t:(o.center&&+o.center.t)||1};
     if(o.inner) state.inner={on:!!o.inner.on,pattern:o.inner.pattern==='chevron'?'chevron':'diamond',chevTo:o.inner.chevTo==='tip'||o.inner.chevTo==='butt'?o.inner.chevTo:null,place:o.inner.place==='against'?'against':'center',auto:!!o.inner.auto,touched:!o.inner.auto,stripes:(o.inner.stripes||[]).map(s=>({c:s.c,t:+s.t||1}))};
+    if(o.inner){ state.inner.fillOn=!!o.inner.fillOn; state.inner.fill=(o.inner.fill||[]).map(s=>({c:s.c,t:Math.max(1,+s.t||1)})); }
     else state.inner.on=false;
     state.touched=true; state.autoT=false; stripes.length=0; (o.stripes||[]).forEach(s=>stripes.push({c:s.c,t:+s.t||1}));
     if(!stripes.length) stripes.push({c:'#c8202b',t:defThreads()});
