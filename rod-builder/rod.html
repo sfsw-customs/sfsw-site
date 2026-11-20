@@ -1342,13 +1342,13 @@ function buttCap(g, img) {
 
 // ---------- camera ----------
 let camSet = false, anim = null, curView = 'handle';
-function viewSpan(v) { return { all: [GRIP ? L.buttStart - 0.3 : 0, RL()], butt: [L.buttStart - 0.6, L.butt + 3], handle: [0, L.handle1 + 1], wrap: [L.wrap[0] - 1.2, L.wrap[1] + 1.2],
+function viewSpan(v) { return { all: [GRIP ? L.buttStart - 0.3 : 0, RL()], butt: [L.buttStart - 0.6, L.butt + 3], handle: [0, L.handle1 + 1], wrap: [L.wrap[0] - 0.45, L.wrap[1] + 0.8],
   trim: [L.wrap[0] - 0.9, L.wrap[0] + 1.5], guides: [L.guides - 3, L.guides + 14], tip: [st.len - 14, st.len + 0.6] }[v]; }
 function goView(v, now) {
   curView = v; [...$('views').children].forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v));
   const span = viewSpan(v === 'grips' ? 'handle' : v), off = -RL() / 2,   /* SFSW: grips = a closer look at the handle */ asp = camera.aspect || 1.5, fovT = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   const cx = (span[0] + span[1]) / 2 + off, w = span[1] - span[0];
-  const dist = Math.max(2.2, (w * (v === 'all' ? 0.42 : v === 'handle' ? 0.62 : v === 'grips' ? 0.4 : 0.5)) / (fovT * Math.min(asp, 2.4)));
+  const dist = v === 'wrap' ? Math.max(2.2, w / 2 / (fovT * asp)) : Math.max(2.2, (w * (v === 'all' ? 0.42 : v === 'handle' ? 0.62 : v === 'grips' ? 0.4 : 0.5)) / (fovT * Math.min(asp, 2.4)));
   const target = new THREE.Vector3(cx, v === 'guides' || v === 'tip' ? 0.45 * (st.type === 'spinning' ? -1 : 1) : 0.1, 0);
   // every view looks at the rod straight from the side, a little from above, so the rod lies level across the screen
   const dir = { all: [0, 0.16, 1], butt: [0, 0.22, 1], handle: [0, 0.22, 1], grips: [0, 0.3, 1], wrap: [0, 1, 0.02], wrapside: [0, 0.24, 1], trim: [0, 0.26, 1], guides: [0, 0.2, 1], tip: [0, 0.2, 1] }[v];

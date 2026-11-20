@@ -483,7 +483,7 @@
       { trim: '479 Gulfstream',
         stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 4], ['9860 Metallic Silver', 4], ['841 Iron Ore', 4], ['479 Gulfstream', 6], ['862S Metallic Twist Black/Silver', 2],
           ['479 Gulfstream', 3], ['841 Iron Ore', 3], ['479 Gulfstream', 4], ['9860 Metallic Silver', 2], ['862 Twilight Black', 1]] },
-      { trim: '484 Deep Sea',
+      { trim: '513 Guacamole',
         stripes: [['9520 Metallic Green', 1], ['862 Twilight Black', 4], ['9520 Metallic Green', 3], ['807 White', 2], ['513 Guacamole', 6], ['807 White', 2],
           ['9520 Metallic Green', 2], ['862 Twilight Black', 2], ['9520 Metallic Green', 1], ['862 Twilight Black', 2], ['9520 Metallic Green', 2], ['807 White', 2],
           ['819 Ghost Grey', 6], ['807 White', 2]] },
