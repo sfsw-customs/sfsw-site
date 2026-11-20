@@ -701,7 +701,7 @@
     exButtons();
     [].forEach.call(modeEl.querySelectorAll('.rb-mode'), function (b) { b.classList.toggle('selected', b.dataset.m === m); });
     if (dzBox) dzBox.classList.toggle('rb-dz-off', m !== 'build');
-    if (colorSec) colorSec.style.display = 'none'; if (rndPal) rndPal.style.display = m === 'random' ? '' : 'none'; modeEl.classList.toggle('rnd', m === 'random'); updTop();
+    if (colorSec) colorSec.style.display = 'none'; if (rndPal) rndPal.style.display = m === 'random' ? '' : 'none'; if (rndBar) rndBar.style.display = m === 'random' ? '' : 'none'; modeEl.classList.toggle('rnd', m === 'random'); updTop();
   }
   // what floats under the 3D rod on the Wrap step: the example's photo, and in Random the color slots
   function updTop() {
