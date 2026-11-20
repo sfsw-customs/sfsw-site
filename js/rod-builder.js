@@ -432,7 +432,7 @@
     var sw = call('isSplitGrip') ? call('getSplitWrap') : null;
     p.splitOn = !!sw; if (sw) p.split = sw.id === 'abalone' ? abSpec(S.splitAbaloneColorIdx) : wrapSpec(sw.id, main, sup, null, notes, 'split wrap');
     p.gw = S.guideWrapUserSelected ? guideWrapSpec(S.guideWrapId, main, sup, notes)
-      : { under: false, underC: '#1a1a1a', footC: '#1a1a1a', bands: [], trims: [] };   // plain black foot wraps until a guide wrap is picked (wrap examples don't change them)
+      : { under: false, underC: '#1a1a1a', footC: '#1a1a1a', bands: [], trims: [{ c: '#dabd66', t: 3 }] };   // black foot wraps with gold trim bands (9130 Metallic Gold) until a guide wrap is picked (wrap examples don't change them)
     return { p: p, notes: notes };
   }
 
