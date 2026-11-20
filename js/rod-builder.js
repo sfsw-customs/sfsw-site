@@ -84,7 +84,7 @@
     '.rb-on #wrap-preview{display:none!important}',
     '.rb-wphoto.rb-wph-full{height:150px;background-size:contain;background-color:#07090c}',
     '.rb-top .rb-wphoto{display:none}.rb-top.rb-wtop .rb-wphoto{display:block}',
-    '.rb-rbar{display:none;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 2px;padding:8px;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-rnd-slot .rb-rbar{display:flex;margin:0 0 10px}',
+    '.rb-rbar{display:none;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 2px;padding:8px;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-rnd-slot .rb-rbar{display:flex;margin:0 0 10px}.rb-len.rb-len-off{filter:blur(2px);opacity:.45;pointer-events:none;user-select:none}',
     '.rb-rs{display:flex;align-items:center;gap:8px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:999px;padding:4px 10px 4px 4px;color:var(--c-text);font-size:13px;cursor:pointer;text-align:left}',
     '.rb-rs i{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}.rb-rs small{display:block;font:600 9.5px var(--font-cond);letter-spacing:.12em;text-transform:uppercase;color:var(--c-muted)}',
     '.rb-rs.on{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.25)}.rb-rs b{margin-left:4px;color:var(--c-muted);font-weight:400;padding:0 2px}.rb-rs b:hover{color:#fff}',
@@ -734,14 +734,16 @@
   // wrap length: starts at the rod type's length (9 in here); each extra inch is +$10
   function BASE_LEN() { return (CFG.wrap && +CFG.wrap.len) || 8; }
   function wrapLen() { return Math.max(BASE_LEN(), +S.wrapLen || BASE_LEN()); }
-  function lenFee() { return CFG.wrap ? (wrapLen() - BASE_LEN()) * 10 : 0; }
+  function lenFee() { return CFG.wrap && S.wrapId !== 'trim-band' ? (wrapLen() - BASE_LEN()) * 10 : 0; }   // the Trim Band wrap has no length to pick
   function setWrapLen(n) {
     S.wrapLen = Math.max(BASE_LEN(), Math.min(BASE_LEN() + 12, n)); renderLen();
     var w = dw(); if (w && w.wlCapture && S.wrapMode !== 'random') { try { var c = w.wlCapture(); c.unit = 'in'; c.len = wrapLen().toFixed(2); w.wlApply(c); } catch (e) {} clearTimeout(readT); readT = setTimeout(readDesign, 300); }
     updateAll();
   }
   function renderLen() { var b = document.querySelector('.rb-len'); if (!b) return; var f = lenFee();
-    b.querySelector('b').textContent = wrapLen() + ' in'; b.querySelector('.rb-len-fee').textContent = f ? '+$' + f : 'Included'; b.querySelector('[data-d="-1"]').disabled = wrapLen() <= BASE_LEN(); }
+    b.querySelector('b').textContent = wrapLen() + ' in'; b.querySelector('.rb-len-fee').textContent = f ? '+$' + f : 'Included'; b.querySelector('[data-d="-1"]').disabled = wrapLen() <= BASE_LEN();
+    var off = S.wrapId === 'trim-band'; b.classList.toggle('rb-len-off', off); b.title = off ? 'Wrap length is set for the Trim Band wrap. Pick another wrap to change it.' : '';
+    [].forEach.call(b.querySelectorAll('button'), function (x) { if (off) x.disabled = true; else if (x.dataset.d === '1') x.disabled = false; }); }
   // Trim bands: on/off, width and thread color, written straight into the wrap design
   var tbEl;   // (set by tbBox while the steps are built, earlier in the file)
   function tbBox() { tbEl = el('div', 'cfg-section rb-tb'); tbEl.innerHTML = '<div class="rb-tb-body"></div>'; setTimeout(renderTB, 0); return tbEl; }
@@ -920,7 +922,7 @@
         b.onclick = function () { setMode(S.wrapMode === x[0] ? 'example' : x[0]); exButtons(); }; box.appendChild(b); });
       (card.querySelector('.option-item-body') || card).appendChild(box);
     }
-    placeModes(card); syncSkips(); try { dz.contentDocument.documentElement.classList.toggle('sfswtb', S.wrapId === 'trim-band'); } catch (e) {}
+    placeModes(card); syncSkips(); renderLen(); try { dz.contentDocument.documentElement.classList.toggle('sfswtb', S.wrapId === 'trim-band'); } catch (e) {}
     if (wphoto) { var src = ph[Math.min(cur, ph.length - 1)]; wphoto.hidden = !src; wphoto.classList.toggle('rb-wph-full', id === 'abalone'); if (src) { wphoto.style.backgroundImage = 'url("' + src + '")'; wphoto.onclick = function () { lightbox(w, Math.min(cur, ph.length - 1)); }; } updTop(); }
   }
   function lightbox(w, start) {
