@@ -84,7 +84,7 @@
     '.rb-on #wrap-preview{display:none!important}',
     '.rb-wphoto.rb-wph-full{height:150px;background-size:contain;background-color:#07090c}',
     '.rb-top .rb-wphoto{display:none}.rb-top.rb-wtop .rb-wphoto{display:block}',
-    '.rb-rbar{display:none;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 2px;padding:8px;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-rnd-slot .rb-rbar{display:flex;margin:0 0 10px}.rb-len.rb-len-off{filter:blur(2px);opacity:.45;pointer-events:none;user-select:none}',
+    '.rb-rbar{display:none;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 2px;padding:8px;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-rnd-slot .rb-rbar{display:flex;margin:0 0 10px}.rb-rg-sz.rb-rg-sz2{margin-left:24px;display:flex;align-items:center;gap:10px}.rb-rg-each{display:flex;align-items:center;gap:8px;margin:0 0 10px;cursor:pointer;font-size:14px}.rb-rg-each small{color:var(--c-muted,#8a94a3)}.rb-rg-each input{width:16px;height:16px;accent-color:var(--c-gold)}.rb-len.rb-len-off{filter:blur(2px);opacity:.45;pointer-events:none;user-select:none}',
     '.rb-rs{display:flex;align-items:center;gap:8px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:999px;padding:4px 10px 4px 4px;color:var(--c-text);font-size:13px;cursor:pointer;text-align:left}',
     '.rb-rs i{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}.rb-rs small{display:block;font:600 9.5px var(--font-cond);letter-spacing:.12em;text-transform:uppercase;color:var(--c-muted)}',
     '.rb-rs.on{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.25)}.rb-rs b{margin-left:4px;color:var(--c-muted);font-weight:400;padding:0 2px}.rb-rs b:hover{color:#fff}',
@@ -1000,6 +1000,19 @@
   var rgName = function (id) { var e = rgIsEva(id), l = e ? rgList.eva : rgList.cork, k = e ? id.slice(4) : id, f = l.find(function (x) { return x[0] === k; }); return (e ? 'EVA ' : '') + (f ? f[1] : k); };
   var rgChip = function (id) { return rgIsEva(id) ? RGB + 'eva/' + id.slice(4) + '.webp' : RGB + 'cork/' + id + '-chip.webp'; };
   var rgKeys = function () { var g = call('getGrip') || {}; return g.style === 'full' ? [['full', 'Rear grip'], ['fore', 'Fore grip']] : [['butt', 'Butt piece'], ['rear', 'Rear piece'], ['fore', 'Fore grip']]; };
+  // put one ring of color m (w in long) right in the middle of the grip; if the middle ring is already EVA, just recolor it
+  function rgCenter(r, m, w) {
+    var L = rgLen(r), c = L / 2, a = 0;
+    for (var i = 0; i < r.length; i++) { var b = a + r[i].t; if (c >= a - 1e-6 && c <= b + 1e-6 && rgIsEva(r[i].m) && Math.abs(r[i].t - w) < 1e-6) { r[i] = { m: m, t: r[i].t }; return r; } a = b; }
+    var lo = Math.max(0, c - w / 2), hi = Math.min(L, c + w / 2), out = [], put = false; a = 0;
+    r.forEach(function (x) { var b = a + x.t;
+      if (b <= lo + 1e-6 || a >= hi - 1e-6) { if (a >= hi - 1e-6 && !put) { out.push({ m: m, t: hi - lo }); put = true; } out.push(x); }
+      else { if (a < lo - 1e-6) out.push({ m: x.m, t: +(lo - a).toFixed(3) }); if (!put) { out.push({ m: m, t: +(hi - lo).toFixed(3) }); put = true; } if (b > hi + 1e-6) out.push({ m: x.m, t: +(b - hi).toFixed(3) }); }
+      a = b; });
+    if (!put) out.push({ m: m, t: hi - lo });
+    return out;
+  }
+  var rgSame = function () { return rgKeys().length === 3 && !!(S.gripRings && S.gripRings.same); };
   var rgLen = function (r) { return (r || []).reduce(function (a, x) { return a + x.t; }, 0); };
   function rgFill(len, m) { var out = [], n = len; while (n > 1e-6) { var t = n >= 0.5 ? 0.5 : 0.25; out.push({ m: m, t: t }); n -= t; } return out; }
   // the rings live in S, so they go into the cart and come back with Edit
@@ -1008,7 +1021,7 @@
     var kind = RG_KIND[S.gripId], H = CFG.handle || {};
     if (!S.gripRings || S.gripRings.grip !== S.gripId) {
       var m0 = kind === 'eva' ? 'eva:black' : 'burl', len = { butt: H.gButt || 2.5, rear: H.gRear || 2.5, fore: H.gFore || 2.5, full: H.gripSpan || 10.5 };
-      S.gripRings = { grip: S.gripId, g: {} };
+      S.gripRings = { grip: S.gripId, g: {}, same: rgKeys().length === 3 };   // split grips: all 3 pieces match unless the customer asks to do each one
       rgKeys().forEach(function (k) { S.gripRings.g[k[0]] = rgFill(len[k[0]], m0); });
       rgUi = { piece: null, m: m0, t: 0.5, tab: kind };
     }
@@ -1018,22 +1031,30 @@
   }
   function rgBuild() {
     rgEl = el('div', 'rb-rg');
-    rgEl.innerHTML = '<div class="rb-rg-lbl">Grip to design</div><div class="rb-rg-top"><div class="rb-seg rb-big" data-k="piece"></div><div class="rb-rg-sz">Ring size <div class="rb-seg" data-k="size"><button type="button" data-v="0.25">0.25 in</button><button type="button" data-v="0.5">0.5 in</button></div></div>' +
+    rgEl.innerHTML = '<label class="rb-rg-each"><input type="checkbox"> Customize each piece separately <small>(otherwise all 3 pieces match)</small></label><div class="rb-rg-lbl rb-rg-pl">Grip to design</div><div class="rb-rg-top"><div class="rb-seg rb-big" data-k="piece"></div><div class="rb-rg-sz">Ring size <div class="rb-seg" data-k="size"><button type="button" data-v="0.25">0.25 in</button><button type="button" data-v="0.5">0.5 in</button></div></div>' +
       '<div class="rb-rg-stripbox"><div class="rb-rg-lbl"><b class="rb-rg-now"></b> · <span class="rb-rg-hint"></span></div><div class="rb-strip"></div>' +
       '<div class="rb-rg-row"><button type="button" class="rb-mini" data-a="add">Add ring</button><button type="button" class="rb-mini" data-a="del">Remove last ring</button><span class="rb-rg-len"></span></div></div></div>' +
 '<div class="rb-rg-lbl"><span class="rb-rg-kind"></span>: <b class="rb-rg-name"></b></div><div class="rb-rg-tabs"><div class="rb-seg" data-k="tab"><button type="button" data-v="cork">Cork <span class="rb-tp">+$2.50 per 0.5 in added</span></button><button type="button" data-v="eva">EVA <span class="rb-tp">+$10 per color</span></button></div><span class="rb-rg-price"></span></div>' +
       '<div class="rb-chips"></div>';
+    var rgSz = rgEl.querySelector('.rb-rg-sz'), rgTabs = rgEl.querySelector('.rb-rg-tabs'); if (rgSz && rgTabs) { rgSz.classList.add('rb-rg-sz2'); rgTabs.appendChild(rgSz); }   // Ring size sits to the right of the Cork/EVA row
+    rgEl.addEventListener('change', function (e) { if (!e.target.closest('.rb-rg-each')) return; var G = rgState(); if (!G) return;
+      G.same = !e.target.checked; if (G.same) { var src = JSON.stringify(G.g[rgUi.piece] || G.g.butt || []); rgKeys().forEach(function (k) { G.g[k[0]] = JSON.parse(src); }); rgUi.piece = 'butt'; }
+      rgUi.sel = null; rgRender(); call('renderGripPreview'); updateAll(); });
     rgEl.addEventListener('click', function (e) {
+      if (e.target.closest('.rb-rg-each')) return;
       e.stopPropagation();
       var b = e.target.closest('button'); if (!b) return;
       var seg = b.closest('.rb-seg'), G = rgState(); if (!G) return;
       var cur = function () { return (G.g[rgUi.piece] || []).map(function (r) { return { m: r.m, t: r.t }; }); };
-      var set = function (r) { G.g[rgUi.piece] = r; changed(); };
+      var set = function (r) { if (rgSame()) rgKeys().forEach(function (k) { G.g[k[0]] = JSON.parse(JSON.stringify(r)); }); else G.g[rgUi.piece] = r; changed(); };
       if (seg) { var k = seg.dataset.k, v = b.dataset.v;
         if (k === 'piece') { rgUi.piece = v; rgUi.sel = null; } else if (k === 'tab') rgUi.tab = v; else if (k === 'size') rgUi.t = +v;
         return rgRender(); }
       if (b.dataset.i != null) { var ti = +b.dataset.i; rgUi.sel = rgUi.sel === ti ? null : ti; return rgRender(); }   // pick a ring (tap again: back to the whole grip)
       if (b.dataset.m) { rgUi.m = b.dataset.m;
+        if (rgUi.sel == null && RG_KIND[S.gripId] === 'cork') {   // custom cork grip, no ring picked: an EVA color goes in the center ring; a cork color fills the cork rings (EVA rings stay)
+          if (rgIsEva(rgUi.m)) return set(rgCenter(cur(), rgUi.m, rgUi.t));
+          return set(cur().map(function (x) { return { m: rgIsEva(x.m) ? x.m : rgUi.m, t: x.t }; })); }
         if (rgUi.sel == null) return set(cur().map(function (x) { return { m: rgUi.m, t: x.t }; }));   // no ring picked: the whole grip takes the color
         // a ring picked: just that ring takes the color (and the ring size), keeping the grip's length
         var r = cur(), i = Math.min(rgUi.sel, r.length - 1), old = r[i], t = rgUi.t;
@@ -1042,7 +1063,7 @@
         else r[i] = { m: rgUi.m, t: old.t };
         return set(r); }
       var a = b.dataset.a;
-      if (a === 'add') { var r2 = cur(); if (rgLen(r2) + rgUi.t <= rgMax(rgUi.piece) + 1e-6) { r2.push({ m: rgUi.m, t: rgUi.t }); set(r2); } }
+      if (a === 'add') { var r2 = cur(); if (rgLen(r2) + rgUi.t <= (rgSame() ? Math.min.apply(null, rgKeys().map(function (k) { return rgMax(k[0]); })) : rgMax(rgUi.piece)) + 1e-6) { r2.push({ m: rgUi.m, t: rgUi.t }); set(r2); } }
       if (a === 'del') { var r3 = cur(); if (r3.length > 1) { r3.pop(); if (rgUi.sel != null && rgUi.sel >= r3.length) rgUi.sel = null; set(r3); } }
     });
     function changed() { rgRender(); call('renderGripPreview'); updateAll(); }
@@ -1072,9 +1093,11 @@
     rgEl.querySelector('.rb-chips').innerHTML = list.map(function (id) { return '<button type="button" data-m="' + id + '" aria-pressed="' + (id === rgUi.m) + '"><img src="' + rgChip(id) + '" alt="" loading="lazy"><span>' + (rgIsEva(id) ? rgName(id).slice(4) : rgName(id)) + '</span></button>'; }).join('');
     var rings = G.g[rgUi.piece] || [], strip = rgEl.querySelector('.rb-strip'); strip.innerHTML = '';
     rgPaint(strip, rings, strip.clientWidth || 600);
-    var name = (rgKeys().find(function (k) { return k[0] === rgUi.piece; }) || ['', 'Grip'])[1];
+    var name = rgSame() ? 'All 3 pieces' : (rgKeys().find(function (k) { return k[0] === rgUi.piece; }) || ['', 'Grip'])[1];
+    var each = rgEl.querySelector('.rb-rg-each'); each.style.display = rgKeys().length === 3 ? '' : 'none'; each.querySelector('input').checked = !rgSame();
+    seg('piece').style.display = rgSame() ? 'none' : ''; rgEl.querySelector('.rb-rg-pl').style.display = rgSame() ? 'none' : '';
     rgEl.querySelector('.rb-rg-now').textContent = name + ' · ' + rgLen(rings).toFixed(2) + ' in';
-    rgEl.querySelector('.rb-rg-hint').textContent = rgUi.sel == null ? 'a color fills the whole grip · tap a ring to color just that one' : 'ring ' + (rgUi.sel + 1) + ' picked · tap a color for it · tap the ring again for the whole grip';
+    rgEl.querySelector('.rb-rg-hint').textContent = rgUi.sel == null ? (RG_KIND[S.gripId] === 'cork' ? 'a cork color fills the grip · an EVA color goes in the center · tap a ring to color just that one' : 'a color fills the whole grip · tap a ring to color just that one') : 'ring ' + (rgUi.sel + 1) + ' picked · tap a color for it · tap the ring again for the whole grip';
     rgEl.querySelector('.rb-rg-len').textContent = rings.length + ' rings · ' + rgLen(rings).toFixed(2) + ' in' + (rgUi.piece === 'full' ? ' (set for this rod)' : ' · up to ' + rgMax(rgUi.piece).toFixed(2) + ' in');
     [].forEach.call(rgEl.querySelectorAll('.rb-mini[data-a="add"],.rb-mini[data-a="del"]'), function (b) { b.style.display = rgUi.piece === 'full' ? 'none' : ''; });
     var x = rgExtra(), xs = rgEl.querySelector('.rb-rg-extra'); if (!xs) { xs = el('div', 'rb-rg-lbl rb-rg-extra'); rgEl.appendChild(xs); }

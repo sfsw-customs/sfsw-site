@@ -16,7 +16,7 @@ html.sfswd.sfswtb .f:has(>#trimWrap){display:block!important}
 .sfswd .dsrow .mirrow,.sfswd .f:has(>#pattern),.sfswd .f:has(>#axes),.sfswd .f.dsinl:has(#tsize),.sfswd .f:has(>#pat){display:none!important}
 .sfswd #openBox{margin:10px 0 6px}
 /* SFSW: the wrap length sets how many diamonds/chevrons fit, so no count to pick */
-.sfswd #fitBox,.sfswd #thrSize{display:none!important}
+.sfswd #fitBox,.sfswd #thrSize,.sfswd .sfswTs{display:none!important}
 /* SFSW: no thread size choice for customers */
 .sfswd .f.dsinl:has(>#tsize),.sfswd #thrSize,.sfswd .f:has(>#trimWrap),.sfswd #sizeRow,.sfswd #sizeNote{display:none!important}
 /* SFSW: the 3D rod on the page shows the wrap, so no flat preview here */
@@ -2387,7 +2387,7 @@ function paint(cv,cssW,cssH,dpr,fn){
   cv.style.height= cv.parentElement.classList.contains('scroll') ? cssH+'px' : 'auto';
   const ctx=cv.getContext('2d'); const im=ctx.createImageData(W,H); fn(W,H,im.data); ctx.putImageData(im,0,0);
 }
-let rT; window.addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(render,150);});
+let rT, rW=innerWidth; window.addEventListener('resize',()=>{ if(innerWidth===rW) return; rW=innerWidth; clearTimeout(rT);rT=setTimeout(render,150);});
 const runNow=run; let runRq=0;
 run=function(){ cancelAnimationFrame(runRq); runRq=requestAnimationFrame(runNow); };
 runNow();
@@ -2506,7 +2506,7 @@ runNow();
   new MutationObserver(scan).observe(document.body,{childList:true,subtree:true}); scan();
   document.addEventListener('click',e=>{ if(pop && !pop.contains(e.target)) close(); });
   document.addEventListener('keydown',e=>{ if(e.key==='Escape') close(); });
-  window.addEventListener('resize',close);
+  let cpW=innerWidth; window.addEventListener('resize',()=>{ if(innerWidth!==cpW){ cpW=innerWidth; close(); } });
   try{ run(); }catch(e){}   // redraw so metallic threads show from the start
 })();
 
