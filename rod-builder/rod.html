@@ -2045,6 +2045,38 @@ const sfswBoot = (async () => {
   try { parent.postMessage({ sfswRod: 'ready' }, location.origin); } catch (e) {}
 }
 
+// SFSW: touch on phones — one finger: left/right slides along the whole rod, up/down spins it;
+// two fingers: pinch to zoom, drag to move the view around
+(() => {
+  const host = cv.parentNode, pts = new Map(); let lock = null, start = null, two = null;
+  const dirty = () => { anim = null; window.__sfswDirty = 12; controls.update(); };
+  const perPx = () => { const d = camera.position.distanceTo(controls.target); return 2 * d * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / Math.max(1, cv.clientHeight); };
+  const shift = v => { camera.position.add(v); controls.target.add(v); const h = RL() / 2 + 2, ox = Math.max(-h, Math.min(h, controls.target.x)) - controls.target.x; if (ox) { camera.position.x += ox; controls.target.x += ox; }
+    try { $('along').value = Math.round((controls.target.x + RL() / 2) / RL() * 1000); } catch (e) {} };
+  const pair = () => { const [a, b] = [...pts.values()]; return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, d: Math.hypot(a.x - b.x, a.y - b.y) }; };
+  host.addEventListener('pointerdown', e => { if (e.pointerType !== 'touch' || e.target !== cv) return;
+    e.stopPropagation(); e.preventDefault(); pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pts.size === 1) { lock = null; start = { x: e.clientX, y: e.clientY }; } else if (pts.size === 2) two = pair(); }, true);
+  addEventListener('pointermove', e => { const p = pts.get(e.pointerId); if (!p) return; e.preventDefault();
+    const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+    if (pts.size === 1) {
+      if (!lock) { const tx = e.clientX - start.x, ty = e.clientY - start.y; if (Math.hypot(tx, ty) < 8) return; lock = Math.abs(tx) >= Math.abs(ty) ? 'slide' : 'spin'; }
+      if (lock === 'slide') shift(new THREE.Vector3(-dx * perPx(), 0, 0)); else rod.rotation.x += dy * 0.012;
+      dirty();
+    } else if (pts.size === 2 && two) {
+      const n = pair(), k = perPx();
+      const right = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0), up = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1);
+      shift(right.multiplyScalar(-(n.x - two.x) * k).add(up.multiplyScalar((n.y - two.y) * k)));
+      if (two.d > 10 && n.d > 10) { const off = camera.position.clone().sub(controls.target), d = off.length(),
+        nd = Math.max(controls.minDistance, Math.min(controls.maxDistance, d * two.d / n.d)); camera.position.copy(controls.target).add(off.multiplyScalar(nd / d)); }
+      two = n; dirty();
+    } }, { passive: false });
+  const up = e => { if (!pts.delete(e.pointerId)) return; two = pts.size === 2 ? pair() : null;
+    if (pts.size === 1) { const [p] = pts.values(); start = { x: p.x, y: p.y }; lock = null; } };
+  addEventListener('pointerup', up); addEventListener('pointercancel', up);
+  window.__sfswCam = () => ({ x: +controls.target.x.toFixed(2), r: +rod.rotation.x.toFixed(2), d: +camera.position.distanceTo(controls.target).toFixed(2) });
+})();
+
 </script>
 </body>
 </html>
