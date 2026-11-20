@@ -534,7 +534,7 @@
     modeEl.innerHTML = (CFG.wrap ? '<div class="rb-len"><span class="rb-len-l">Wrap length <small>' + BASE_LEN() + ' in included · +$10 each added inch</small></span><button type="button" data-d="-1" aria-label="Shorter">−</button><b></b><button type="button" data-d="1" aria-label="Longer">+</button><span class="rb-len-fee"></span></div>' : '') +
 
       '<div class="rb-dz-slot"></div>' +
-      '<div class="rb-rnd-note">Builder\u2019s Choice: pick a main color and supporting colors, and we lay out the wrap. Main + 3 supporting included (4 colors) · +$10 each extra color.</div>' +
+      '<div class="rb-rnd-note">Builder\u2019s Choice: Choose a main color and supporting colors, and we will do a unique design of our choice. 1 Main and 3 supporting colors included (4 colors) · +$10 each extra color.</div>' +
       '<div class="rb-rnd-slot"><div class="rb-rpal"></div></div>';
     ($('wrap-abalone-colors') || optList).insertAdjacentElement('afterend', modeEl);
     modeEl.querySelector('.rb-dz-slot').appendChild(dzBox);
