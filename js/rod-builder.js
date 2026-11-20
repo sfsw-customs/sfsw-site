@@ -84,7 +84,7 @@
     '.rb-on #wrap-preview{display:none!important}',
     '.rb-wphoto.rb-wph-full{height:150px;background-size:contain;background-color:#07090c}',
     '.rb-top .rb-wphoto{display:none}.rb-top.rb-wtop .rb-wphoto{display:block}',
-    '.rb-rbar{display:none;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 2px;padding:8px;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-top.rb-rtop .rb-rbar{display:flex}',
+    '.rb-rbar{display:none;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 2px;padding:8px;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-rnd-slot .rb-rbar{display:flex;margin:0 0 10px}',
     '.rb-rs{display:flex;align-items:center;gap:8px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:999px;padding:4px 10px 4px 4px;color:var(--c-text);font-size:13px;cursor:pointer;text-align:left}',
     '.rb-rs i{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}.rb-rs small{display:block;font:600 9.5px var(--font-cond);letter-spacing:.12em;text-transform:uppercase;color:var(--c-muted)}',
     '.rb-rs.on{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.25)}.rb-rs b{margin-left:4px;color:var(--c-muted);font-weight:400;padding:0 2px}.rb-rs b:hover{color:#fff}',
@@ -523,7 +523,8 @@
       dz.style.height = Math.ceil(b + d.defaultView.scrollY) + 4 + 'px'; } catch (e) {} };
     dz.addEventListener('load', function () { setMore();
       try { var dd = dz.contentDocument, ob = dd.getElementById('openBox'), iw = dd.getElementById('innerWrap'); if (ob && iw) iw.parentNode.insertBefore(ob, iw);   // Color filler right under the thread colors
-        underBox(dd, iw);
+        underBox(dd, iw); presetBox(dd);
+        [].forEach.call(dd.querySelectorAll('span,label,div,small'), function (x) { if (/^\s*Thread size\s*$/.test(x.textContent) && !x.querySelector('input,button,select')) x.style.display = 'none'; });   // the leftover "Thread size" label
         dd.addEventListener('change', function (e) { if (!e.target || e.target.id !== 'innerOn' || !e.target.checked) return;   // a pattern between starts with a thread line to customize
           setTimeout(function () { try { var w = dz.contentWindow, c = w.wlCapture(); if (c.inner && c.inner.on && !(c.inner.stripes || []).length) { c.inner.stripes = [{ c: (c.stripes[0] || {}).c || '#1e1617', t: 2 }]; w.wlApply(c); } } catch (x) {} }, 30); }, true);
       } catch (e) {}
@@ -537,7 +538,7 @@
       '<div class="rb-rnd-slot"><div class="rb-rpal"></div></div>';
     ($('wrap-abalone-colors') || optList).insertAdjacentElement('afterend', modeEl);
     modeEl.querySelector('.rb-dz-slot').appendChild(dzBox);
-    rndPal = modeEl.querySelector('.rb-rpal'); rndBar = el('div', 'rb-rbar');
+    rndPal = modeEl.querySelector('.rb-rpal'); rndBar = el('div', 'rb-rbar'); rndPal.parentNode.insertBefore(rndBar, rndPal);   // the color slots sit right above the colors, under the note
     [].forEach.call(modeEl.querySelectorAll('.rb-mode'), function (b) { b.onclick = function () { setMode(b.dataset.m === S.wrapMode ? 'example' : b.dataset.m); }; });
     var lenEl = modeEl.querySelector('.rb-len'), lbl0 = wrapSec.querySelector('.rb-presets-lbl'); if (lenEl && lbl0) { lenEl.style.marginBottom = '14px'; lbl0.parentNode.insertBefore(lenEl, lbl0); }   // up top, between Rod Wrap and Our wraps
     [].forEach.call(document.querySelectorAll('.rb-len button'), function (b) { b.onclick = function () { setWrapLen(wrapLen() + +b.dataset.d); }; });
@@ -621,6 +622,32 @@
     bc.addEventListener('input', function () { if (S.under.on && bc.value !== under0) S.under.c = bc.value; });
     underSync();
   }
+  // Presets in the customizer: 5 ready-made color sets for the wrap's own pattern. A wrap can have its own 5
+  // (CUSTOM_PRESETS['Diamond — 2 Axis'] = [...]); the rest use the 5 below. Each: name, trim color, thread lines (center first).
+  var CUSTOM_PRESETS = {};
+  var BASE_PRESETS = [
+    { name: 'Gulfstream & Gold', trim: '479 Gulfstream', stripes: [['9130 Metallic Gold', 1], ['479 Gulfstream', 4], ['807 White', 2], ['9130 Metallic Gold', 2], ['479 Gulfstream', 3]] },
+    { name: 'Green & White', trim: '513 Guacamole', stripes: [['9520 Metallic Green', 1], ['862 Twilight Black', 4], ['513 Guacamole', 4], ['807 White', 2], ['9520 Metallic Green', 2]] },
+    { name: 'Black & Silver', trim: '862 Twilight Black', stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 4], ['9860 Metallic Silver', 2], ['841 Iron Ore', 4], ['862 Twilight Black', 2]] },
+    { name: 'Deep Sea & White', trim: '484 Deep Sea', stripes: [['807 White', 1], ['484 Deep Sea', 4], ['807 White', 3], ['819 Ghost Grey', 2], ['484 Deep Sea', 3]] },
+    { name: 'Black & Gold', trim: '862 Twilight Black', stripes: [['9100 Metallic Yellow Gold', 1], ['862 Twilight Black', 4], ['9100 Metallic Yellow Gold', 3], ['813 Silver Shiner', 3], ['862 Twilight Black', 2]] }];
+  function presetsFor() { var w = wrapNamed(S.wrapId); return (w && CUSTOM_PRESETS[w.name]) || BASE_PRESETS; }
+  function presetBox(dd) {
+    var tb = dd.getElementById('threadsBox'); if (!tb || dd.getElementById('sfswPresets')) return;
+    var box = dd.createElement('div'); box.id = 'sfswPresets'; box.className = 'f'; box.style.cssText = 'margin:0 0 10px';
+    box.innerHTML = '<label style="display:flex;align-items:center;gap:10px"><span>Presets</span><select id="sfswPreset" style="min-width:240px;background:#0f141b;color:inherit;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:7px 10px;font:inherit"></select></label>';
+    tb.parentNode.insertBefore(box, tb);
+    var sel = box.querySelector('select');
+    sel.addEventListener('change', function () { var pr = presetsFor()[+sel.value]; if (!pr) return; var w = dw(); if (!w || !w.wlCapture) return;
+      try { var hx = threadHex(w), c = w.wlCapture(); c.stripes = pr.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; });
+        if (c.trims) { c.trims.c = hx(pr.trim); c.trims.bands = []; c.trims.ends = []; } w.wlApply(c); } catch (e) {}
+      clearTimeout(readT); readT = setTimeout(readDesign, 120); });
+    presetFill();
+  }
+  function presetFill() {   // the list for the picked wrap, starting on "Choose a preset"
+    try { var sel = dz.contentDocument.getElementById('sfswPreset'); if (!sel) return;
+      sel.innerHTML = '<option value="">Choose a preset…</option>' + presetsFor().map(function (p, i) { return '<option value="' + i + '">' + p.name + '</option>'; }).join(''); } catch (e) {}
+  }
   function underOk() { var d = S.customDesign, st = d && d.setup; return S.wrapId !== 'trim-band' && !(st && st.pattern === 'dragon') && S.wrapId !== 'abalone'; }
   function underSync() {   // no Underwrap on the dragon scale wraps (they have their metallic) or the Trim Band
     try { var dd = dz.contentDocument, box = dd.getElementById('sfswUnder'), cb = dd.getElementById('underOn'), bc = dd.getElementById('blankC'); if (!box) return;
@@ -680,8 +707,7 @@
   function updTop() {
     if (typeof top === 'undefined' || !top || !STEPS[cur]) return; var onWrap = STEPS[cur].view === 'wrap', rnd = onWrap && S.wrapMode === 'random' && !!modeEl && modeEl.style.display !== 'none';
     if (wphoto && wphoto.parentNode !== top) top.insertBefore(wphoto, approx);
-    if (rndBar && rndBar.parentNode !== top) top.insertBefore(rndBar, approx);
-    top.classList.toggle('rb-wtop', onWrap && !!wphoto && !wphoto.hidden && !rnd); top.classList.toggle('rb-rtop', rnd);
+    top.classList.toggle('rb-wtop', onWrap && !!wphoto && !wphoto.hidden && !rnd && S.wrapMode !== 'build');   // no wrap photo while customizing
     if (rnd) renderRandom();
   }
   // Random: tap a slot in the floating bar (Main, Supporting 1, 2 …), then tap colors below to fill it
@@ -787,9 +813,9 @@
   window.SFSW_designColors = function () { var d = designOn(); return d && d.colors ? d.colors.length : null; };
   function setMode(m, quiet) {
     var was = S.wrapMode; S.wrapMode = m;
-    if (m === 'build' && was !== 'build') { genericDesign(); dzSimple = false; if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
+    if (m === 'build' && was !== 'build') { presetFill(); genericDesign(); dzSimple = false; if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
     if (m === 'random' && was !== 'random') { S.supportIdxs = (S.supportIdxs || []).slice(0, 3); call('renderSupportingRows'); }   // Builder's Choice starts at main + 3 supporting
-    renderModes(); if (quiet) return;
+    renderModes(); updTop(); if (quiet) return;
     if (was === 'random' && m !== 'random') { clearTimeout(readT); readT = setTimeout(readDesign, 50); }
     updateAll();
   }
