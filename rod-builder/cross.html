@@ -12,8 +12,9 @@ html.sfswd.sfswtb .f:has(>#trimWrap){display:block!important}
 /* SFSW: a roomier color picker */
 .sfswd .cpop{width:min(560px,calc(100vw - 24px))!important;max-height:none!important}
 .sfswd .cpop .clist{max-height:min(560px,70vh)!important}
-/* SFSW: the wrap list picks the pattern and axis lines, so the designer doesn't offer them */
-.sfswd .dsrow .mirrow,.sfswd .f:has(>#pattern),.sfswd .f:has(>#axes),.sfswd .f.dsinl:has(#tsize),.sfswd .f:has(>#pat){display:none!important}
+/* SFSW: the wrap list picks the pattern; Axis lines shows (the page keeps it to the wraps we offer and switches the wrap) */
+.sfswd .dsrow .mirrow{display:none}
+.sfswd .mirrow [data-mirror=pattern],.sfswd .mirrow .mirlbl:first-child,.sfswd .f:has(>#pattern),.sfswd .f:has(>#axes),.sfswd .f.dsinl:has(#tsize),.sfswd .f:has(>#pat){display:none!important}
 .sfswd #openBox{margin:10px 0 6px}
 /* SFSW: the wrap length sets how many diamonds/chevrons fit, so no count to pick */
 .sfswd #fitBox,.sfswd #thrSize,.sfswd .sfswTs{display:none!important}

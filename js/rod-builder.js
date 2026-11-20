@@ -524,7 +524,7 @@
       dz.style.height = Math.ceil(b + d.defaultView.scrollY) + 4 + 'px'; } catch (e) {} };
     dz.addEventListener('load', function () { setMore();
       try { var dd = dz.contentDocument, ob = dd.getElementById('openBox'), iw = dd.getElementById('innerWrap'); if (ob && iw) iw.parentNode.insertBefore(ob, iw);   // Color filler right under the thread colors
-        underBox(dd, iw); presetBox(dd);
+        underBox(dd, iw); presetBox(dd); axisHook(dd);
         [].forEach.call(dd.querySelectorAll('span,label,div,small'), function (x) { if (/^\s*Thread size\s*$/.test(x.textContent) && !x.querySelector('input,button,select')) x.style.display = 'none'; });   // the leftover "Thread size" label
         dd.addEventListener('change', function (e) { if (!e.target || e.target.id !== 'innerOn' || !e.target.checked) return;   // a pattern between starts with a thread line to customize
           setTimeout(function () { try { var w = dz.contentWindow, c = w.wlCapture(); if (c.inner && c.inner.on && !(c.inner.stripes || []).length) { c.inner.stripes = [{ c: (c.stripes[0] || {}).c || '#1e1617', t: 2 }]; w.wlApply(c); } } catch (x) {} }, 30); }, true);
@@ -541,7 +541,7 @@
     modeEl.querySelector('.rb-dz-slot').appendChild(dzBox);
     rndPal = modeEl.querySelector('.rb-rpal'); rndBar = el('div', 'rb-rbar'); rndPal.parentNode.insertBefore(rndBar, rndPal);   // the color slots sit right above the colors, under the note
     [].forEach.call(modeEl.querySelectorAll('.rb-mode'), function (b) { b.onclick = function () { setMode(b.dataset.m === S.wrapMode ? 'example' : b.dataset.m); }; });
-    var lenEl = modeEl.querySelector('.rb-len'), lbl0 = wrapSec.querySelector('.rb-presets-lbl'); if (lenEl && lbl0) { lenEl.style.marginBottom = '14px'; lbl0.parentNode.insertBefore(lenEl, lbl0); }   // up top, between Rod Wrap and Our wraps
+    var lenEl = modeEl.querySelector('.rb-len'), lbl0 = wrapSec.querySelector('.rb-presets-lbl'); if (lenEl) { lenEl.style.margin = '0 0 12px'; dzBox.insertBefore(lenEl, dzBox.firstChild); }   // wrap length lives in the wrap designer (Customize)
     [].forEach.call(document.querySelectorAll('.rb-len button'), function (b) { b.onclick = function () { setWrapLen(wrapLen() + +b.dataset.d); }; });
     setTimeout(function () { renderModes(); renderLen(); }, 0);
     addEventListener('message', function (e) { if (dz && e.source === dz.contentWindow && e.data && e.data.wlH) fitDz(); });
@@ -649,6 +649,30 @@
     try { var sel = dz.contentDocument.getElementById('sfswPreset'); if (!sel) return;
       sel.innerHTML = '<option value="">Choose a preset…</option>' + presetsFor().map(function (p, i) { return '<option value="' + i + '">' + p.name + '</option>'; }).join(''); } catch (e) {}
   }
+  // Axis lines in the customizer: picking another axis count switches the wrap in the list to that wrap (Diamond 2 → Diamond 4, …),
+  // keeps the customer's colors, and scales the thread counts by old/new axes so the wrap keeps the same look and stays even
+  function axisWrap(p, a) { var hit = null; WRAPS.forEach(function (w) { var pr = PRESET[w.name]; if (!hit && pr && pr.p === p && pr.a === a && !/Decorative|Dragon/i.test(w.name)) hit = w.id; }); return hit; }
+  function axisSync() {
+    try { var dd = dz.contentDocument, m = dd.querySelector('.dsrow .mirrow'), seg = dd.querySelector('[data-mirror="axes"]'); if (!m || !seg) return;
+      var c = dw().wlCapture(), p = c.pattern, ok = (p === 'diamond' || p === 'chevron') && S.wrapId !== 'trim-band';
+      m.style.setProperty('display', ok ? 'flex' : 'none', 'important');
+      [].forEach.call(seg.querySelectorAll('button'), function (b) { b.style.display = ok && axisWrap(p, +b.dataset.v) ? '' : 'none'; });
+    } catch (e) {}
+  }
+  function axisHook(dd) {
+    var seg = dd.querySelector('[data-mirror="axes"]'); if (!seg || seg.__sfsw) return; seg.__sfsw = true;
+    seg.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; var w = dw(); if (!w || !w.wlCapture) return;
+      var c0 = w.wlCapture(), a0 = +c0.axes, a1 = +b.dataset.v, id = axisWrap(c0.pattern, a1); if (!id || a1 === a0) { if (!id) { e.preventDefault(); e.stopImmediatePropagation(); } return; }
+      setTimeout(function () { try {
+        var c = w.wlCapture(), k = a0 / a1, sc = function (L) { return (L || []).map(function (x) { return { c: x.c, t: Math.max(1, Math.round(x.t * k)) }; }); };
+        c.axes = a1; c.stripes = sc(c0.stripes); if (c.inner && c0.inner) c.inner.stripes = sc(c0.inner.stripes);
+        w.wlApply(c);
+        S.wrapId = id; S.wrapUserSelected = true; modeWrap = id; call('renderWraps'); exButtons(); updateAll();
+        clearTimeout(readT); readT = setTimeout(readDesign, 150);
+      } catch (x) {} }, 60);
+    }, true);
+    axisSync();
+  }
   function underOk() { var d = S.customDesign, st = d && d.setup; return S.wrapId !== 'trim-band' && !(st && st.pattern === 'dragon') && S.wrapId !== 'abalone'; }
   function underSync() {   // no Underwrap on the dragon scale wraps (they have their metallic) or the Trim Band
     try { var dd = dz.contentDocument, box = dd.getElementById('sfswUnder'), cb = dd.getElementById('underOn'), bc = dd.getElementById('blankC'); if (!box) return;
@@ -658,7 +682,7 @@
   function underOn() { return !!(S.under.on && S.wrapMode === 'build' && designOn() && underOk() && S.under.c); }
   window.SFSW_underwrap = underOn;
   function readDesign() {
-    dzBusy = false; underSync();
+    dzBusy = false; underSync(); axisSync();
     var w = dw(); if (!w || !w.wlCapture || !presetOf(S.wrapId) || S.wrapMode === 'random') return;
     var cap; try { cap = clean(w.wlCapture()); } catch (e) { return; }
     var kind = dzKind, cols = colorsOf(cap, kind), name = function (h) { try { return (w.WL_THREADS && w.WL_THREADS.name(h)) || h; } catch (e) { return h; } };
