@@ -2095,6 +2095,16 @@ const sfswBoot = (async () => {
   window.__sfswCam = () => ({ x: +controls.target.x.toFixed(2), r: +rod.rotation.x.toFixed(2), d: +camera.position.distanceTo(controls.target).toFixed(2) });
 })();
 
+// SFSW: on the Wrap or Trim view, when the wrap's length changes (another wrap or example picked), re-frame the camera on the whole wrap
+(() => { let lastK = null, lastV = null;
+  setInterval(() => { try {
+    if (curView !== 'wrap' && curView !== 'trim') { lastV = curView; lastK = null; return; }
+    const k = L.wrap ? L.wrap.map(v => v.toFixed(2)).join(',') : '';
+    if (lastV === curView && lastK !== null && k !== lastK && !anim) goView(curView);
+    lastK = k; lastV = curView;
+  } catch (e) {} }, 250);
+})();
+
 </script>
 </body>
 </html>
