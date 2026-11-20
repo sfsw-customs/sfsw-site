@@ -216,7 +216,7 @@
       parts: [secOf('sec-butt')] },
     { title: 'Reel <em>Seat</em>', tab: 'Reel Seat', sub: 'The reel seat and its color.', view: 'handle',
       parts: [secOf('sec-seat')] },
-    { title: 'Wrap', sub: 'Pick a wrap style, then start from one of our examples, build your own, or go Random and just pick colors.', view: 'wrap',
+    { title: 'Wrap', sub: 'Pick any wrap style you want, customize your own, choose from our presets, or let us come up with the design.', view: 'wrap',
       parts: [secOf('sec-wrap-color'), secOf('sec-rod-wraps'), secOf('sec-split-wrap')] },
     { skip: function () { return S.wrapId === 'trim-band'; }, title: 'Trim Bands', sub: 'The bands at both ends of the wrap that hold the thread down.', view: 'trim', parts: [tbBox()] },
     { title: 'Guides', sub: 'Frame, ring material and frame color.', view: 'guides',
