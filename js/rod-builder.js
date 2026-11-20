@@ -428,6 +428,7 @@
     else if (!rnd && wrapLen() === BASE_LEN() && LOOK[(wrapNamed(S.wrapId) || {}).name]) p.main = { full: LOOK[wrapNamed(S.wrapId).name], kind: 'taper' };   // until the designer is up: the wrap's own design
     else p.main = wrapSpec(S.wrapId, main, sup, rnd ? null : S.customDesign, notes, 'rod wrap');
     if (p.main && !p.main.full && CFG.wrap) p.main.len = wrapLen();
+    if (rnd && p.main && !p.main.full && S.wrapId !== 'abalone') p.main.veil = { colors: [main].concat(sup).filter(Boolean) };   // Builder's Choice: a sheet over the wrap with their colors
     lastMain = p.main;
     var sw = call('isSplitGrip') ? call('getSplitWrap') : null;
     p.splitOn = !!sw; if (sw) p.split = sw.id === 'abalone' ? abSpec(S.splitAbaloneColorIdx) : wrapSpec(sw.id, main, sup, null, notes, 'split wrap');
