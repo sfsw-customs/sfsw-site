@@ -241,7 +241,8 @@
   <link rel="modulepreload" href="../rod-builder/vendor/three/three.module.js">
   <link rel="prefetch" href="../rod-builder/taper.html">
   <style>.build-strip{display:none!important} html.rb-boot .config-layout:not(.rb-on){visibility:hidden}</style>
-  <script>window.SFSW_NO_PHOTOS = true; document.documentElement.classList.add('rb-boot'); setTimeout(function () { document.documentElement.classList.remove('rb-boot'); }, 6000);</script>
+  <script>/* open at the top of the page every time, not where the last visit left off (the builder lays itself out after load, which landed people at the bottom of the blank list) */ try { if (!location.hash) { history.scrollRestoration = 'manual'; addEventListener('load', function () { scrollTo(0, 0); }); addEventListener('pageshow', function (e) { if (e.persisted) scrollTo(0, 0); }); } } catch (e) {}
+  window.SFSW_NO_PHOTOS = true; document.documentElement.classList.add('rb-boot'); setTimeout(function () { document.documentElement.classList.remove('rb-boot'); }, 6000);</script>
 </head>
 <body>
 <div id="nav-mount"></div>
