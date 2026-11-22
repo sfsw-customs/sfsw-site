@@ -494,7 +494,14 @@
       { trim: '479 Gulfstream',
         stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 3], ['9860 Metallic Silver', 3], ['479 Gulfstream', 8], ['862S Metallic Twist Black/Silver', 2], ['862 Twilight Black', 3],
           ['479 Gulfstream', 1], ['862 Twilight Black', 2], ['479 Gulfstream', 2], ['862 Twilight Black', 1], ['479 Gulfstream', 3], ['9860 Metallic Silver', 1]] } ] }, '4 Axis Decorative Chevron or Diamond': { k: 'taper', p: 'diamond', a: 4 },
-    '8 Axis Wrap': { k: 'taper', p: 'diamond', a: 8 }, '16 Axis Wrap': { k: 'taper', p: 'diamond', a: 16 },
+    '8 Axis Wrap': { k: 'taper', p: 'diamond', a: 8, recs: [   // our own designs in the style of the 4 axis examples (fewer threads per color with more axes)
+      { trim: '479 Gulfstream', stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 2], ['9860 Metallic Silver', 2], ['479 Gulfstream', 4], ['862S Metallic Twist Black/Silver', 1], ['862 Twilight Black', 2]] },
+      { trim: '9470 Metallic Bluefin', stripes: [['9870 Metallic Steel Grey', 1], ['807 White', 1], ['9470 Metallic Bluefin', 2], ['807 White', 2], ['9870 Metallic Steel Grey', 2], ['807 White', 1]] },
+      { trim: '862 Twilight Black', stripes: [['9100 Metallic Yellow Gold', 1], ['862 Twilight Black', 2], ['9100 Metallic Yellow Gold', 2], ['479 Gulfstream', 3], ['862 Twilight Black', 1], ['9860 Metallic Silver', 2]] } ] },
+    '16 Axis Wrap': { k: 'taper', p: 'diamond', a: 16, recs: [
+      { trim: '479 Gulfstream', stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 1], ['479 Gulfstream', 2], ['862S Metallic Twist Black/Silver', 1], ['862 Twilight Black', 1]] },
+      { trim: '9470 Metallic Bluefin', stripes: [['807 White', 1], ['9470 Metallic Bluefin', 1], ['9870 Metallic Steel Grey', 2], ['807 White', 1], ['9470 Metallic Bluefin', 1]] },
+      { trim: '862 Twilight Black', stripes: [['9100 Metallic Yellow Gold', 1], ['862 Twilight Black', 1], ['9860 Metallic Silver', 1], ['479 Gulfstream', 2], ['862 Twilight Black', 1]] } ] },
     '2 Axis Wrap Over Dragon Scales': { k: 'taper', p: 'dragon', a: 8, over: true },
     'Snowflake Wrap': { k: 'cross', pat: 'Snowflake', a: 2 }, '2 Axis Cross Wrap': { k: 'cross', a: 2, other: true }, '4 Axis Cross Wrap': { k: 'cross', a: 4, other: true }
   };
@@ -1061,7 +1068,7 @@
     if (card) {
       var box = el('div', 'rb-exs'); box.addEventListener('click', function (e) { e.stopPropagation(); });
       var fam = famOf(id); if (fam) { var ax = el('div', 'rb-fax');   // 2 / 4 / 8 / 16 axis: each shows its own examples
-        fam.ids.forEach(function (fid, k) { var fw = wrapById(fid), dl = ((fw && fw.adder) || 0) - (((wrapById(id) || {}).adder) || 0), b = el('button', fid === id ? 'on' : '', fam.ax[k] + ' Axis' + (dl ? ' <small>' + (dl > 0 ? '+' : '\u2212') + '$' + Math.abs(dl) + '</small>' : ''));   /* the price change from the axis count picked now */ b.type = 'button';
+        fam.ids.forEach(function (fid, k) { var fw = wrapById(fid), b = el('button', fid === id ? 'on' : '', fam.ax[k] + ' Axis' + (fw && fw.adder ? ' <small>+$' + fw.adder + '</small>' : ''));   /* each axis count's own upcharge */ b.type = 'button';
           b.onclick = function () { if (fid !== S.wrapId) window.pickWrap(fid); }; ax.appendChild(b); });
         box.appendChild(ax); box.appendChild(el('div', 'rb-fbr')); }
       for (var i = 0; i < (id === 'abalone' ? 0 : n); i++) { var b = el('button', i === cur && S.wrapMode === 'example' ? 'on' : '', 'Example ' + (i + 1)); b.type = 'button'; b.dataset.i = i;
