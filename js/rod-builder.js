@@ -767,7 +767,7 @@
     try { var dd = dz.contentDocument, m = dd.querySelector('.dsrow .mirrow'), seg = dd.querySelector('[data-mirror="axes"]'); if (!m || !seg) return;
       var c = dw().wlCapture(), p = c.pattern, drag = p === 'dragon' && !(c.dragon && c.dragon.over && c.dragon.over.on), ok = (p === 'diamond' || p === 'chevron' || drag) && S.wrapId !== 'trim-band';
       m.style.setProperty('display', ok ? 'flex' : 'none', 'important');
-      [].forEach.call(seg.querySelectorAll('button'), function (b) { b.style.display = ok && (drag ? DRAG_AX[+b.dataset.v] != null : axisWrap(p, +b.dataset.v)) ? '' : 'none'; });
+      [].forEach.call(seg.querySelectorAll('button'), function (b) { var show = ok && (drag ? DRAG_AX[+b.dataset.v] != null : axisWrap(p, +b.dataset.v)); if (show && +b.dataset.v === 32) b.style.setProperty('display', 'block', 'important'); else b.style.setProperty('display', show ? '' : 'none'); if (show) b.hidden = false; });   /* 32 is hidden for regular wraps; dragon scales use it */
       [].forEach.call(dd.querySelectorAll('#angle button'), function (b) { var off = drag && +c.axes === 32 && b.dataset.v !== '45'; b.disabled = off; b.style.opacity = off ? '.35' : ''; b.title = off ? '32 axis dragon scales come in 45° only' : ''; });
       var fee = dd.getElementById('sfswAxFee'), cw = drag ? { adder: DRAG_AX[+c.axes] || 0 } : (wrapById(S.wrapId) || {}), sb = seg.querySelector('button[aria-pressed="true"]');   // the upcharge, right under the axis count picked
       if (!fee) { fee = dd.createElement('small'); fee.id = 'sfswAxFee'; fee.style.cssText = 'position:absolute;font-size:12px;font-weight:600;color:#d4a73c;white-space:nowrap;transform:translateX(-50%);pointer-events:none'; m.style.position = 'relative'; m.appendChild(fee); }
@@ -783,6 +783,29 @@
     clearTimeout(readT); readT = setTimeout(readDesign, 30); setTimeout(exButtons, 60);
   }
   function dragonFee() { var d = designOn(), c = d && d.setup; return c && c.pattern === 'dragon' && !(c.dragon && c.dragon.over && c.dragon.over.on) ? (DRAG_AX[+c.axes] || 0) : 0; }
+  // Dragon Scale: the metallic overwrap is picked from all the Metallic and Ultra-UV Metallic threads, shown right here (no color board);
+  // a plain Dragon Scale has no "wrap over it" (that's the 2 Axis Wrap Over Dragon Scales), and presets don't apply to dragon scales
+  function dragonSync() {
+    try { var dd = dz.contentDocument, w = dz.contentWindow, box = dd.getElementById('dragonBox'); if (!box) return;
+      var c = w.wlCapture(), drag = c.pattern === 'dragon';
+      var ov = dd.getElementById('ovOn'), ovl = ov && ov.closest('label'); if (ovl) ovl.style.display = S.wrapId === 'dragon' ? 'none' : '';
+      var pb = dd.getElementById('sfswPresets'); if (pb) pb.style.display = drag ? 'none' : '';
+      if (!drag) return;
+      var sw = dd.getElementById('dgSw'), mi = dd.getElementById('dgMetal'), ml = mi && mi.closest('label'); if (sw) sw.style.display = 'none'; if (ml) ml.style.display = 'none';
+      var mine = dd.getElementById('sfswDgMet');
+      if (!mine) { mine = dd.createElement('div'); mine.id = 'sfswDgMet'; mine.style.cssText = 'display:flex;flex-direction:column;gap:8px;margin-top:4px;flex:1 1 100%';
+        var G = (w.WL_THREADS.groups([]) || []).filter(function (g) { return /^Metallic ·|^Ultra-UV/.test(g[0]); });
+        mine.innerHTML = '<div style="font-size:13px;color:var(--muted)">Metallic overwrap: <b id="sfswDgName" style="color:var(--fg)"></b></div>' + G.map(function (g) {
+          return '<div><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:2px 0 6px">' + g[0] + '</div><div style="display:flex;flex-wrap:wrap;gap:7px">' + g[1].map(function (x) {
+            return '<button type="button" data-h="' + x[1] + '" title="' + x[0] + '" aria-label="' + x[0] + '" style="width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,.15);background:radial-gradient(circle at 32% 30%,#fff 0,' + x[1] + ' 38%,' + x[1] + ' 62%,rgba(0,0,0,.55) 100%)"></button>'; }).join('') + '</div></div>'; }).join('');
+        sw.parentNode.insertBefore(mine, sw.nextSibling);
+        mine.addEventListener('click', function (e) { var b = e.target.closest('button[data-h]'); if (!b) return; try { var c2 = w.wlCapture(); c2.dragon = c2.dragon || {}; c2.dragon.metal = b.dataset.h; w.wlApply(c2); } catch (x) {}
+          clearTimeout(readT); readT = setTimeout(readDesign, 30); }); }
+      var cur = String((c.dragon && c.dragon.metal) || mi.value || '').toLowerCase();
+      [].forEach.call(mine.querySelectorAll('button[data-h]'), function (b) { var on = b.dataset.h.toLowerCase() === cur; b.style.borderColor = on ? '#d4a73c' : 'rgba(255,255,255,.15)'; b.style.boxShadow = on ? '0 0 0 2px #d4a73c' : 'none'; });
+      var nm = dd.getElementById('sfswDgName'); if (nm) { try { nm.textContent = w.WL_THREADS.name(cur) || ''; } catch (x) {} }
+    } catch (e) {}
+  }
   var axBase = null;   // the design before the axis count was changed (switching 2 → 16 → 2 comes back to it exactly)
   function axisHook(dd) {
     var seg = dd.querySelector('[data-mirror="axes"]'); if (!seg || seg.__sfsw) return; seg.__sfsw = true;
@@ -849,7 +872,7 @@
   window.SFSW_underwrap = underOn;
   var thumbT = null;
   function readDesign() {
-    dzBusy = false; underSync(); axisSync();
+    dzBusy = false; underSync(); axisSync(); dragonSync();
     var w = dw(); if (!w || !w.wlCapture || !presetOf(S.wrapId) || S.wrapMode === 'random') return;
     var cap; try { cap = clean(w.wlCapture()); } catch (e) { return; }
     var kind = dzKind, cols = colorsOf(cap, kind), name = function (h) { try { return (w.WL_THREADS && (w.WL_THREADS.fullName || w.WL_THREADS.name)(h)) || h; } catch (e) { return h; } };
