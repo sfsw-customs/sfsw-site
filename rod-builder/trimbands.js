@@ -82,7 +82,7 @@
     host.innerHTML=!has(T)?`<div class="stripes"><button type="button" class="addbtn" data-k="on">+ Add trim bands</button></div>`
       :`<div class="tbrow"><span class="tblab">Width at each end</span>
           <span class="stripe" style="padding:2px"><button type="button" data-mm="-1" aria-label="Narrower">\u2212</button><input type="number" id="tbmm" min="2" max="80" step="0.5" value="${T.mm||20}" aria-label="Trim band width in mm" style="width:5.5em;text-align:center"><small class="slab">mm</small><button type="button" data-mm="1" aria-label="Wider">+</button></span>
-          <span class="tblab">Trim color</span><input type="color" id="tbbase" value="${T.c||BLUE}" aria-label="Trim band color">
+          <span class="tblab sfswMainTrim">Main Trim Color</span><input type="color" id="tbbase" value="${T.c||BLUE}" aria-label="Trim band color">
           <button type="button" class="addbtn" data-k="off" style="margin-left:auto">No trim bands</button></div>
         <div class="tbrow"><span id="tbsum" class="tblab"></span></div>
         <div class="tbrow" style="margin-top:10px"><div class="seg" id="tbmode" role="group" aria-label="Design the center or the ends">

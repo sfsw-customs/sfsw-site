@@ -513,7 +513,7 @@
       dz.style.height = Math.ceil(b + d.defaultView.scrollY) + 4 + 'px'; } catch (e) {} };
     dz.addEventListener('load', function () { setMore();
       try { var dd = dz.contentDocument, ob = dd.getElementById('openBox'), iw = dd.getElementById('innerWrap'); if (ob && iw) iw.parentNode.insertBefore(ob, iw);   // Color filler right under the thread colors
-        underBox(dd, iw); presetBox(dd); axisHook(dd); tgSkin(dd); fillNote(dd);
+        underBox(dd, iw); presetBox(dd); axisHook(dd); tgSkin(dd); fillNote(dd); trimPresetBox(dd, dz.contentWindow, function () { clearTimeout(readT); readT = setTimeout(readDesign, 150); });
         try { new dz.contentWindow.MutationObserver(function () { tgSkin(dd); }).observe(dd.getElementById('innerWrap').parentNode, { childList: true, subtree: true }); } catch (e) {}
         try { var rb = dd.getElementById('resetThreads'); if (rb && !rb.__sfsw) { rb.__sfsw = true;   // reset goes back to the picked preset, or to the wrap the customizer started with
           rb.addEventListener('click', function (e) { e.preventDefault(); e.stopImmediatePropagation(); var pr = lastPreset;
@@ -677,6 +677,30 @@
     var T = keep.pattern === 'diamond' && !pr.exact ? await fitHalf(mk, 4, 120, tok) : sum;
     if (T == null || tok !== fitTok) return;   // another preset was picked meanwhile
     w.wlApply(mk(T)); clearTimeout(readT); readT = setTimeout(readDesign, 150);
+  }
+  // Trim band presets (Trim Band wrap's customizer and the Trim Bands tab): Build From Scratch, then Preset 1-5; Preset 1 is the Trim Band example
+  var TRIM_PRESETS = [null,
+    { c: '479 Gulfstream', bands: [['807 White', 3], ['9130 Metallic Gold', 2], ['479 Gulfstream', 4], ['807 White', 2]], ends: [['807 White', 4]] },
+    { c: '862 Twilight Black', bands: [['9860 Metallic Silver', 3], ['862 Twilight Black', 2], ['9860 Metallic Silver', 1, 'mid', '862 Twilight Black'], ['841 Iron Ore', 3]], ends: [['9860 Metallic Silver', 5]] },
+    { c: '862 Twilight Black', bands: [['9520 Metallic Green', 4], ['807 White', 2], ['513 Guacamole', 3], ['', 3, 'fade']], ends: [['9520 Metallic Green', 4]] },
+    { c: '484 Deep Sea', bands: [['807 White', 2], ['484 Deep Sea', 3], ['807 White', 1, 'mid', '484 Deep Sea'], ['9860 Metallic Silver', 2]], ends: [['807 White', 3]] }];
+  function trimPresetBox(dd, fw, after) {
+    var tw = dd.getElementById('trimWrap'); if (!tw || dd.getElementById('sfswTrimPreset')) return;
+    var box = dd.createElement('div'); box.className = 'sfswTP'; box.style.cssText = 'margin:4px 0 12px';
+    box.innerHTML = '<label style="display:flex;align-items:center;gap:10px"><span style="font-size:15px">Presets</span><select id="sfswTrimPreset" style="min-width:240px;background:#0f141b;color:inherit;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:7px 10px;font:inherit">'
+      + '<option value="scratch">Build From Scratch</option>' + [1, 2, 3, 4, 5].map(function (i) { return '<option value="' + (i - 1) + '">Preset ' + i + '</option>'; }).join('') + '</select></label>';
+    tw.parentNode.insertBefore(box, tw);
+    var sel = box.querySelector('select');
+    trimPresetSync(dd, fw);
+    sel.addEventListener('change', function () { try {
+      var c = fw.wlCapture(), hx = threadHex(fw), mm = (c.trims && c.trims.mm) || 20, ex = ((PRESET['Trim Band'] || {}).recs || [])[0];
+      if (sel.value === 'scratch') c.trims = { on: true, mm: mm, c: (c.trims && c.trims.c) || hx('862 Twilight Black'), bands: [], ends: [] };
+      else { var T = +sel.value === 0 && ex ? ex.tb : TRIM_PRESETS[+sel.value]; c.trims = tbOf({ mm: S.wrapId === 'trim-band' ? 50.8 : mm, c: T.c, bands: T.bands, ends: T.ends }, hx); }
+      fw.wlApply(c); if (after) after(); } catch (e) {} });
+  }
+  function trimPresetSync(dd, fw) {   // show Preset 1 for the Trim Band example, Build From Scratch for plain trims
+    try { var sel = dd.getElementById('sfswTrimPreset'); if (!sel) return; var t0 = fw.wlCapture().trims || {};
+      sel.value = S.wrapId === 'trim-band' || (t0.bands || []).length || (t0.ends || []).length ? (sel.value === 'scratch' ? '0' : sel.value) : 'scratch'; } catch (e) {}
   }
   function presetClear(c) {   // a new preset starts clean: Underwrap and the pattern between go off
     if (c.inner) c.inner.on = false;
@@ -870,7 +894,7 @@
     tf.style.height = Math.ceil(b + 8) + 'px'; } catch (e) {} }
   function tfPull() {   // the main wrap's trims into the trims designer
     var w = dw(), fw = tf && tf.contentWindow; if (!w || !w.wlCapture || !fw || !fw.wlApply) return;
-    try { tfSync = true; fw.wlApply(clean(w.wlCapture())); } catch (e) {} setTimeout(function () { tfSync = false; tfFit(); }, 60);
+    try { tfSync = true; fw.wlApply(clean(w.wlCapture())); } catch (e) {} setTimeout(function () { tfSync = false; tfFit(); try { trimPresetSync(tf.contentDocument, fw); } catch (e) {} }, 60);
   }
   function tfPush() {   // the trims designer's trims onto the main wrap
     if (tfSync) return; var w = dw(), fw = tf && tf.contentWindow; if (!w || !w.wlApply || !fw || !fw.wlCapture) return;
@@ -883,7 +907,8 @@
       tfReady = new Promise(function (res) { tf.addEventListener('load', function () { var tries = 0, t = setInterval(function () { var fw = tf.contentWindow;
         if ((fw && fw.wlCapture && fw.wlApply) || ++tries > 80) { clearInterval(t); try { var dd = tf.contentDocument; dd.documentElement.classList.remove('sfsws');
           ['input', 'change', 'click'].forEach(function (ev) { dd.addEventListener(ev, function () { setTimeout(tfPush, 0); }, true); });
-          new fw.MutationObserver(function () { setTimeout(tfFit, 0); }).observe(dd.body, { childList: true, subtree: true, attributes: true }); } catch (e) {}
+          new fw.MutationObserver(function () { setTimeout(tfFit, 0); }).observe(dd.body, { childList: true, subtree: true, attributes: true });
+          trimPresetBox(dd, fw, function () { setTimeout(tfPush, 0); }); } catch (e) {}
           res(); } }, 100); }); });
       tf.src = BASE + 'taper.html';
     }
