@@ -518,7 +518,7 @@
       { trim: '9470 Metallic Bluefin', stripes: [['807 White', 1], ['9470 Metallic Bluefin', 1], ['9870 Metallic Steel Grey', 2], ['807 White', 1], ['9470 Metallic Bluefin', 1]] },
       { trim: '862 Twilight Black', stripes: [['9100 Metallic Yellow Gold', 1], ['862 Twilight Black', 1], ['9860 Metallic Silver', 1], ['479 Gulfstream', 2], ['862 Twilight Black', 1]] } ] },
     '2 Axis Wrap Over Dragon Scales': { k: 'taper', p: 'dragon', a: 8, over: true },
-    'Snowflake Wrap': { k: 'cross', pat: 'Snowflake', a: 2 }, '2 Axis Cross Wrap': { k: 'cross', a: 2, other: true }, '4 Axis Cross Wrap': { k: 'cross', a: 4, other: true }
+    'Snowflake Wrap': { k: 'cross', pat: 'Snowflake', a: 2 }, '2 Axis Cross Wrap': { k: 'cross', a: 2, other: true, recs: [{}, { pat: 'Snowflake' }, {}] }, '4 Axis Cross Wrap': { k: 'cross', a: 4, other: true }
   };
   var WRAPS = val('ROD_WRAPS') || [];
   var wrapById = function (id) { return WRAPS.find(function (w) { return w.id === id; }); };
@@ -543,7 +543,10 @@
       dz.style.height = Math.ceil(b + d.defaultView.scrollY) + 4 + 'px'; } catch (e) {} };
     dz.addEventListener('load', function () { setMore();
       try { var dd = dz.contentDocument, ob = dd.getElementById('openBox'), iw = dd.getElementById('innerWrap'); if (ob && iw) iw.parentNode.insertBefore(ob, iw);   // Color filler right under the thread colors
-        underBox(dd, iw); presetBox(dd); axisHook(dd); tgSkin(dd); fillNote(dd); trimPresetBox(dd, dz.contentWindow, function () { clearTimeout(readT); readT = setTimeout(readDesign, 150); });
+        underBox(dd, iw); presetBox(dd); axisHook(dd); tgSkin(dd); fillNote(dd);
+        if (dd.getElementById('pat')) { var rbx = dd.getElementById('repBox'); if (rbx) rbx.style.setProperty('display', 'none', 'important');   // cross wraps: repetitions fill the wrap on their own; no blank color here
+          var bcx = dd.getElementById('blankC'), bf = bcx && bcx.closest('.f'); if (bf) bf.style.display = 'none';
+          try { var tgT = null; new dz.contentWindow.MutationObserver(function () { clearTimeout(tgT); tgT = setTimeout(function () { tgSkin(dd); }, 30); }).observe(dd.body, { childList: true, subtree: true }); } catch (e) {} } trimPresetBox(dd, dz.contentWindow, function () { clearTimeout(readT); readT = setTimeout(readDesign, 150); });
         try { new dz.contentWindow.MutationObserver(function () { tgSkin(dd); }).observe(dd.getElementById('innerWrap').parentNode, { childList: true, subtree: true }); } catch (e) {}
         try { var rb = dd.getElementById('resetThreads'); if (rb && !rb.__sfsw) { rb.__sfsw = true;   // reset goes back to the picked preset, or to the wrap the customizer started with
           rb.addEventListener('click', function (e) { e.preventDefault(); e.stopImmediatePropagation(); var pr = lastPreset;
@@ -620,7 +623,7 @@
   }
   function wrapIdFor(cap, kind) {
     var ax = +cap.axes || 2;
-    if (kind === 'cross') return idByName(/snowflake/i.test(cap.pat || '') && ax < 4 ? 'Snowflake Wrap' : ax >= 4 ? '4 Axis Cross Wrap' : '2 Axis Cross Wrap');
+    if (kind === 'cross') return idByName(ax >= 4 ? '4 Axis Cross Wrap' : '2 Axis Cross Wrap');   // a snowflake is a 2 axis cross wrap
     if (cap.pattern === 'trim') return idByName('Trim Band');
     if (cap.pattern === 'dragon') return idByName(cap.dragon && cap.dragon.over && cap.dragon.over.on ? '2 Axis Wrap Over Dragon Scales' : 'Dragon Scale');
     if (ax >= 16) return idByName(cap.pattern === 'chevron' ? 'Chevron — 16 Axis' : '16 Axis Wrap');
@@ -802,8 +805,8 @@
   // Underwrap / Add a pattern between / Filler over it: shown as toggle buttons like Color filler, with the note to the right
   function tgSkin(dd) {
     var ref = dd.getElementById('armsBtn'); if (!ref) return; var cs = dd.defaultView.getComputedStyle(ref), seg = dd.defaultView.getComputedStyle(ref.parentNode);
-    ['underOn', 'innerOn', 'innerFillOn'].forEach(function (id) {
-      if (id === 'innerOn') { var iI = dd.getElementById(id), sm = iI && iI.closest('label.chk') && iI.closest('label.chk').querySelector('small'); if (sm && !/\+\$/.test(sm.textContent)) sm.textContent = '+$50 · ' + sm.textContent.replace(/^\(|\)$/g, '') + ' · up to 2 new colors included'; }
+    ['underOn', 'innerOn', 'innerFillOn', 'btOn'].forEach(function (id) {
+      if (id === 'innerOn' || id === 'btOn') { var iI = dd.getElementById(id), sm = iI && iI.closest('label.chk') && iI.closest('label.chk').querySelector('small'); if (sm && !/\+\$/.test(sm.textContent)) sm.textContent = '+$50 · ' + sm.textContent.replace(/^\(|\)$/g, '') + (id === 'innerOn' ? ' · up to 2 new colors included' : ''); }
       var inp = dd.getElementById(id), lab = inp && inp.closest('label.chk'); if (!lab) return;
       var btn = lab.querySelector('.sfswTgB');
       if (!btn) {
@@ -873,7 +876,7 @@
   function threadHex(w) { var m = {}; try { w.WL_THREADS.BRANDS.sfsw.groups.forEach(function (g) { g[1].forEach(function (x) { m[x[0]] = x[1]; }); }); } catch (e) {}
     return function (n) { return m[n] || '#1e1617'; }; }
   var recPick = {};   // which photo design each wrap is on
-  function recOf(pr, id) { var r = pr && pr.recs ? pr.recs[Math.min(recPick[id] || 0, pr.recs.length - 1)] : null; return r && r.stripes ? r : null; }   // a photo-only example has no recipe
+  function recOf(pr, id) { var r = pr && pr.recs ? pr.recs[Math.min(recPick[id] || 0, pr.recs.length - 1)] : null; return r && (r.stripes || r.pat) ? r : null; }   // a photo-only example has no recipe
   function recInner(R, hx) { var I = R && R.inner; if (!I) return null;   // an example's pattern between
     return { on: true, pattern: I.pattern || 'diamond', place: I.place || 'center', chevTo: I.chevTo || null, auto: false, touched: true, stripes: I.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; }), fillOn: false, fill: [] }; }
   // Customize / Builder's Choice open right under the picked wrap: the list is laid out by order (moving the designer would reload it)
@@ -926,16 +929,20 @@
     [].forEach.call(rndPal.querySelectorAll('.rb-rp button'), function (b) { b.onclick = function () { var i = +b.dataset.i; if (rndSlot === 'main') S.mainIdx = i; else sup[rndSlot] = i; call('renderSupportingRows'); updateAll(); }; });
   }
   // wrap length: starts at the rod type's length (9 in here); each extra inch is +$10
-  function BASE_LEN() { return (CFG.wrap && +CFG.wrap.len) || 8; }
-  function wrapLen() { return Math.max(BASE_LEN(), +S.wrapLen || BASE_LEN()); }
-  function lenFee() { return CFG.wrap && S.wrapId !== 'trim-band' ? (wrapLen() - BASE_LEN()) * 10 : 0; }   // the Trim Band wrap has no length to pick
+  // wrap length: included length per wrap (cross wraps 8 in, the rest this rod type's length); longer costs per inch (cross wraps +$20, the rest +$10); shorter is allowed and doesn't lower the price
+  function isCrossWrap() { var pr = presetOf(S.wrapId); return !!(pr && pr.k === 'cross'); }
+  function BASE_LEN() { return isCrossWrap() ? 8 : ((CFG.wrap && +CFG.wrap.len) || 8); }
+  function LEN_RATE() { return isCrossWrap() ? 20 : 10; }
+  var MIN_LEN = 3;
+  function wrapLen() { return Math.max(MIN_LEN, +S.wrapLen || BASE_LEN()); }
+  function lenFee() { return CFG.wrap && S.wrapId !== 'trim-band' ? Math.max(0, wrapLen() - BASE_LEN()) * LEN_RATE() : 0; }   // the Trim Band wrap has no length to pick
   function setWrapLen(n) {
-    S.wrapLen = Math.max(BASE_LEN(), Math.min(BASE_LEN() + 12, n)); renderLen();
+    S.wrapLen = Math.max(MIN_LEN, Math.min(BASE_LEN() + 12, n)); renderLen();
     var w = dw(); if (w && w.wlCapture && S.wrapMode !== 'random') { try { var c = w.wlCapture(); c.unit = 'in'; c.len = wrapLen().toFixed(2); w.wlApply(c); } catch (e) {} clearTimeout(readT); readT = setTimeout(readDesign, 300); }
     updateAll();
   }
   function renderLen() { var b = document.querySelector('.rb-len'); if (!b) return; var f = lenFee();
-    b.querySelector('b').textContent = wrapLen() + ' in'; b.querySelector('.rb-len-fee').textContent = f ? '+$' + f : 'Included'; b.querySelector('[data-d="-1"]').disabled = wrapLen() <= BASE_LEN();
+    b.querySelector('b').textContent = wrapLen() + ' in'; b.querySelector('.rb-len-fee').textContent = f ? '+$' + f : 'Included'; b.querySelector('[data-d="-1"]').disabled = wrapLen() <= MIN_LEN; var lab = b.querySelector('.rb-len-l small'); if (lab) lab.textContent = BASE_LEN() + ' in included · +$' + LEN_RATE() + ' each added inch · shorter is fine (same price)';
     var off = S.wrapId === 'trim-band'; b.classList.toggle('rb-len-off', off); b.title = off ? 'Wrap length is set for the Trim Band wrap. Pick another wrap to change it.' : '';
     [].forEach.call(b.querySelectorAll('button'), function (x) { if (off) x.disabled = true; else if (x.dataset.d === '1') x.disabled = false; }); }
   // Trim bands: on/off, width and thread color, written straight into the wrap design
@@ -1023,8 +1030,8 @@
     if (fit) { cap.unit = fit.unit; cap.len = fit.len; cap.dB = fit.dB; cap.dM = fit.dM; cap.dT = fit.dT; }
     var WS = (window.SFSW_BUILDER || {}).wrap;   // this rod type's wrap: length (in) and butt / tip diameters (mm)
     if (WS && !restore) { cap.unit = 'in'; cap.len = (+wrapLen()).toFixed(2); cap.dB = (+WS.dB).toFixed(1); cap.dT = (+WS.dT).toFixed(1); cap.dM = ((+WS.dB + +WS.dT) / 2).toFixed(1); }
-    if (!restore && dzKind === 'cross') noCustom(w);
-    if (!restore && REC) { var hx0 = threadHex(w);   // the wrap's own design goes in first, so nothing else ever shows
+    if (!restore && dzKind === 'cross') { noCustom(w); cap.reps = null; }   // repetitions: auto, to fill the wrap
+    if (!restore && REC && REC.stripes) { var hx0 = threadHex(w);   // the wrap's own design goes in first, so nothing else ever shows
       cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } if (REC.tb) cap.trims = tbOf(REC.tb, hx0); if (REC.dragon && cap.dragon) { cap.dragon.metal = hx0(REC.dragon.metal); cap.dragon.line = hx0(REC.dragon.line); } var ri0 = recInner(REC, hx0); if (ri0) cap.inner = ri0; else if (cap.inner) cap.inner.on = false; }
     if (!restore && pr.p !== 'trim' && cap.trims && !(REC && REC.tb)) { cap.trims.mm = 20; cap.trims.bands = []; cap.trims.ends = []; }
     else if (!restore && !prev && dzKind === 'taper') { cap.stripes = JSON.parse(JSON.stringify(START.stripes)); if (cap.trims) { cap.trims.c = START.trim; cap.trims.bands = []; cap.trims.ends = []; } }
@@ -1044,7 +1051,7 @@
         press(w, '#axes [data-v="' + pr.a + '"]');
       } else {
         var sel = w.document.getElementById('pat');
-        if (sel) { var want = pr.pat || ([].find.call(sel.options, function (o) { return !/snowflake/i.test(o.value); }) || {}).value;
+        if (sel) { var want = (REC && REC.pat) || pr.pat || ([].find.call(sel.options, function (o) { return !/snowflake/i.test(o.value); }) || {}).value;
           if (want && sel.value !== want && [].some.call(sel.options, function (o) { return o.value === want; })) { sel.value = want; sel.dispatchEvent(new Event('change', { bubbles: true })); } }
         press(w, '#axes [data-v="' + pr.a + '"]');
       }
@@ -1053,7 +1060,7 @@
       if (n !== applyN) return;
       var cols = prev || START.stripes.map(function (x) { return x.c; });
       var c2 = w.wlCapture();
-      if (REC) {   // this wrap's own recipe (the design in its photo)
+      if (REC && REC.stripes) {   // this wrap's own recipe (the design in its photo)
         var hx = threadHex(w), R = REC;
         c2.stripes = R.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; });
         if (c2.trims) { c2.trims.c = hx(R.trim || R.stripes[0][0]); c2.trims.bands = []; c2.trims.ends = []; }
@@ -1125,7 +1132,7 @@
         box.appendChild(ax); box.appendChild(el('div', 'rb-fbr')); }
       for (var i = 0; i < (id === 'abalone' ? 0 : n); i++) { var b = el('button', i === cur && S.wrapMode === 'example' ? 'on' : '', 'Example ' + (i + 1)); b.type = 'button'; b.dataset.i = i;
         b.onclick = function () { var k = +this.dataset.i; recPick[id] = k; var was = S.wrapMode;
-          if (recs[k] && recs[k].stripes) { setMode('example', true); toDesigner(id, null, null); } else { setMode('example', was === 'example'); exButtons(); } }; box.appendChild(b); }
+          if (recs[k] && (recs[k].stripes || recs[k].pat || (recs.some(function (r) { return r && r.pat; }) && pr.k === 'cross'))) { setMode('example', true); toDesigner(id, null, null); } else { setMode('example', was === 'example'); exButtons(); } }; box.appendChild(b); }
       if (id === 'abalone' && w && w.colors) {   // abalone: pick the shell color here (no thread colors)
         w.colors.forEach(function (c, k) { var b = el('button', (S.abaloneColorIdx || 0) === k ? 'on' : '', c); b.type = 'button';
           b.onclick = function () { call('pickAbaloneColor', String(k)); setTimeout(exButtons, 30); }; box.appendChild(b); });
@@ -1182,15 +1189,15 @@
   // Color filler (+$20): the designer's filler that covers the open space inside the diamonds
   var FILL_FEE = 20;
   var INNER_FEE = 50;
-  function innerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && c.inner && c.inner.on && (c.inner.stripes || []).length); }
-  function fillerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && c.arms === 'cover' && c.pattern === 'diamond'); }
+  function innerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && ((c.inner && c.inner.on && (c.inner.stripes || []).length) || (d.sfsw === 'cross' && c.between && c.between.on))); }
+  function fillerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && c.arms === 'cover' && (c.pattern === 'diamond' || d.sfsw === 'cross')); }
   window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? FILL_FEE : 0) + (innerOn() ? INNER_FEE : 0) + dragonFee(); };   // (the wrap length rides along here)
   var _order = window.buildOrderItem;
   if (typeof _order === 'function') window.buildOrderItem = function () {
     var it = _order.apply(this, arguments), d = designOn();
-    if (lenFee() && it.lines) it.lines.push({ label: 'Wrap Length', value: wrapLen() + ' in  +$' + lenFee() });
+    if (CFG.wrap && it.lines && S.wrapId !== 'trim-band' && wrapLen() !== BASE_LEN()) it.lines.push({ label: 'Wrap Length', value: wrapLen() + ' in' + (lenFee() ? '  +$' + lenFee() : ' (shorter than standard)') });
     if (dragonFee() && it.lines) it.lines.push({ label: 'Dragon Scale', value: designOn().setup.axes + ' axis  +$' + dragonFee() });
-    if (innerOn() && it.lines) { var ic = designOn().setup.inner; it.lines.push({ label: 'Pattern Between', value: (ic.pattern === 'chevron' ? 'Chevron' : 'Diamond') + (ic.fillOn && ic.pattern !== 'chevron' ? ' with filler over it' : '') + '  +$' + INNER_FEE + ' (up to 2 new colors included)' }); }
+    if (innerOn() && it.lines) { var ic = designOn().setup.inner || { pattern: 'cross' }; it.lines.push({ label: 'Pattern Between', value: (ic.pattern === 'cross' ? 'Cross' : ic.pattern === 'chevron' ? 'Chevron' : 'Diamond') + (ic.fillOn && ic.pattern !== 'chevron' ? ' with filler over it' : '') + '  +$' + INNER_FEE + ' (up to 2 new colors included)' }); }
     if (fillerOn() && it.lines) { var fn; try { fn = (dw().WL_THREADS.fullName || dw().WL_THREADS.name)(designOn().setup.fillC); } catch (e) {} it.lines.push({ label: 'Color Filler', value: (fn || designOn().setup.fillC || '') + '  +$' + FILL_FEE }); }
     if (underOn() && it.lines) { var un; try { un = (dw().WL_THREADS.fullName || dw().WL_THREADS.name)(S.under.c); } catch (e) {} it.lines.push({ label: 'Underwrap', value: (un || S.under.c) + '  +$' + UNDER_FEE }); }
     if (!d) return it;
