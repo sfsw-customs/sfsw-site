@@ -439,7 +439,7 @@
       if (dzBusy && S.wrapMode !== 'random' && presetOf(S.wrapId)) return;   // a new wrap is being laid out: one update when it's ready, not two
       var key = JSON.stringify(s.p); if (key === lastSent) return; lastSent = key;
       var r0 = rod.set(s.p); if (r0 && r0.then && Date.now() - stepAt < 4000) r0.then(function () { if (rod && lastView) rod.view(lastView, true); });
-    }, 90);
+    }, 40);
   }
 
   // every pick on the page ends in updateAll(): follow it
@@ -637,16 +637,17 @@
   // Presets in the customizer: 5 ready-made color sets for the wrap's own pattern. A wrap can have its own 5
   // (CUSTOM_PRESETS['Diamond — 2 Axis'] = [...]); the rest use the 5 below. Each: name, trim color, thread lines (center first).
   var CUSTOM_PRESETS = {};
-  var BASE_PRESETS = [
+  var BASE_PRESETS = [   // five different looks: a classic, Brett's black/storm cloud/gold, a striped green, a redfish/copper, a black-out silver
     { name: 'Gulfstream & Gold', trim: '479 Gulfstream', stripes: [['9130 Metallic Gold', 1], ['479 Gulfstream', 4], ['807 White', 2], ['9130 Metallic Gold', 2], ['479 Gulfstream', 3]] },
-    { name: 'Green & White', trim: '513 Guacamole', stripes: [['9520 Metallic Green', 1], ['862 Twilight Black', 4], ['513 Guacamole', 4], ['807 White', 2], ['9520 Metallic Green', 2]] },
-    { name: 'Black & Silver', trim: '862 Twilight Black', stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 4], ['9860 Metallic Silver', 2], ['841 Iron Ore', 4], ['862 Twilight Black', 2]] },
-    { name: 'Deep Sea & White', trim: '484 Deep Sea', stripes: [['807 White', 1], ['484 Deep Sea', 4], ['807 White', 3], ['819 Ghost Grey', 2], ['484 Deep Sea', 3]] },
-    { name: 'Black & Gold', trim: '862 Twilight Black', stripes: [['9100 Metallic Yellow Gold', 1], ['862 Twilight Black', 4], ['9100 Metallic Yellow Gold', 3], ['813 Silver Shiner', 3], ['862 Twilight Black', 2]] }];
+    { name: 'Black, Storm Cloud & Gold', trim: '862 Twilight Black', exact: true, stripes: [['862 Twilight Black', 8], ['850 Storm Cloud', 1], ['862 Twilight Black', 2], ['850 Storm Cloud', 2], ['862 Twilight Black', 1], ['850 Storm Cloud', 3],
+      ['9100 Metallic Yellow Gold', 3], ['850 Storm Cloud', 2], ['9100 Metallic Yellow Gold', 2], ['850 Storm Cloud', 1], ['9100 Metallic Yellow Gold', 3]] },
+    { name: 'Green Stripes', trim: '9520 Metallic Green', stripes: [['807 White', 3], ['9520 Metallic Green', 2], ['862 Twilight Black', 1], ['9520 Metallic Green', 2], ['862 Twilight Black', 1], ['513 Guacamole', 4], ['807 White', 1], ['513 Guacamole', 2]] },
+    { name: 'Redfish & Copper', trim: '319 Redfish', stripes: [['740 Copper', 1], ['862 Twilight Black', 2], ['319 Redfish', 5], ['740 Copper', 1], ['862 Twilight Black', 1], ['740 Copper', 1], ['319 Redfish', 2]] },
+    { name: 'Black-Out Silver', trim: '862 Twilight Black', stripes: [['862 Twilight Black', 3], ['9860 Metallic Silver', 1], ['862 Twilight Black', 1], ['9860 Metallic Silver', 1], ['841 Iron Ore', 4], ['9860 Metallic Silver', 2]] }];
   // Preset 1-5 (not the photo examples, so no one gets a wrap that's already on someone else's rod); the customizer opens on Preset 1
   function presetsFor() {
     var w = wrapNamed(S.wrapId), L = (w && CUSTOM_PRESETS[w.name]) || BASE_PRESETS;
-    return L.slice(0, 5).map(function (x, i) { return { name: 'Preset ' + (i + 1), trim: x.trim, stripes: x.stripes }; });
+    return L.slice(0, 5).map(function (x, i) { return { name: 'Preset ' + (i + 1), trim: x.trim, stripes: x.stripes, exact: x.exact }; });
   }
   function presetBox(dd) {
     var tb = dd.getElementById('threadsBox'); if (!tb || dd.getElementById('sfswPresets')) return;
@@ -673,12 +674,14 @@
     mf.src = BASE + 'taper.html'; document.body.appendChild(mf); return mfReady;
   }
   // find the total thread count that leaves half the wrap open; mk(T) builds the design for a total of T
+  var fitMemo = {};   // the same design on the same wrap again: no need to measure again
   async function fitHalf(mk, lo, hi, tok) {
+    var key = JSON.stringify(mk(1, true)) + '|' + lo + '|' + hi; if (fitMemo[key]) return fitMemo[key];
     var fw = await measFrame(), sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
     if (!fw) return Math.round((lo + hi) / 2);
-    for (var k = 0; k < 7; k++) { if (tok !== fitTok) return null; var mid = Math.round((lo + hi) / 2), c = mk(mid, true); fw.wlApply(c); await sleep(40);
+    while (hi - lo > 2) { if (tok !== fitTok) return null; var mid = Math.round((lo + hi) / 2), c = mk(mid, true); fw.wlApply(c); await sleep(0);
       if (openShare(fw, c) > 0.5) lo = mid; else hi = mid; }
-    return tok === fitTok ? Math.round((lo + hi) / 2) : null;
+    if (tok !== fitTok) return null; return (fitMemo[key] = Math.round((lo + hi) / 2));
   }
   async function presetApply(pr, fresh) {
     lastPreset = pr; var tok = ++fitTok;
@@ -691,7 +694,7 @@
       if (c.trims) { c.trims.c = hx(pr.trim); c.trims.bands = []; c.trims.ends = []; } if (measuring) { c.arms = 'show'; if (c.inner) c.inner.on = false; } return c; };
     var T = keep.pattern === 'diamond' && !pr.exact ? await fitHalf(mk, 4, 120, tok) : sum;
     if (T == null || tok !== fitTok) return;   // another preset was picked meanwhile
-    w.wlApply(mk(T)); clearTimeout(readT); readT = setTimeout(readDesign, 150);
+    w.wlApply(mk(T)); clearTimeout(readT); readT = setTimeout(readDesign, 20);
   }
   // Trim band presets (Trim Band wrap's customizer and the Trim Bands tab): Build From Scratch, then Preset 1-5; Preset 1 is the Trim Band example
   var TRIM_PRESETS = [null,
@@ -808,13 +811,15 @@
   }
   function underOn() { return !!(S.under.on && S.wrapMode === 'build' && designOn() && underOk() && S.under.c); }
   window.SFSW_underwrap = underOn;
+  var thumbT = null;
   function readDesign() {
     dzBusy = false; underSync(); axisSync();
     var w = dw(); if (!w || !w.wlCapture || !presetOf(S.wrapId) || S.wrapMode === 'random') return;
     var cap; try { cap = clean(w.wlCapture()); } catch (e) { return; }
     var kind = dzKind, cols = colorsOf(cap, kind), name = function (h) { try { return (w.WL_THREADS && w.WL_THREADS.name(h)) || h; } catch (e) { return h; } };
     var MET = {}, UV = {}; try { w.WL_THREADS.BRANDS.sfsw.metallic.forEach(function (h) { MET[h.toLowerCase()] = 1; }); w.WL_THREADS.BRANDS.fuji.metallic.forEach(function (h) { UV[h.toLowerCase()] = 1; }); } catch (e) {}
-    var thumb = ''; try { var u = w.WL_unrolled(900, 220); if (u && u.canvas) { var c = document.createElement('canvas'); c.width = 640; c.height = Math.round(640 * (u.canvas.height / 2) / u.canvas.width); c.getContext('2d').drawImage(u.canvas, 0, 0, u.canvas.width, u.canvas.height / 2, 0, 0, c.width, c.height); thumb = c.toDataURL('image/jpeg', .8); } } catch (e) {}
+    var thumb = (S.customDesign && S.customDesign.thumb) || '';   // the thumbnail (cart / summary) is redrawn just after, out of the way of the 3D rod
+    clearTimeout(thumbT); thumbT = setTimeout(function () { try { var u = w.WL_unrolled(900, 220); if (u && u.canvas && S.customDesign) { var c = document.createElement('canvas'); c.width = 640; c.height = Math.round(640 * (u.canvas.height / 2) / u.canvas.width); c.getContext('2d').drawImage(u.canvas, 0, 0, u.canvas.width, u.canvas.height / 2, 0, 0, c.width, c.height); S.customDesign.thumb = c.toDataURL('image/jpeg', .8); } } catch (e) {} }, 900);
     var over = cap.dragon && cap.dragon.over && cap.dragon.over.on;
     var pat = kind === 'cross' ? (cap.pat || 'Cross wrap') : cap.pattern === 'dragon' ? (over ? 'Chevron over dragon scales' : 'Dragon scale') : cap.pattern === 'chevron' ? 'Chevron' : 'Diamond';
     var ax = kind === 'taper' && cap.pattern === 'dragon' ? (over ? +cap.dragon.over.axes || 2 : +cap.axes || 8) : +cap.axes || 2;
@@ -985,8 +990,11 @@
     if (!restore && pr.p !== 'trim' && cap.trims && !(REC && REC.tb)) { cap.trims.mm = 20; cap.trims.bands = []; cap.trims.ends = []; }
     else if (!restore && !prev && dzKind === 'taper') { cap.stripes = JSON.parse(JSON.stringify(START.stripes)); if (cap.trims) { cap.trims.c = START.trim; cap.trims.bands = []; cap.trims.ends = []; } }
     if (!restore) snap(w, cap);
+    var same = !restore && !switched && !first && REC && pr.k === 'taper' && cap.pattern === pr.p && +cap.axes === +pr.a && pr.p !== 'dragon';   // same wrap, another example: nothing else to set up
+    if (same) { cap.nOverride = null; cap.chevTo = null; if (cap.inner) cap.inner.on = false; }
     try { w.wlApply(cap); } catch (e) {}
     lastKind = dzKind;
+    if (same) { clearTimeout(readT); readT = setTimeout(readDesign, 20); return; }
     if (!restore) {
       await new Promise(function (r) { setTimeout(r, 80); });
       if (pr.k === 'taper') {

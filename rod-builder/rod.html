@@ -1957,7 +1957,7 @@ const sfswBoot = (async () => {
       src[k] = spec.kind === 'cross' ? 'cross' : 'taper'; if (src[k] === 'cross') await crossFrame(k);
       const w = await whenReady(fk(k), w => w.WL_unrolled && w.__wlRod); w.__wlFitted = true;
       try { w.wlApply(clone(spec.full)); } catch (e) { console.warn('design', k, e); }
-      await wait(150); await readWrap(k); return true;
+      await wait(40); await readWrap(k); return true;
     }
     if (src[k] !== 'taper') src[k] = 'taper';
     const w = await taperReady(k);
@@ -1976,7 +1976,7 @@ const sfswBoot = (async () => {
     try { w.wlApply(o); } catch (e) { console.warn('wrap', k, e); }
     const ab = window.__sfswAb || (window.__sfswAb = {}), mm = o.trims && o.trims.on ? +o.trims.mm : 0;   // every re-read of this wrap paints the shell again
     ab[k] = spec.abalone ? (rr => paintAbalone(rr, spec.abalone.img, mm).catch(e => console.warn('abalone', e))) : spec.veil ? (rr => paintVeil(rr, spec.veil.colors || [], mm, spec.veil.name || '')) : null;
-    await wait(120); await readWrap(k);
+    await wait(40); await readWrap(k);
     return true;
   }
   // SFSW: abalone shell laid between the trim bands (the photo, mirrored tile to tile so there are no seams)
@@ -2044,17 +2044,25 @@ const sfswBoot = (async () => {
     if (gk !== last.guideKey) { last.guideKey = gk; reguide = true; }
     render();
     const mk = JSON.stringify(p.main || null);   // the same wrap again: nothing to redraw
-    if (p.main && st.mainOn && mk !== window.__sfswMainKey) { await setWrap('main', p.main); window.__sfswMainKey = mk; }
+    const rest = JSON.stringify(Object.assign({}, p, { main: null })), onlyMain = rest === last.rest && !!window.__sfswBuilt; last.rest = rest;
+    if (p.main && st.mainOn && mk !== window.__sfswMainKey) {
+      const old = unrolled.main; await setWrap('main', p.main); window.__sfswMainKey = mk;
+      // SFSW: only the wrap changed and it's the same size: put the new picture on the rod as it is (no rebuild — much faster)
+      const nw = unrolled.main;
+      if (onlyMain && old && nw && old !== nw && Math.abs(old.lengthMM - nw.lengthMM) < 0.05 && (old.trimMM || 0) === (nw.trimMM || 0) && old.from === nw.from && !!old.canvas.__sfswShiny === !!nw.canvas.__sfswShiny) {
+        let hit = 0; rod.traverse(o => { const mt = o.material, mp = mt && mt.map; if (mp && mp.image === old.canvas) { mp.image = nw.canvas; mp.needsUpdate = true; hit++; } });
+        if (hit) { window.__sfswHoldMain = false; window.__sfswDirty = 12; return; } }
+    }
     if (p.main) window.__sfswHoldMain = false;   // the customer's wrap is in: show it
     if (p.split && st.splitOn && st.style === 'split') await setWrap('split', p.split);
     if (p.gw && await setGuideWrap(p.gw)) reguide = true;
     if (reguide) await readGuideWraps();
-    await build();
+    await build(); window.__sfswBuilt = true;
     // SFSW: make the 3D blank as thick as the wrap's butt diameter where the wrap starts, so the wrap looks just like the designer
     if (p.wrapD && L.wrap) { const base = 2 * blankR(L.wrap[0]) * IN / (st.rScale || 1), s = p.wrapD / base;
       if (isFinite(s) && s > 0 && Math.abs(s - (st.rScale || 1)) > 0.005) { st.rScale = s; await build(); } }
   }
-  async function pump() { if (busy) return; busy = true; try { while (want) { const p = want; want = null; try { await apply(p); } catch (e) { console.error(e); } } } finally { busy = false; } }
+  async function pump() { if (busy) return; busy = true; window.__sfswBusy = true; try { while (want) { const p = want; want = null; try { await apply(p); } catch (e) { console.error(e); } } } finally { busy = false; window.__sfswBusy = false; window.__sfswDone = (window.__sfswDone || 0) + 1; } }
   // the size the wrap above the fore grip was fitted to on this blank, for the page's Wrap Designer
   const fit = async () => { await sfswBoot; const w = await taperReady('main'); const c = firstFit.main || w.wlCapture(); return { unit: c.unit, len: c.len, dB: c.dB, dM: c.dM, dT: c.dT }; };
   // custom grips: the page's ring designer paints its strips with the rod's own cork and EVA textures
