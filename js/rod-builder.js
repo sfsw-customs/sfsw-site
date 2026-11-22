@@ -734,7 +734,7 @@
   }
   function presetScratch() {   // Build From Scratch: just a center line to build on
     lastPreset = 'scratch'; fitTok++; var w = dw(); if (!w || !w.wlCapture) return;
-    var c = clean(w.wlCapture()), hx = threadHex(w); presetClear(c); c.stripes = [{ c: (c.stripes[0] || {}).c || hx('479 Gulfstream'), t: 2 }];
+    var c = clean(w.wlCapture()), hx = threadHex(w); presetClear(c); c.stripes = [{ c: hx('807 White'), t: 2 }];   /* 2 white threads in the center */
     c.center = { on: false, c: c.stripes[0].c, t: 1 }; if (c.inner) c.inner.on = false; if (c.trims) { c.trims.bands = []; c.trims.ends = []; }
     w.wlApply(c); clearTimeout(readT); readT = setTimeout(readDesign, 150);
   }
