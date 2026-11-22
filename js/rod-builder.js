@@ -615,7 +615,7 @@
     if (lab) { [].slice.call(lab.childNodes).forEach(function (n) { if (n.nodeType === 3 && /Blank color/.test(n.textContent)) n.textContent = 'Underwrap color '; }); box.querySelector('.sfswUrow').appendChild(lab); }
     var cb = box.querySelector('#underOn');
     var put = function (hex) { bc.value = hex; bc.dispatchEvent(new Event('input', { bubbles: true })); bc.dispatchEvent(new Event('change', { bubbles: true })); };
-    cb.addEventListener('change', function () { S.under.on = cb.checked; underSync(); put(cb.checked ? (S.under.c || threadHex(dw())('862 Twilight Black') || '#1e1617') : under0); clearTimeout(readT); readT = setTimeout(readDesign, 120); });
+    cb.addEventListener('change', function () { S.under.on = cb.checked; underSync(); put(cb.checked ? (S.under.c || threadHex(dw())('9460 Metallic Deep Blue') || '#2b38af') : under0); clearTimeout(readT); readT = setTimeout(readDesign, 120); });
     bc.addEventListener('input', function () { if (S.under.on && bc.value !== under0) S.under.c = bc.value; });
     underSync();
   }
