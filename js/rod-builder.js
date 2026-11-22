@@ -347,7 +347,7 @@
   var TRIM_AS = { 'at-trim': 'step', 'alps-trim': 'dimple', 'matagi-trim': 'slim' };
   var TRIM_COL = { Gunsmoke: 'Gunmetal', 'Pale Gold': 'Champagne', 'Dark Gunmetal': 'Gunmetal' };
   // rod wraps the 3D rod can lay thread for; the rest show the thread colors as a plain wrap
-  var WRAP_AS = { 'trim-band': ['trim', 2], 'diam-2': ['diamond', 2], 'chev-2': ['chevron', 2], 'chev-4': ['chevron', 4], 'diam-4': ['diamond', 4], 'dec-4': ['diamond', 4],
+  var WRAP_AS = { 'trim-band': ['trim', 2], 'diam-2': ['diamond', 2], 'chev-2': ['chevron', 2], 'chev-4': ['chevron', 4], 'diam-4': ['diamond', 4],
     'closed-4': ['diamond', 8], 'axis-16': ['diamond', 16], 'dragon': ['dragon', 8], '2axis-dragon': ['dragon', 8, true], 'trim-bands': ['trim', 2] };
   var hexOf = function (i) { var W = val('WRAP_COLORS') || [], c = W[i]; return c && /^#[0-9a-f]{6}$/i.test(c.hex) ? c.hex.toLowerCase() : '#1a1a1a'; };
   var rings = function (pieces) { var out = []; (pieces || []).forEach(function (p) { var n = +p.inches || 0, m = CORK_AS[p.patternId] || 'burl';
@@ -506,9 +506,9 @@
       { trim: '479 Gulfstream',
         stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 3], ['9860 Metallic Silver', 3], ['479 Gulfstream', 8], ['862S Metallic Twist Black/Silver', 2], ['862 Twilight Black', 3],
           ['479 Gulfstream', 1], ['862 Twilight Black', 2], ['479 Gulfstream', 2], ['862 Twilight Black', 1], ['479 Gulfstream', 3], ['9860 Metallic Silver', 1]] },
-      { trim: '479 Gulfstream',   // example 4 (the photo that was 4 Axis Decorative's example 2)
+      { trim: '479 Gulfstream',   // example 4
         stripes: [['9860 Metallic Silver', 6], ['479 Gulfstream', 3], ['455 Cobalt', 1], ['479 Gulfstream', 2], ['455 Cobalt', 2], ['479 Gulfstream', 1], ['455 Cobalt', 3], ['836 Forged Steel', 1],
-          ['455 Cobalt', 2], ['836 Forged Steel', 2], ['455 Cobalt', 1], ['836 Forged Steel', 3], ['807 White', 1], ['836 Forged Steel', 2], ['807 White', 2]] } ] }, '4 Axis Decorative Chevron or Diamond': { k: 'taper', p: 'diamond', a: 4 },
+          ['455 Cobalt', 2], ['836 Forged Steel', 2], ['455 Cobalt', 1], ['836 Forged Steel', 3], ['807 White', 1], ['836 Forged Steel', 2], ['807 White', 2]] } ] },
     '8 Axis Wrap': { k: 'taper', p: 'diamond', a: 8, recs: [   // our own designs in the style of the 4 axis examples (fewer threads per color with more axes)
       { trim: '479 Gulfstream', stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 2], ['9860 Metallic Silver', 2], ['479 Gulfstream', 4], ['862S Metallic Twist Black/Silver', 1], ['862 Twilight Black', 2]] },
       { trim: '9470 Metallic Bluefin', stripes: [['9870 Metallic Steel Grey', 1], ['807 White', 1], ['9470 Metallic Bluefin', 2], ['807 White', 2], ['9870 Metallic Steel Grey', 2], ['807 White', 1]] },
@@ -625,8 +625,6 @@
     if (cap.pattern === 'dragon') return idByName(cap.dragon && cap.dragon.over && cap.dragon.over.on ? '2 Axis Wrap Over Dragon Scales' : 'Dragon Scale');
     if (ax >= 16) return idByName(cap.pattern === 'chevron' ? 'Chevron — 16 Axis' : '16 Axis Wrap');
     if (ax >= 8) return idByName(cap.pattern === 'chevron' ? 'Chevron — 8 Axis' : '8 Axis Wrap');
-    var cur = wrapById(S.wrapId);
-    if (ax === 4 && cur && cur.name === '4 Axis Decorative Chevron or Diamond') return cur.id;   // decorative stays decorative
     return idByName((cap.pattern === 'chevron' ? 'Chevron' : 'Diamond') + ' — ' + (ax >= 4 ? 4 : 2) + ' Axis');
   }
   function nearestIdx(hex) {   // a WRAP_COLORS entry, only so the page counts the colors (never the +$10 UV metallics)
