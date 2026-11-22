@@ -669,6 +669,7 @@
     lastPreset = pr; var tok = ++fitTok;
     var w = dw(); if (!w || !w.wlCapture) return; var hx = threadHex(w), pw = presetOf(S.wrapId);
     var base = pr.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; }), sum = base.reduce(function (a, x) { return a + x.t; }, 0), keep = clean(w.wlCapture());
+    presetClear(keep);
     if (fresh && pw) { keep.pattern = pw.p; keep.axes = pw.a; keep.nOverride = null; keep.chevTo = null; keep.center = { on: false, c: base[0].c, t: 1 };
       keep.inner = { on: false, pattern: 'diamond', place: 'center', auto: true, stripes: [] }; keep.unit = 'in'; keep.len = wrapLen().toFixed(2); }
     var mk = function (T, measuring) { var c = JSON.parse(JSON.stringify(keep)), f = T / sum; c.stripes = base.map(function (x) { return { c: x.c, t: Math.max(1, Math.round(x.t * f)) }; });
@@ -677,9 +678,13 @@
     if (T == null || tok !== fitTok) return;   // another preset was picked meanwhile
     w.wlApply(mk(T)); clearTimeout(readT); readT = setTimeout(readDesign, 150);
   }
+  function presetClear(c) {   // a new preset starts clean: Underwrap and the pattern between go off
+    if (c.inner) c.inner.on = false;
+    if (S.under && S.under.on) { S.under.on = false; if (under0) c.blankC = under0; setTimeout(underSync, 0); }
+  }
   function presetScratch() {   // Build From Scratch: just a center line to build on
     lastPreset = 'scratch'; fitTok++; var w = dw(); if (!w || !w.wlCapture) return;
-    var c = clean(w.wlCapture()), hx = threadHex(w); c.stripes = [{ c: (c.stripes[0] || {}).c || hx('479 Gulfstream'), t: 1 }];
+    var c = clean(w.wlCapture()), hx = threadHex(w); presetClear(c); c.stripes = [{ c: (c.stripes[0] || {}).c || hx('479 Gulfstream'), t: 1 }];
     c.center = { on: false, c: c.stripes[0].c, t: 1 }; if (c.inner) c.inner.on = false; if (c.trims) { c.trims.bands = []; c.trims.ends = []; }
     w.wlApply(c); clearTimeout(readT); readT = setTimeout(readDesign, 150);
   }
