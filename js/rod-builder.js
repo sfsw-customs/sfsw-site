@@ -524,11 +524,16 @@
       dz.style.height = Math.ceil(b + d.defaultView.scrollY) + 4 + 'px'; } catch (e) {} };
     dz.addEventListener('load', function () { setMore();
       try { var dd = dz.contentDocument, ob = dd.getElementById('openBox'), iw = dd.getElementById('innerWrap'); if (ob && iw) iw.parentNode.insertBefore(ob, iw);   // Color filler right under the thread colors
-        underBox(dd, iw); presetBox(dd); axisHook(dd);
+        underBox(dd, iw); presetBox(dd); axisHook(dd); tgSkin(dd); fillNote(dd);
+        try { new dz.contentWindow.MutationObserver(function () { tgSkin(dd); }).observe(dd.getElementById('innerWrap').parentNode, { childList: true, subtree: true }); } catch (e) {}
+        try { var rb = dd.getElementById('resetThreads'); if (rb && !rb.__sfsw) { rb.__sfsw = true;   // reset goes back to the picked preset, or to the wrap the customizer started with
+          rb.addEventListener('click', function (e) { e.preventDefault(); e.stopImmediatePropagation(); var pr = lastPreset;
+            if (pr) presetApply(pr); else genericDesign();
+            rb.textContent = 'Reset'; setTimeout(function () { rb.textContent = 'Reset threads to original'; }, 1200); }, true); } } catch (e) {}
         try { var ab = dd.getElementById('armsBtn'); if (ab && !ab.querySelector('.sfswFee')) ab.insertAdjacentHTML('beforeend', ' <small class="sfswFee" style="color:#d4a73c;font-weight:600">+$20</small>'); } catch (e) {}
         [].forEach.call(dd.querySelectorAll('span,label,div,small'), function (x) { if (/^\s*Thread size\s*$/.test(x.textContent) && !x.querySelector('input,button,select')) x.style.display = 'none'; });   // the leftover "Thread size" label
         dd.addEventListener('change', function (e) { if (!e.target || e.target.id !== 'innerOn' || !e.target.checked) return;   // a pattern between starts with a thread line to customize
-          setTimeout(function () { try { var w = dz.contentWindow, c = w.wlCapture(); if (c.inner && c.inner.on && !(c.inner.stripes || []).length) { c.inner.stripes = [{ c: (c.stripes[0] || {}).c || '#1e1617', t: 2 }]; w.wlApply(c); } } catch (x) {} }, 30); }, true);
+          setTimeout(function () { try { var w = dz.contentWindow, c = w.wlCapture(); if (c.inner && c.inner.on) { c.inner.stripes = (c.stripes || []).map(function (x) { return { c: x.c, t: 2 }; }); if (!c.inner.stripes.length) c.inner.stripes = [{ c: '#1e1617', t: 2 }]; c.inner.auto = true; c.inner.touched = false; w.wlApply(c); }   /* starts with the wrap's own colors, one line each, sized by the designer */ } catch (x) {} }, 30); }, true);
       } catch (e) {}
       try { new dz.contentWindow.ResizeObserver(fitDz).observe(dz.contentDocument.querySelector('.wrap')); new dz.contentWindow.MutationObserver(function () { setTimeout(fitDz, 0); }).observe(dz.contentDocument.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'hidden', 'class'] }); } catch (e) {} fitDz(); }); setMore();
     // three ways to get a wrap: one of our examples, build your own in the designer, or pick colors and let us lay it out (Random)
@@ -645,16 +650,35 @@
     presetFill();
   }
   // a preset keeps its colors and their ratio; on diamonds the counts are scaled so the diamonds take up as much room as the open space between them
+  var lastPreset = null, fitTok = 0;
+  // a second, hidden designer just for measuring: the search for the right thread counts runs there, so the customer's
+  // designer and the 3D rod only change once, to the final answer (no flicker while it searches)
+  var mf = null, mfReady = null;
+  function measFrame() {
+    if (mfReady) return mfReady;
+    mf = el('iframe'); mf.id = 'sfsw-meas'; mf.setAttribute('aria-hidden', 'true'); mf.tabIndex = -1;
+    mf.style.cssText = 'position:fixed;left:-10000px;top:0;width:1000px;height:700px;border:0;visibility:hidden;pointer-events:none';
+    mfReady = new Promise(function (res) { mf.addEventListener('load', function () { var n = 0, t = setInterval(function () { var fw = mf.contentWindow;
+      if ((fw && fw.wlApply && fw.WL_unrolled) || ++n > 100) { clearInterval(t); res(fw && fw.wlApply ? fw : null); } }, 100); }); });
+    mf.src = BASE + 'taper.html'; document.body.appendChild(mf); return mfReady;
+  }
+  // find the total thread count that leaves half the wrap open; mk(T) builds the design for a total of T
+  async function fitHalf(mk, lo, hi, tok) {
+    var fw = await measFrame(), sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+    if (!fw) return Math.round((lo + hi) / 2);
+    for (var k = 0; k < 7; k++) { if (tok !== fitTok) return null; var mid = Math.round((lo + hi) / 2), c = mk(mid, true); fw.wlApply(c); await sleep(40);
+      if (openShare(fw, c) > 0.5) lo = mid; else hi = mid; }
+    return tok === fitTok ? Math.round((lo + hi) / 2) : null;
+  }
   async function presetApply(pr) {
-    var w = dw(); if (!w || !w.wlCapture) return; var hx = threadHex(w), sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
-    var base = pr.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; }), sum = base.reduce(function (a, x) { return a + x.t; }, 0), keep = w.wlCapture(), arms = keep.arms;
-    var put = function (T, measuring) { var c = w.wlCapture(); var f = T / sum; c.stripes = base.map(function (x) { return { c: x.c, t: Math.max(1, Math.round(x.t * f)) }; });
-      if (c.trims) { c.trims.c = hx(pr.trim); c.trims.bands = []; c.trims.ends = []; } if (measuring) { c.arms = 'show'; if (c.inner) c.inner.on = false; } else { c.arms = arms; if (c.inner && keep.inner) c.inner.on = keep.inner.on; }
-      c.autoT = false; w.wlApply(c); return c; };
-    if (keep.pattern === 'diamond') { var lo = 4, hi = 120;
-      for (var k = 0; k < 7; k++) { var mid = Math.round((lo + hi) / 2), c = put(mid, true); await sleep(220); if (openShare(w, c) > 0.5) lo = mid; else hi = mid; }
-      put(Math.round((lo + hi) / 2)); } else put(sum);
-    clearTimeout(readT); readT = setTimeout(readDesign, 200);
+    lastPreset = pr; var tok = ++fitTok;
+    var w = dw(); if (!w || !w.wlCapture) return; var hx = threadHex(w);
+    var base = pr.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; }), sum = base.reduce(function (a, x) { return a + x.t; }, 0), keep = clean(w.wlCapture());
+    var mk = function (T, measuring) { var c = JSON.parse(JSON.stringify(keep)), f = T / sum; c.stripes = base.map(function (x) { return { c: x.c, t: Math.max(1, Math.round(x.t * f)) }; });
+      if (c.trims) { c.trims.c = hx(pr.trim); c.trims.bands = []; c.trims.ends = []; } if (measuring) { c.arms = 'show'; if (c.inner) c.inner.on = false; } return c; };
+    var T = keep.pattern === 'diamond' ? await fitHalf(mk, 4, 120, tok) : sum;
+    if (T == null || tok !== fitTok) return;   // another preset was picked meanwhile
+    w.wlApply(mk(T)); clearTimeout(readT); readT = setTimeout(readDesign, 150);
   }
   function openShare(w, c) {   // how much of the wrap (between the trims) is still bare blank
     var r = w.WL_unrolled(900, 240); if (!r) return 0.5;
@@ -691,11 +715,39 @@
     }, true);
     axisSync();
   }
+  // Underwrap / Add a pattern between / Filler over it: shown as toggle buttons like Color filler, with the note to the right
+  function tgSkin(dd) {
+    var ref = dd.getElementById('armsBtn'); if (!ref) return; var cs = dd.defaultView.getComputedStyle(ref), seg = dd.defaultView.getComputedStyle(ref.parentNode);
+    ['underOn', 'innerOn', 'innerFillOn'].forEach(function (id) {
+      if (id === 'innerOn') { var iI = dd.getElementById(id), sm = iI && iI.closest('label.chk') && iI.closest('label.chk').querySelector('small'); if (sm && !/\+\$/.test(sm.textContent)) sm.textContent = '+$50 · ' + sm.textContent.replace(/^\(|\)$/g, '') + ' · up to 2 new colors included'; }
+      var inp = dd.getElementById(id), lab = inp && inp.closest('label.chk'); if (!lab) return;
+      var btn = lab.querySelector('.sfswTgB');
+      if (!btn) {
+        var title = '', note = null;
+        [].slice.call(lab.childNodes).forEach(function (n) { if (n === inp) return; if (n.nodeType === 3) { title += n.textContent; n.remove(); } else if (n.tagName === 'SMALL') note = n; });
+        inp.style.cssText = 'position:absolute;opacity:0;width:1px;height:1px;pointer-events:none';
+        var wrap = dd.createElement('span'); wrap.className = 'sfswTg';
+        wrap.style.cssText = 'display:inline-flex;border:' + seg.border + ';border-radius:' + seg.borderRadius + ';background:' + seg.backgroundColor + ';overflow:hidden;flex:0 0 auto';
+        btn = dd.createElement('span'); btn.className = 'sfswTgB'; btn.textContent = title.trim();
+        btn.style.cssText = 'font:' + cs.font + ';padding:' + cs.padding + ';cursor:pointer;white-space:nowrap';
+        var fee = (note && /^\s*\+\$\d+/.exec(note.textContent)) ? /\+\$\d+/.exec(note.textContent)[0] : '';
+        if (fee) { btn.insertAdjacentHTML('beforeend', ' <small style="color:#d4a73c;font-weight:600">' + fee + '</small>'); note.textContent = note.textContent.replace(/^\s*\+\$\d+\s*·\s*/, ''); }
+        wrap.appendChild(btn); lab.insertBefore(wrap, lab.firstChild);
+        lab.style.gap = '12px'; lab.style.position = 'relative'; lab.style.margin = '6px 0';
+        if (note) { note.style.fontSize = '13px'; lab.appendChild(note); }
+        inp.addEventListener('change', function () { tgPaint(inp, btn); });
+      }
+      tgPaint(inp, btn);
+    });
+  }
+  function fillNote(dd) { var ab = dd.getElementById('armsBtn'); if (!ab || dd.getElementById('sfswFillNote')) return; var row = ab.closest('.seg'); if (!row) return;
+    row.insertAdjacentHTML('afterend', '<small id="sfswFillNote" style="font-size:13px;color:var(--muted)">fills the open space inside the diamonds with one thread color</small>'); }
+  function tgPaint(inp, btn) { btn.setAttribute('aria-pressed', String(inp.checked)); btn.style.background = inp.checked ? 'var(--ink)' : 'none'; btn.style.color = inp.checked ? '#fff' : 'var(--muted)'; }
   function underOk() { var d = S.customDesign, st = d && d.setup; return S.wrapId !== 'trim-band' && !(st && st.pattern === 'dragon') && S.wrapId !== 'abalone'; }
   function underSync() {   // no Underwrap on the dragon scale wraps (they have their metallic) or the Trim Band
     try { var dd = dz.contentDocument, box = dd.getElementById('sfswUnder'), cb = dd.getElementById('underOn'), bc = dd.getElementById('blankC'); if (!box) return;
       var ok = underOk(); box.style.display = ok ? '' : 'none'; if (!ok && S.under.on) { S.under.on = false; if (bc && under0) { bc.value = under0; bc.dispatchEvent(new Event('input', { bubbles: true })); } }
-      cb.checked = S.under.on; var row = box.querySelector('.sfswUrow'); if (row) row.style.display = S.under.on ? '' : 'none'; } catch (e) {}
+      cb.checked = S.under.on; var tb = box.querySelector('.sfswTgB'); if (tb) tgPaint(cb, tb); var row = box.querySelector('.sfswUrow'); if (row) row.style.display = S.under.on ? '' : 'none'; } catch (e) {}
   }
   function underOn() { return !!(S.under.on && S.wrapMode === 'build' && designOn() && underOk() && S.under.c); }
   window.SFSW_underwrap = underOn;
@@ -842,23 +894,23 @@
   async function genericDesign() {
     var w = dw(), pr = presetOf(S.wrapId); if (!w || !w.wlCapture || !pr || pr.k !== 'taper' || !/diamond|chevron/.test(pr.p)) return;
     var hx = threadHex(w), cols = [hx('479 Gulfstream'), hx('807 White'), hx('9130 Metallic Gold')], sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
-    var put = function (T) { var c = w.wlCapture(); c.pattern = pr.p; c.axes = pr.a; c.nOverride = null; c.chevTo = null;
+    var tok = ++fitTok, keep0 = clean(w.wlCapture());
+    var mk = function (T) { var c = JSON.parse(JSON.stringify(keep0)); c.pattern = pr.p; c.axes = pr.a; c.nOverride = null; c.chevTo = null;
       c.center = { on: false, c: cols[0], t: 1 }; c.inner = { on: false, pattern: 'diamond', place: 'center', auto: true, stripes: [] };
       var a = Math.round(T * 0.45), b = Math.round(T * 0.3); c.stripes = [{ c: cols[0], t: a }, { c: cols[1], t: b }, { c: cols[2], t: Math.max(1, T - a - b) }];
       if (c.trims) { c.trims.c = cols[0]; c.trims.bands = []; c.trims.ends = []; }
-      c.unit = 'in'; c.len = wrapLen().toFixed(2); w.wlApply(c); return c; };
-    var open = async function (T) { var c = put(T); await sleep(220); var r = w.WL_unrolled(900, 240); if (!r) return 0.5;
-      var B = [1, 3, 5].map(function (i) { return parseInt((c.blankC || '#101010').slice(i, i + 2), 16); }), x = r.canvas.getContext('2d'), W = r.canvas.width, H = r.canvas.height;
-      var t0 = Math.round((r.trimMM || 0) / (r.lengthMM || 1) * W) + 3, d = x.getImageData(t0, 0, Math.max(1, W - 2 * t0), H).data, bl = 0, n = 0;
-      for (var i = 0; i < d.length; i += 16) { n++; if (d[i + 3] < 10 || Math.abs(d[i] - B[0]) + Math.abs(d[i + 1] - B[1]) + Math.abs(d[i + 2] - B[2]) < 18) bl++; }
-      return bl / n; };
-    var lo = 6, hi = 90; for (var k = 0; k < 7; k++) { var mid = Math.round((lo + hi) / 2); if (await open(mid) > 0.5) lo = mid; else hi = mid; }
-    put(Math.round((lo + hi) / 2)); clearTimeout(readT); readT = setTimeout(readDesign, 250);
+      c.unit = 'in'; c.len = wrapLen().toFixed(2); return c; };
+    var T = await fitHalf(mk, 6, 90, tok); if (T == null || tok !== fitTok) return;
+    w.wlApply(mk(T)); clearTimeout(readT); readT = setTimeout(readDesign, 250);
   }
-  window.SFSW_designColors = function () { var d = designOn(); return d && d.colors ? d.colors.length : null; };
+  // the pattern between brings up to 2 new colors free; colors it shares with the main wrap are free anyway
+  function innerFree() { var d = designOn(), c = d && d.setup; if (!c || !c.inner || !c.inner.on || S.wrapMode !== 'build') return 0;
+    var lc = function (x) { return String(x || '').toLowerCase(); }, main = {}; (c.stripes || []).forEach(function (x) { main[lc(x.c)] = 1; }); if (c.center && c.center.on) main[lc(c.center.c)] = 1;
+    var nw = {}; (c.inner.stripes || []).forEach(function (x) { if (!main[lc(x.c)]) nw[lc(x.c)] = 1; }); return Math.min(2, Object.keys(nw).length); }
+  window.SFSW_designColors = function () { var d = designOn(); return d && d.colors ? d.colors.length - innerFree() : null; };
   function setMode(m, quiet) {
     var was = S.wrapMode; S.wrapMode = m;
-    if (m === 'build' && was !== 'build') { presetFill(); genericDesign(); dzSimple = false; if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
+    if (m === 'build' && was !== 'build') { lastPreset = null; presetFill(); genericDesign(); dzSimple = false; if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
     if (m === 'random' && was !== 'random') { S.supportIdxs = (S.supportIdxs || []).slice(0, 3); call('renderSupportingRows'); }   // Builder's Choice starts at main + 3 supporting
     renderModes(); updTop(); if (quiet) return;
     if (was === 'random' && m !== 'random') { clearTimeout(readT); readT = setTimeout(readDesign, 50); }
@@ -1013,12 +1065,15 @@
     var W = val('WRAP_COLORS') || []; return [S.mainIdx].concat(S.supportIdxs || []).reduce(function (a, i) { return a + (W[i] && W[i].group === 'uv-metallic' ? 10 : 0); }, 0); };
   // Color filler (+$20): the designer's filler that covers the open space inside the diamonds
   var FILL_FEE = 20;
+  var INNER_FEE = 50;
+  function innerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && c.inner && c.inner.on && (c.inner.stripes || []).length); }
   function fillerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && c.arms === 'cover' && c.pattern === 'diamond'); }
-  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? FILL_FEE : 0); };   // (the wrap length rides along here)
+  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? FILL_FEE : 0) + (innerOn() ? INNER_FEE : 0); };   // (the wrap length rides along here)
   var _order = window.buildOrderItem;
   if (typeof _order === 'function') window.buildOrderItem = function () {
     var it = _order.apply(this, arguments), d = designOn();
     if (lenFee() && it.lines) it.lines.push({ label: 'Wrap Length', value: wrapLen() + ' in  +$' + lenFee() });
+    if (innerOn() && it.lines) { var ic = designOn().setup.inner; it.lines.push({ label: 'Pattern Between', value: (ic.pattern === 'chevron' ? 'Chevron' : 'Diamond') + (ic.fillOn && ic.pattern !== 'chevron' ? ' with filler over it' : '') + '  +$' + INNER_FEE + ' (up to 2 new colors included)' }); }
     if (fillerOn() && it.lines) { var fn; try { fn = dw().WL_THREADS.name(designOn().setup.fillC); } catch (e) {} it.lines.push({ label: 'Color Filler', value: (fn || designOn().setup.fillC || '') + '  +$' + FILL_FEE }); }
     if (underOn() && it.lines) { var un; try { un = dw().WL_THREADS.name(S.under.c); } catch (e) {} it.lines.push({ label: 'Underwrap', value: (un || S.under.c) + '  +$' + UNDER_FEE }); }
     if (!d) return it;
