@@ -641,11 +641,13 @@
     box.innerHTML = '<label style="display:flex;align-items:center;gap:10px"><span>Presets</span><select id="sfswPreset" style="min-width:240px;background:#0f141b;color:inherit;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:7px 10px;font:inherit"></select></label>';
     tb.parentNode.insertBefore(box, tb);
     var sel = box.querySelector('select');
-    sel.addEventListener('change', function () { var pr = presetsFor()[+sel.value]; if (!pr) return; presetApply(pr); });
+    sel.addEventListener('change', function () {
+      if (sel.value === '') { lastPreset = null; fitTok++; var w = dw(); if (startCap && w && w.wlApply) { w.wlApply(JSON.parse(JSON.stringify(startCap))); clearTimeout(readT); readT = setTimeout(readDesign, 150); } else genericDesign(); return; }   // back to the wrap the customizer opened with
+      var pr = presetsFor()[+sel.value]; if (pr) presetApply(pr); });
     presetFill();
   }
   // a preset keeps its colors and their ratio; on diamonds the counts are scaled so the diamonds take up as much room as the open space between them
-  var lastPreset = null, fitTok = 0;
+  var lastPreset = null, fitTok = 0, startCap = null;   // startCap: the wrap the customizer opened with
   // a second, hidden designer just for measuring: the search for the right thread counts runs there, so the customer's
   // designer and the 3D rod only change once, to the final answer (no flicker while it searches)
   var mf = null, mfReady = null;
@@ -895,7 +897,7 @@
       if (c.trims) { c.trims.c = cols[0]; c.trims.bands = []; c.trims.ends = []; }
       c.unit = 'in'; c.len = wrapLen().toFixed(2); return c; };
     var T = await fitHalf(mk, 6, 90, tok); if (T == null || tok !== fitTok) return;
-    w.wlApply(mk(T)); clearTimeout(readT); readT = setTimeout(readDesign, 250);
+    w.wlApply(mk(T)); startCap = clean(w.wlCapture()); clearTimeout(readT); readT = setTimeout(readDesign, 250);
   }
   // the pattern between brings up to 2 new colors free; colors it shares with the main wrap are free anyway
   function innerFree() { var d = designOn(), c = d && d.setup; if (!c || !c.inner || !c.inner.on || S.wrapMode !== 'build') return 0;
@@ -904,7 +906,7 @@
   window.SFSW_designColors = function () { var d = designOn(); return d && d.colors ? d.colors.length - innerFree() : null; };
   function setMode(m, quiet) {
     var was = S.wrapMode; S.wrapMode = m;
-    if (m === 'build' && was !== 'build') { lastPreset = null; presetFill(); genericDesign(); if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
+    if (m === 'build' && was !== 'build') { lastPreset = null; startCap = null; presetFill(); genericDesign(); if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
     if (m === 'random' && was !== 'random') { S.supportIdxs = (S.supportIdxs || []).slice(0, 3); call('renderSupportingRows'); }   // Builder's Choice starts at main + 3 supporting
     renderModes(); updTop(); if (quiet) return;
     if (was === 'random' && m !== 'random') { clearTimeout(readT); readT = setTimeout(readDesign, 50); }
