@@ -485,7 +485,15 @@
     'Dragon Scale': { k: 'taper', p: 'dragon', a: 8, recs: [   // photo 1: metallic green scales, photo 3: metallic silver
       { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9520 Metallic Green', line: '862 Twilight Black' } },
       { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9860 Metallic Silver', line: '862 Twilight Black' } } ] }, 'Chevron — 4 Axis': { k: 'taper', p: 'chevron', a: 4 },
-    'Diamond — 4 Axis': { k: 'taper', p: 'diamond', a: 4 }, '4 Axis Decorative Chevron or Diamond': { k: 'taper', p: 'diamond', a: 4 },
+    'Diamond — 4 Axis': { k: 'taper', p: 'diamond', a: 4, recs: [   // examples 1-3, in photo order; the first stripe is the center
+      { trim: '479 Gulfstream',
+        stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 3], ['9860 Metallic Silver', 4], ['479 Gulfstream', 8], ['862S Metallic Twist Black/Silver', 2], ['862 Twilight Black', 3]] },
+      { trim: '9470 Metallic Bluefin',
+        stripes: [['9870 Metallic Steel Grey', 1], ['807 White', 2], ['9870 Metallic Steel Grey', 4], ['807 White', 3], ['9470 Metallic Bluefin', 2], ['807 White', 3],
+          ['9470 Metallic Bluefin', 4], ['807 White', 1]] },
+      { trim: '479 Gulfstream',
+        stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 3], ['9860 Metallic Silver', 3], ['479 Gulfstream', 8], ['862S Metallic Twist Black/Silver', 2], ['862 Twilight Black', 3],
+          ['479 Gulfstream', 1], ['862 Twilight Black', 2], ['479 Gulfstream', 2], ['862 Twilight Black', 1], ['479 Gulfstream', 3], ['9860 Metallic Silver', 1]] } ] }, '4 Axis Decorative Chevron or Diamond': { k: 'taper', p: 'diamond', a: 4 },
     '8 Axis Wrap': { k: 'taper', p: 'diamond', a: 8 }, '16 Axis Wrap': { k: 'taper', p: 'diamond', a: 16 },
     '2 Axis Wrap Over Dragon Scales': { k: 'taper', p: 'dragon', a: 8, over: true },
     'Snowflake Wrap': { k: 'cross', pat: 'Snowflake', a: 2 }, '2 Axis Cross Wrap': { k: 'cross', a: 2, other: true }, '4 Axis Cross Wrap': { k: 'cross', a: 4, other: true }
