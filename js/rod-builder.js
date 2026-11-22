@@ -517,7 +517,7 @@
         try { new dz.contentWindow.MutationObserver(function () { tgSkin(dd); }).observe(dd.getElementById('innerWrap').parentNode, { childList: true, subtree: true }); } catch (e) {}
         try { var rb = dd.getElementById('resetThreads'); if (rb && !rb.__sfsw) { rb.__sfsw = true;   // reset goes back to the picked preset, or to the wrap the customizer started with
           rb.addEventListener('click', function (e) { e.preventDefault(); e.stopImmediatePropagation(); var pr = lastPreset;
-            if (pr) presetApply(pr); else genericDesign();
+            if (pr === 'scratch') presetScratch(); else presetApply(pr || presetsFor()[0]);
             rb.textContent = 'Reset'; setTimeout(function () { rb.textContent = 'Reset threads to original'; }, 1200); }, true); } } catch (e) {}
         try { var ab = dd.getElementById('armsBtn'); if (ab && !ab.querySelector('.sfswFee')) ab.insertAdjacentHTML('beforeend', ' <small class="sfswFee" style="color:#d4a73c;font-weight:600">+$20</small>'); } catch (e) {}
         [].forEach.call(dd.querySelectorAll('span,label,div,small'), function (x) { if (/^\s*Thread size\s*$/.test(x.textContent) && !x.querySelector('input,button,select')) x.style.display = 'none'; });   // the leftover "Thread size" label
@@ -628,12 +628,10 @@
     { name: 'Black & Silver', trim: '862 Twilight Black', stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 4], ['9860 Metallic Silver', 2], ['841 Iron Ore', 4], ['862 Twilight Black', 2]] },
     { name: 'Deep Sea & White', trim: '484 Deep Sea', stripes: [['807 White', 1], ['484 Deep Sea', 4], ['807 White', 3], ['819 Ghost Grey', 2], ['484 Deep Sea', 3]] },
     { name: 'Black & Gold', trim: '862 Twilight Black', stripes: [['9100 Metallic Yellow Gold', 1], ['862 Twilight Black', 4], ['9100 Metallic Yellow Gold', 3], ['813 Silver Shiner', 3], ['862 Twilight Black', 2]] }];
-  BASE_PRESETS.push({ name: 'Iron Ore & Silver', trim: '841 Iron Ore', stripes: [['807 White', 1], ['841 Iron Ore', 4], ['9860 Metallic Silver', 3], ['479 Gulfstream', 3], ['841 Iron Ore', 2]] });
-  // Preset 1-6: the wrap's own examples first (laid exactly as designed), then ours to make six (sized to the open space)
+  // Preset 1-5 (not the photo examples, so no one gets a wrap that's already on someone else's rod); the customizer opens on Preset 1
   function presetsFor() {
-    var w = wrapNamed(S.wrapId); if (w && CUSTOM_PRESETS[w.name]) return CUSTOM_PRESETS[w.name];
-    var pr = presetOf(S.wrapId), ex = (pr && pr.recs || []).filter(function (r) { return r.stripes && !r.dragon; }).map(function (r) { return { trim: r.trim, stripes: r.stripes, exact: true }; });
-    return ex.concat(BASE_PRESETS).slice(0, 6).map(function (x, i) { return { name: 'Preset ' + (i + 1), trim: x.trim, stripes: x.stripes, exact: x.exact }; });
+    var w = wrapNamed(S.wrapId), L = (w && CUSTOM_PRESETS[w.name]) || BASE_PRESETS;
+    return L.slice(0, 5).map(function (x, i) { return { name: 'Preset ' + (i + 1), trim: x.trim, stripes: x.stripes }; });
   }
   function presetBox(dd) {
     var tb = dd.getElementById('threadsBox'); if (!tb || dd.getElementById('sfswPresets')) return;
@@ -642,12 +640,12 @@
     tb.parentNode.insertBefore(box, tb);
     var sel = box.querySelector('select');
     sel.addEventListener('change', function () {
-      if (sel.value === '') { lastPreset = null; fitTok++; var w = dw(); if (startCap && w && w.wlApply) { w.wlApply(JSON.parse(JSON.stringify(startCap))); clearTimeout(readT); readT = setTimeout(readDesign, 150); } else genericDesign(); return; }   // back to the wrap the customizer opened with
+      if (sel.value === 'scratch') return presetScratch();
       var pr = presetsFor()[+sel.value]; if (pr) presetApply(pr); });
     presetFill();
   }
   // a preset keeps its colors and their ratio; on diamonds the counts are scaled so the diamonds take up as much room as the open space between them
-  var lastPreset = null, fitTok = 0, startCap = null;   // startCap: the wrap the customizer opened with
+  var lastPreset = null, fitTok = 0;
   // a second, hidden designer just for measuring: the search for the right thread counts runs there, so the customer's
   // designer and the 3D rod only change once, to the final answer (no flicker while it searches)
   var mf = null, mfReady = null;
@@ -667,15 +665,23 @@
       if (openShare(fw, c) > 0.5) lo = mid; else hi = mid; }
     return tok === fitTok ? Math.round((lo + hi) / 2) : null;
   }
-  async function presetApply(pr) {
+  async function presetApply(pr, fresh) {
     lastPreset = pr; var tok = ++fitTok;
-    var w = dw(); if (!w || !w.wlCapture) return; var hx = threadHex(w);
+    var w = dw(); if (!w || !w.wlCapture) return; var hx = threadHex(w), pw = presetOf(S.wrapId);
     var base = pr.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; }), sum = base.reduce(function (a, x) { return a + x.t; }, 0), keep = clean(w.wlCapture());
+    if (fresh && pw) { keep.pattern = pw.p; keep.axes = pw.a; keep.nOverride = null; keep.chevTo = null; keep.center = { on: false, c: base[0].c, t: 1 };
+      keep.inner = { on: false, pattern: 'diamond', place: 'center', auto: true, stripes: [] }; keep.unit = 'in'; keep.len = wrapLen().toFixed(2); }
     var mk = function (T, measuring) { var c = JSON.parse(JSON.stringify(keep)), f = T / sum; c.stripes = base.map(function (x) { return { c: x.c, t: Math.max(1, Math.round(x.t * f)) }; });
       if (c.trims) { c.trims.c = hx(pr.trim); c.trims.bands = []; c.trims.ends = []; } if (measuring) { c.arms = 'show'; if (c.inner) c.inner.on = false; } return c; };
     var T = keep.pattern === 'diamond' && !pr.exact ? await fitHalf(mk, 4, 120, tok) : sum;
     if (T == null || tok !== fitTok) return;   // another preset was picked meanwhile
     w.wlApply(mk(T)); clearTimeout(readT); readT = setTimeout(readDesign, 150);
+  }
+  function presetScratch() {   // Build From Scratch: just a center line to build on
+    lastPreset = 'scratch'; fitTok++; var w = dw(); if (!w || !w.wlCapture) return;
+    var c = clean(w.wlCapture()), hx = threadHex(w); c.stripes = [{ c: (c.stripes[0] || {}).c || hx('479 Gulfstream'), t: 1 }];
+    c.center = { on: false, c: c.stripes[0].c, t: 1 }; if (c.inner) c.inner.on = false; if (c.trims) { c.trims.bands = []; c.trims.ends = []; }
+    w.wlApply(c); clearTimeout(readT); readT = setTimeout(readDesign, 150);
   }
   function openShare(w, c) {   // how much of the wrap (between the trims) is still bare blank
     var r = w.WL_unrolled(900, 240); if (!r) return 0.5;
@@ -684,9 +690,10 @@
     for (var i = 0; i < d.length; i += 16) { n++; if (d[i + 3] < 10 || Math.abs(d[i] - B[0]) + Math.abs(d[i + 1] - B[1]) + Math.abs(d[i + 2] - B[2]) < 18) bl++; }
     return bl / n;
   }
-  function presetFill() {   // the list for the picked wrap, starting on "Choose a preset"
+  function presetPick(v) { try { var sel = dz.contentDocument.getElementById('sfswPreset'); if (sel) sel.value = String(v); } catch (e) {} }
+  function presetFill() {   // the list for the picked wrap: Build From Scratch, then Preset 1-5
     try { var sel = dz.contentDocument.getElementById('sfswPreset'); if (!sel) return;
-      sel.innerHTML = '<option value="">Choose a preset…</option>' + presetsFor().map(function (p, i) { return '<option value="' + i + '">' + p.name + '</option>'; }).join(''); } catch (e) {}
+      sel.innerHTML = '<option value="scratch">Build From Scratch</option>' + presetsFor().map(function (p, i) { return '<option value="' + i + '">' + p.name + '</option>'; }).join(''); } catch (e) {}
   }
   // Axis lines in the customizer: picking another axis count switches the wrap in the list to that wrap (Diamond 2 → Diamond 4, …),
   // keeps the customer's colors, and scales the thread counts by old/new axes so the wrap keeps the same look and stays even
@@ -896,18 +903,8 @@
   }
   // Customize starts from a plain 3-color wrap of the picked style, with the threads set so the diamonds
   // take up as much of the wrap as the open space between them
-  async function genericDesign() {
-    var w = dw(), pr = presetOf(S.wrapId); if (!w || !w.wlCapture || !pr || pr.k !== 'taper' || !/diamond|chevron/.test(pr.p)) return;
-    var hx = threadHex(w), cols = [hx('479 Gulfstream'), hx('807 White'), hx('9130 Metallic Gold')], sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
-    var tok = ++fitTok, keep0 = clean(w.wlCapture());
-    var mk = function (T) { var c = JSON.parse(JSON.stringify(keep0)); c.pattern = pr.p; c.axes = pr.a; c.nOverride = null; c.chevTo = null;
-      c.center = { on: false, c: cols[0], t: 1 }; c.inner = { on: false, pattern: 'diamond', place: 'center', auto: true, stripes: [] };
-      var a = Math.round(T * 0.45), b = Math.round(T * 0.3); c.stripes = [{ c: cols[0], t: a }, { c: cols[1], t: b }, { c: cols[2], t: Math.max(1, T - a - b) }];
-      if (c.trims) { c.trims.c = cols[0]; c.trims.bands = []; c.trims.ends = []; }
-      c.unit = 'in'; c.len = wrapLen().toFixed(2); return c; };
-    var T = await fitHalf(mk, 6, 90, tok); if (T == null || tok !== fitTok) return;
-    w.wlApply(mk(T)); startCap = clean(w.wlCapture()); clearTimeout(readT); readT = setTimeout(readDesign, 250);
-  }
+  function genericDesign() { var pr = presetOf(S.wrapId); if (!pr || pr.k !== 'taper' || !/diamond|chevron/.test(pr.p)) return; presetFill(); presetPick(0); return presetApply(presetsFor()[0], true); }   // the customizer opens on Preset 1
+
   // the pattern between brings up to 2 new colors free; colors it shares with the main wrap are free anyway
   function innerFree() { var d = designOn(), c = d && d.setup; if (!c || !c.inner || !c.inner.on || S.wrapMode !== 'build') return 0;
     var lc = function (x) { return String(x || '').toLowerCase(); }, main = {}; (c.stripes || []).forEach(function (x) { main[lc(x.c)] = 1; }); if (c.center && c.center.on) main[lc(c.center.c)] = 1;
@@ -915,7 +912,7 @@
   window.SFSW_designColors = function () { var d = designOn(); return d && d.colors ? d.colors.length - innerFree() : null; };
   function setMode(m, quiet) {
     var was = S.wrapMode; S.wrapMode = m;
-    if (m === 'build' && was !== 'build') { lastPreset = null; startCap = null; presetFill(); genericDesign(); if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
+    if (m === 'build' && was !== 'build') { lastPreset = null; presetFill(); genericDesign(); if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
     if (m === 'random' && was !== 'random') { S.supportIdxs = (S.supportIdxs || []).slice(0, 3); call('renderSupportingRows'); }   // Builder's Choice starts at main + 3 supporting
     renderModes(); updTop(); if (quiet) return;
     if (was === 'random' && m !== 'random') { clearTimeout(readT); readT = setTimeout(readDesign, 50); }
