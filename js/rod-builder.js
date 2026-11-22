@@ -84,7 +84,7 @@
     '.rb-on #wrap-preview{display:none!important}',
     '.rb-wphoto.rb-wph-full{height:150px;background-size:contain;background-color:#07090c}',
     '.rb-top .rb-wphoto{display:none}.rb-top.rb-wtop .rb-wphoto{display:block}',
-    '.rb-rbar{display:none;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 2px;padding:8px;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-rnd-slot .rb-rbar{display:flex;margin:0 0 10px}.rb-rg-sz.rb-rg-sz2{margin-left:24px;display:flex;align-items:center;gap:10px}.rb-len.rb-len-off{filter:blur(2px);opacity:.45;pointer-events:none;user-select:none}',
+    '.rb-rbar{display:none;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 2px;padding:8px;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-rnd-slot .rb-rbar{display:flex;margin:0 0 10px}.rb-fbr{flex-basis:100%;height:2px}.rb-fax{display:flex;flex:0 0 auto;gap:0;margin:0;border:1px solid var(--c-border);border-radius:8px;overflow:hidden}.rb-exs .rb-fax button{background:none;border:0;border-right:1px solid var(--c-border);border-radius:0;color:var(--c-muted);padding:8px 14px;font:600 14px var(--font-body,inherit);cursor:pointer}.rb-exs .rb-fax button:last-child{border-right:0}.rb-exs .rb-fax button.on{background:var(--c-gold);color:#111}.rb-fax small{font-size:12px;opacity:.85}.rb-rg-sz.rb-rg-sz2{margin-left:24px;display:flex;align-items:center;gap:10px}.rb-len.rb-len-off{filter:blur(2px);opacity:.45;pointer-events:none;user-select:none}',
     '.rb-rs{display:flex;align-items:center;gap:8px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:999px;padding:4px 10px 4px 4px;color:var(--c-text);font-size:13px;cursor:pointer;text-align:left}',
     '.rb-rs i{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}.rb-rs small{display:block;font:600 9.5px var(--font-cond);letter-spacing:.12em;text-transform:uppercase;color:var(--c-muted)}',
     '.rb-rs.on{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.25)}.rb-rs b{margin-left:4px;color:var(--c-muted);font-weight:400;padding:0 2px}.rb-rs b:hover{color:#fff}',
@@ -1016,11 +1016,24 @@
     window.pickWrap = function (id) { var prev = designCols(); _pick(id); setTimeout(function () { toDesigner(id, null, prev); }, 40); };
     // the wrap the design is priced as stays lit in the list
     if (typeof _render === 'function') window.renderWraps = function () { var r = _render.apply(this, arguments);
-      if (S.customDesign && optList) [].forEach.call(optList.querySelectorAll('.option-item'), function (o) { o.classList.toggle('selected', (o.getAttribute('onclick') || '').indexOf("'" + S.wrapId + "'") > 0); });
+      if (S.customDesign && optList) [].forEach.call(optList.querySelectorAll('.option-item'), function (o) { o.classList.toggle('selected', (o.getAttribute('onclick') || '').indexOf("'" + rowId(S.wrapId) + "'") > 0); });
       dressWraps(); return r; };
   }
   // each wrap gets a small photo (tap for the full photos), split into Included and Upgrades
   function wrapPhotos(w) { if (!w) return []; if (w.photo) return [w.photo]; var a = []; if (w.photoNums) return w.photoNums.map(function (i) { return '../preview/rod-wraps/' + (w.photoSlug || w.id) + '-' + i + '.png'; }); for (var i = 1; i <= (w.photoCount || 0); i++) a.push('../preview/rod-wraps/' + (w.photoSlug || w.id) + '-' + i + '.png'); return a; }
+  // wrap families: one row in the list ("Diamond Wrap"), with the axis count picked inside it; the row stays put while the axis changes
+  var FAMILIES = [{ name: 'Diamond Wrap', ids: ['diam-2', 'diam-4', 'closed-4', 'axis-16'], ax: [2, 4, 8, 16] },
+                  { name: 'Chevron Wrap', ids: ['chev-2', 'chev-4'], ax: [2, 4] }];
+  function famOf(id) { for (var i = 0; i < FAMILIES.length; i++) if (FAMILIES[i].ids.indexOf(id) >= 0) return FAMILIES[i]; return null; }
+  function rowId(id) { var f = famOf(id); return f ? f.ids[0] : id; }   // the list row a wrap shows in
+  function dressFamilies() {
+    [].forEach.call(optList.querySelectorAll('.option-item'), function (o) {
+      var m = (o.getAttribute('onclick') || '').match(/pickWrap\('([^']+)'\)/); if (!m) return; var f = famOf(m[1]); if (!f) return;
+      if (m[1] !== f.ids[0]) { o.style.display = 'none'; return; }
+      var nm = o.querySelector('.option-item-name'); if (nm) nm.textContent = f.name;
+      o.classList.toggle('selected', f.ids.indexOf(S.wrapId) >= 0);
+    });
+  }
   function dressWraps() {
     if (!optList) return; var upg = false;
     [].forEach.call(optList.querySelectorAll('.option-item'), function (o) {
@@ -1032,7 +1045,7 @@
       var ph = wrapPhotos(w); if (!ph.length || o.querySelector('.rb-wth')) return;
       var th = el('span', 'rb-wth', ph.length > 1 ? '<b>' + ph.length + '</b>' : ''); th.style.backgroundImage = 'url("' + ph[0] + '")'; th.title = 'See photos';
       th.onclick = function (e) { e.stopPropagation(); lightbox(w); }; o.insertBefore(th, o.firstChild); });
-    exButtons();
+    dressFamilies(); exButtons();
   }
   // the picked wrap's examples (Example 1, 2, 3 … one per photo) sit in its own card; the photo slot above the list shows the one picked
   var modeWrap = null;
@@ -1044,9 +1057,13 @@
     modeWrap = S.wrapId;
     if (!optList) return; var id = S.wrapId, w = wrapNamed(id), pr = presetOf(id), recs = (pr && pr.recs) || [], ph = wrapPhotos(w), n = Math.max(ph.length, recs.length), cur = recPick[id] || 0;
     [].forEach.call(optList.querySelectorAll('.rb-exs'), function (x) { x.remove(); });
-    var card = [].find.call(optList.querySelectorAll('.option-item'), function (o) { return (o.getAttribute('onclick') || '').indexOf("'" + id + "'") > 0; });
+    var card = [].find.call(optList.querySelectorAll('.option-item'), function (o) { return (o.getAttribute('onclick') || '').indexOf("'" + rowId(id) + "'") > 0; });
     if (card) {
       var box = el('div', 'rb-exs'); box.addEventListener('click', function (e) { e.stopPropagation(); });
+      var fam = famOf(id); if (fam) { var ax = el('div', 'rb-fax');   // 2 / 4 / 8 / 16 axis: each shows its own examples
+        fam.ids.forEach(function (fid, k) { var fw = wrapById(fid), dl = ((fw && fw.adder) || 0) - (((wrapById(id) || {}).adder) || 0), b = el('button', fid === id ? 'on' : '', fam.ax[k] + ' Axis' + (dl ? ' <small>' + (dl > 0 ? '+' : '\u2212') + '$' + Math.abs(dl) + '</small>' : ''));   /* the price change from the axis count picked now */ b.type = 'button';
+          b.onclick = function () { if (fid !== S.wrapId) window.pickWrap(fid); }; ax.appendChild(b); });
+        box.appendChild(ax); box.appendChild(el('div', 'rb-fbr')); }
       for (var i = 0; i < (id === 'abalone' ? 0 : n); i++) { var b = el('button', i === cur && S.wrapMode === 'example' ? 'on' : '', 'Example ' + (i + 1)); b.type = 'button'; b.dataset.i = i;
         b.onclick = function () { var k = +this.dataset.i; recPick[id] = k; var was = S.wrapMode;
           if (recs[k]) { setMode('example', true); toDesigner(id, null, null); } else { setMode('example', was === 'example'); exButtons(); } }; box.appendChild(b); }
