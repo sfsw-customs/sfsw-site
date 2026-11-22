@@ -1935,8 +1935,9 @@ resize(); render(); requestAnimationFrame(loop);
 // pull the starting designs in once the designers have loaded
 const sfswBoot = (async () => {
   if (crossOnly()) for (const k of ['main', 'split']) { src[k] = 'cross'; await crossFrame(k); }
-  await fitTaper('main', 16, 4); if (!window.frameElement) await readWrap('main'); build();   /* SFSW: inside the site the page sends the wrap, so don't paint the starter one */
-  window.__sfswLater = (async () => {   // SFSW: the rod is ready once the main wrap is; the split and guide wraps follow
+  await fitTaper('main', 16, 4); if (!window.frameElement) { await readWrap('main'); build(); }   /* SFSW: inside the site the page sends the wrap and the first update builds the rod */
+  window.__sfswLater = (async () => {   // SFSW: the rod is ready once the main wrap is; the split and guide wraps follow (inside the site: after the first update)
+  if (window.frameElement) await new Promise(r => { window.__sfswFirstDone = r; setTimeout(r, 15000); });
   await fitTaper('split', 6, L.split ? Math.max(0.5, Math.round((L.split[1] - L.split[0] - 0.25) * 4) / 4) : 2.5); await readWrap('split');
   await readGuideWraps(); build();
   })();
@@ -2062,7 +2063,7 @@ const sfswBoot = (async () => {
     if (p.wrapD && L.wrap) { const base = 2 * blankR(L.wrap[0]) * IN / (st.rScale || 1), s = p.wrapD / base;
       if (isFinite(s) && s > 0 && Math.abs(s - (st.rScale || 1)) > 0.005) { st.rScale = s; await build(); } }
   }
-  async function pump() { if (busy) return; busy = true; window.__sfswBusy = true; try { while (want) { const p = want; want = null; try { await apply(p); } catch (e) { console.error(e); } } } finally { busy = false; window.__sfswBusy = false; window.__sfswDone = (window.__sfswDone || 0) + 1; } }
+  async function pump() { if (busy) return; busy = true; window.__sfswBusy = true; try { while (want) { const p = want; want = null; try { await apply(p); } catch (e) { console.error(e); } } } finally { busy = false; window.__sfswBusy = false; window.__sfswDone = (window.__sfswDone || 0) + 1; if (window.__sfswFirstDone) { const f = window.__sfswFirstDone; window.__sfswFirstDone = null; setTimeout(f, 50); } } }
   // the size the wrap above the fore grip was fitted to on this blank, for the page's Wrap Designer
   const fit = async () => { await sfswBoot; const w = await taperReady('main'); const c = firstFit.main || w.wlCapture(); return { unit: c.unit, len: c.len, dB: c.dB, dM: c.dM, dT: c.dT }; };
   // custom grips: the page's ring designer paints its strips with the rod's own cork and EVA textures

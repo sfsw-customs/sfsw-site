@@ -317,7 +317,7 @@
   document.body.appendChild(loadEl); document.documentElement.classList.add('rb-loading');
   var loadAt = Date.now(), loadT = setInterval(function () {
     var fw = null; try { fw = frame && frame.contentWindow; } catch (e) {}
-    var ready = !frame.isConnected || (rod && fw && fw.__sfswDone >= 1 && !fw.__sfswBusy && !fw.__sfswHoldMain && S.customDesign && S.customDesign.sfsw && dw() && dw().wlCapture);
+    var ready = !frame.isConnected || (rod && fw && fw.__sfswDone >= 1 && !fw.__sfswHoldMain && S.customDesign && S.customDesign.sfsw && dw() && dw().wlCapture);
     if (ready || Date.now() - loadAt > 25000) { clearInterval(loadT); loadEl.classList.add('rb-load-out'); document.documentElement.classList.remove('rb-loading'); setTimeout(function () { loadEl.remove(); }, 450); }
   }, 150);
   function view(v, step) { if (!v || (v === lastView && !step)) return; lastView = v; if (step) stepAt = Date.now(); if (rod) rod.view(v, !!step); }
@@ -545,7 +545,7 @@
         try { var ab = dd.getElementById('armsBtn'); if (ab && !ab.querySelector('.sfswFee')) ab.insertAdjacentHTML('beforeend', ' <small class="sfswFee" style="color:#d4a73c;font-weight:600">+$20</small>'); } catch (e) {}
         [].forEach.call(dd.querySelectorAll('span,label,div,small'), function (x) { if (/^\s*Thread size\s*$/.test(x.textContent) && !x.querySelector('input,button,select')) x.style.display = 'none'; });   // the leftover "Thread size" label
         dd.addEventListener('change', function (e) { if (!e.target || e.target.id !== 'innerOn' || !e.target.checked) return;   // a pattern between starts with a thread line to customize
-          setTimeout(function () { try { var w = dz.contentWindow, c = w.wlCapture(); if (c.inner && c.inner.on) { var ms = (c.stripes || []).slice().reverse(); c.inner.stripes = ms.map(function (x, i) { var t = Math.max(1, Math.round(x.t * 0.35)); if (i === 0 && t % 2 === 0) t += 1; return { c: x.c, t: t }; }); if (!c.inner.stripes.length) c.inner.stripes = [{ c: '#1e1617', t: 3 }]; c.inner.auto = false; c.inner.touched = true; w.wlApply(c); }   /* starts with the wrap's own colors in the opposite order, about a third the threads */ } catch (x) {} }, 30); }, true);
+          setTimeout(function () { try { var w = dz.contentWindow, c = w.wlCapture(); if (c.inner && c.inner.on) { var ms = (c.stripes || []).slice().reverse(); c.inner.stripes = ms.map(function (x, i) { var t = Math.max(i ? 1 : 3, Math.round(x.t * 0.35)); if (i === 0 && t % 2 === 0) t += 1; return { c: x.c, t: t }; }); if (!c.inner.stripes.length) c.inner.stripes = [{ c: '#1e1617', t: 3 }]; c.inner.auto = false; c.inner.touched = true; w.wlApply(c); }   /* starts with the wrap's own colors in the opposite order, about a third the threads */ } catch (x) {} }, 30); }, true);
       } catch (e) {}
       try { new dz.contentWindow.ResizeObserver(fitDz).observe(dz.contentDocument.querySelector('.wrap')); new dz.contentWindow.MutationObserver(function () { setTimeout(fitDz, 0); }).observe(dz.contentDocument.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'hidden', 'class'] }); } catch (e) {} fitDz(); }); setMore();
     // three ways to get a wrap: one of our examples, build your own in the designer, or pick colors and let us lay it out (Random)
@@ -698,7 +698,7 @@
     presetClear(keep);
     if (fresh && pw) { keep.pattern = pw.p; keep.axes = pw.a; keep.nOverride = null; keep.chevTo = null; keep.center = { on: false, c: base[0].c, t: 1 };
       keep.inner = { on: false, pattern: 'diamond', place: 'center', auto: true, stripes: [] }; keep.unit = 'in'; keep.len = wrapLen().toFixed(2); }
-    var mk = function (T, measuring) { var c = JSON.parse(JSON.stringify(keep)), f = T / sum; c.stripes = base.map(function (x) { return { c: x.c, t: Math.max(1, Math.round(x.t * f)) }; });
+    var mk = function (T, measuring) { var c = JSON.parse(JSON.stringify(keep)), f = T / sum; c.stripes = base.map(function (x, i) { return { c: x.c, t: Math.max(i ? 1 : 2, Math.round(x.t * f)) }; });   /* the center starts with at least 2 threads */
       if (c.trims) { c.trims.c = hx(pr.trim); c.trims.bands = []; c.trims.ends = []; } if (measuring) { c.arms = 'show'; if (c.inner) c.inner.on = false; } return c; };
     var T = keep.pattern === 'diamond' && !pr.exact ? await fitHalf(mk, 4, 120, tok, pr.open) : sum;
     if (T == null || tok !== fitTok) return;   // another preset was picked meanwhile
@@ -734,7 +734,7 @@
   }
   function presetScratch() {   // Build From Scratch: just a center line to build on
     lastPreset = 'scratch'; fitTok++; var w = dw(); if (!w || !w.wlCapture) return;
-    var c = clean(w.wlCapture()), hx = threadHex(w); presetClear(c); c.stripes = [{ c: (c.stripes[0] || {}).c || hx('479 Gulfstream'), t: 1 }];
+    var c = clean(w.wlCapture()), hx = threadHex(w); presetClear(c); c.stripes = [{ c: (c.stripes[0] || {}).c || hx('479 Gulfstream'), t: 2 }];
     c.center = { on: false, c: c.stripes[0].c, t: 1 }; if (c.inner) c.inner.on = false; if (c.trims) { c.trims.bands = []; c.trims.ends = []; }
     w.wlApply(c); clearTimeout(readT); readT = setTimeout(readDesign, 150);
   }
@@ -950,6 +950,7 @@
   }
   addEventListener('message', function (e) { if (tf && e.source === tf.contentWindow && e.data && e.data.wlH) tfFit(); });
   function renderTB() {
+    if (!tbEl || !tbEl.offsetParent) return;   // only once the Trim Bands tab is open (its designer loads then, not with the page)
     if (!tbEl) return; var body = tbEl.querySelector('.rb-tb-body'), c = tbCap(), w = dw();
     if (S.wrapMode === 'random' && S.wrapId !== 'abalone') { body.innerHTML = '<p class="rb-tb-note">Random wraps get trim bands in your main color. Pick an example or Customize on the Wrap step to choose them here.</p>'; return; }
     if (!c || !c.trims) { body.innerHTML = '<p class="rb-tb-note">Loading…</p>'; setTimeout(renderTB, 600); return; }
@@ -991,7 +992,7 @@
     var prev = prevCols || designCols(), first = !prev, switched = false;
     switched = !!(lastKind && lastKind !== (restore ? restore.sfsw : pr.k));
     var w = await loadKind(restore ? restore.sfsw : pr.k); if (!w || n !== applyN) return;
-    var fit = null; try { if (rod && rod.fit) fit = await rod.fit(); } catch (e) {}
+    var WS0 = (window.SFSW_BUILDER || {}).wrap, fit = null; if (!WS0) try { if (rod && rod.fit) fit = await rod.fit(); } catch (e) {}   // this rod type sets the wrap's size itself: no need to wait for the 3D rod
     var cap = restore ? JSON.parse(JSON.stringify(restore.setup)) : w.wlCapture();
     if (restore && restore.setup && restore.setup.unit === 'in' && +restore.setup.len) S.wrapLen = +restore.setup.len;
     if (fit) { cap.unit = fit.unit; cap.len = fit.len; cap.dB = fit.dB; cap.dM = fit.dM; cap.dT = fit.dT; }
