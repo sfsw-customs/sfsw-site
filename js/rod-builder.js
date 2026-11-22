@@ -762,20 +762,31 @@
   function axisWrap(p, a) { var hit = null; WRAPS.forEach(function (w) { var pr = PRESET[w.name]; if (!hit && pr && pr.p === p && pr.a === a && !/Decorative|Dragon/i.test(w.name)) hit = w.id; }); return hit; }
   function axisSync() {
     try { var dd = dz.contentDocument, m = dd.querySelector('.dsrow .mirrow'), seg = dd.querySelector('[data-mirror="axes"]'); if (!m || !seg) return;
-      var c = dw().wlCapture(), p = c.pattern, ok = (p === 'diamond' || p === 'chevron') && S.wrapId !== 'trim-band';
+      var c = dw().wlCapture(), p = c.pattern, drag = p === 'dragon' && !(c.dragon && c.dragon.over && c.dragon.over.on), ok = (p === 'diamond' || p === 'chevron' || drag) && S.wrapId !== 'trim-band';
       m.style.setProperty('display', ok ? 'flex' : 'none', 'important');
-      [].forEach.call(seg.querySelectorAll('button'), function (b) { b.style.display = ok && axisWrap(p, +b.dataset.v) ? '' : 'none'; });
-      var fee = dd.getElementById('sfswAxFee'), cw = wrapById(S.wrapId) || {}, sb = seg.querySelector('button[aria-pressed="true"]');   // the upcharge, right under the axis count picked
+      [].forEach.call(seg.querySelectorAll('button'), function (b) { b.style.display = ok && (drag ? DRAG_AX[+b.dataset.v] != null : axisWrap(p, +b.dataset.v)) ? '' : 'none'; });
+      [].forEach.call(dd.querySelectorAll('#angle button'), function (b) { var off = drag && +c.axes === 32 && b.dataset.v !== '45'; b.disabled = off; b.style.opacity = off ? '.35' : ''; b.title = off ? '32 axis dragon scales come in 45° only' : ''; });
+      var fee = dd.getElementById('sfswAxFee'), cw = drag ? { adder: DRAG_AX[+c.axes] || 0 } : (wrapById(S.wrapId) || {}), sb = seg.querySelector('button[aria-pressed="true"]');   // the upcharge, right under the axis count picked
       if (!fee) { fee = dd.createElement('small'); fee.id = 'sfswAxFee'; fee.style.cssText = 'position:absolute;font-size:12px;font-weight:600;color:#d4a73c;white-space:nowrap;transform:translateX(-50%);pointer-events:none'; m.style.position = 'relative'; m.appendChild(fee); }
       if (ok && sb && cw.adder) { fee.textContent = '+$' + cw.adder; fee.style.display = ''; var rb = sb.getBoundingClientRect(), rm = m.getBoundingClientRect(); fee.style.left = (rb.left - rm.left + rb.width / 2) + 'px'; fee.style.top = (rb.bottom - rm.top + 3) + 'px'; m.style.marginBottom = '14px'; }
       else { fee.style.display = 'none'; m.style.marginBottom = ''; }
     } catch (e) {}
   }
+  // Dragon Scale: 8 axis included, 16 +$25, 32 +$50 (32 only at 45°)
+  var DRAG_AX = { 8: 0, 16: 25, 32: 50 };
+  function setDragonAx(a) {
+    S.dragonAx = a; var w = dw(); if (!w || !w.wlCapture) return;
+    try { var c = w.wlCapture(); if (c.pattern !== 'dragon') return; c.axes = a; if (a === 32) c.angle = '45'; w.wlApply(c); } catch (e) {}
+    clearTimeout(readT); readT = setTimeout(readDesign, 30); setTimeout(exButtons, 60);
+  }
+  function dragonFee() { var d = designOn(), c = d && d.setup; return c && c.pattern === 'dragon' && !(c.dragon && c.dragon.over && c.dragon.over.on) ? (DRAG_AX[+c.axes] || 0) : 0; }
   var axBase = null;   // the design before the axis count was changed (switching 2 → 16 → 2 comes back to it exactly)
   function axisHook(dd) {
     var seg = dd.querySelector('[data-mirror="axes"]'); if (!seg || seg.__sfsw) return; seg.__sfsw = true;
     seg.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; var w = dw(); if (!w || !w.wlCapture) return;
-      var c0 = w.wlCapture(), a0 = +c0.axes, a1 = +b.dataset.v, id = axisWrap(c0.pattern, a1); if (!id || a1 === a0) { if (!id) { e.preventDefault(); e.stopImmediatePropagation(); } return; }
+      var c0 = w.wlCapture(), a0 = +c0.axes, a1 = +b.dataset.v;
+      if (c0.pattern === 'dragon') { if (DRAG_AX[a1] == null) { e.preventDefault(); e.stopImmediatePropagation(); return; } setDragonAx(a1); e.preventDefault(); e.stopImmediatePropagation(); return; }   // dragon scales: 8 / 16 / 32 on the same wrap
+      var id = axisWrap(c0.pattern, a1); if (!id || a1 === a0) { if (!id) { e.preventDefault(); e.stopImmediatePropagation(); } return; }
       var cnt = function (c) { return JSON.stringify([c.stripes, c.inner && c.inner.stripes, c.inner && c.inner.fill]); };
       if (!axBase || axBase.last !== cnt(c0)) axBase = { axes: a0, c: JSON.parse(JSON.stringify(c0)) };   // counts were changed by hand since the last axis switch: scale from these
       setTimeout(function () { try {
@@ -1051,6 +1062,7 @@
         var ri = recInner(R, hx); if (ri) c2.inner = ri; else if (c2.inner) c2.inner.on = false;
       } else if (dzKind === 'cross' || switched || first) { (c2.stripes || []).forEach(function (x, i) { x.c = cols[i % cols.length]; }); if (c2.trims) { c2.trims.c = cols[0]; c2.trims.bands = []; c2.trims.ends = []; } }
       if (pr.p !== 'trim' && c2.trims && !(R && R.tb)) { c2.trims.mm = 20; c2.trims.bands = []; c2.trims.ends = []; }   // the Trim Band's wide band doesn't carry over
+      if (pr.p === 'dragon' && S.dragonAx) { c2.axes = S.dragonAx; if (S.dragonAx === 32) c2.angle = '45'; }   // the dragon scale axes they picked stay
       try { w.wlApply(snap(w, c2)); } catch (e) {}
     }
     clearTimeout(readT); readT = setTimeout(readDesign, 120);
@@ -1104,6 +1116,9 @@
     var card = [].find.call(optList.querySelectorAll('.option-item'), function (o) { return (o.getAttribute('onclick') || '').indexOf("'" + rowId(id) + "'") > 0; });
     if (card) {
       var box = el('div', 'rb-exs'); box.addEventListener('click', function (e) { e.stopPropagation(); });
+      if (pr && pr.p === 'dragon' && !pr.over) { var dax = el('div', 'rb-fax'), curA = (designOn() && designOn().setup && +designOn().setup.axes) || S.dragonAx || 8;   // dragon scales: 8 / 16 / 32 axis
+        [8, 16, 32].forEach(function (a) { var b = el('button', a === curA ? 'on' : '', a + ' Axis' + (DRAG_AX[a] ? ' <small>+$' + DRAG_AX[a] + '</small>' : '')); b.type = 'button'; b.onclick = function () { setDragonAx(a); }; dax.appendChild(b); });
+        box.appendChild(dax); box.appendChild(el('div', 'rb-fbr')); }
       var fam = famOf(id); if (fam) { var ax = el('div', 'rb-fax');   // 2 / 4 / 8 / 16 axis: each shows its own examples
         fam.ids.forEach(function (fid, k) { var fw = wrapById(fid), b = el('button', fid === id ? 'on' : '', fam.ax[k] + ' Axis' + (fw && fw.adder ? ' <small>+$' + fw.adder + '</small>' : ''));   /* each axis count's own upcharge */ b.type = 'button';
           b.onclick = function () { if (fid !== S.wrapId) window.pickWrap(fid); }; ax.appendChild(b); });
@@ -1169,11 +1184,12 @@
   var INNER_FEE = 50;
   function innerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && c.inner && c.inner.on && (c.inner.stripes || []).length); }
   function fillerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && c.arms === 'cover' && c.pattern === 'diamond'); }
-  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? FILL_FEE : 0) + (innerOn() ? INNER_FEE : 0); };   // (the wrap length rides along here)
+  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? FILL_FEE : 0) + (innerOn() ? INNER_FEE : 0) + dragonFee(); };   // (the wrap length rides along here)
   var _order = window.buildOrderItem;
   if (typeof _order === 'function') window.buildOrderItem = function () {
     var it = _order.apply(this, arguments), d = designOn();
     if (lenFee() && it.lines) it.lines.push({ label: 'Wrap Length', value: wrapLen() + ' in  +$' + lenFee() });
+    if (dragonFee() && it.lines) it.lines.push({ label: 'Dragon Scale', value: designOn().setup.axes + ' axis  +$' + dragonFee() });
     if (innerOn() && it.lines) { var ic = designOn().setup.inner; it.lines.push({ label: 'Pattern Between', value: (ic.pattern === 'chevron' ? 'Chevron' : 'Diamond') + (ic.fillOn && ic.pattern !== 'chevron' ? ' with filler over it' : '') + '  +$' + INNER_FEE + ' (up to 2 new colors included)' }); }
     if (fillerOn() && it.lines) { var fn; try { fn = (dw().WL_THREADS.fullName || dw().WL_THREADS.name)(designOn().setup.fillC); } catch (e) {} it.lines.push({ label: 'Color Filler', value: (fn || designOn().setup.fillC || '') + '  +$' + FILL_FEE }); }
     if (underOn() && it.lines) { var un; try { un = (dw().WL_THREADS.fullName || dw().WL_THREADS.name)(S.under.c); } catch (e) {} it.lines.push({ label: 'Underwrap', value: (un || S.under.c) + '  +$' + UNDER_FEE }); }
