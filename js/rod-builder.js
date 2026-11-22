@@ -641,13 +641,13 @@
     { name: 'Gulfstream & Gold', trim: '479 Gulfstream', stripes: [['9130 Metallic Gold', 1], ['479 Gulfstream', 4], ['807 White', 2], ['9130 Metallic Gold', 2], ['479 Gulfstream', 3]] },
     { name: 'Black, Storm Cloud & Gold', trim: '862 Twilight Black', exact: true, stripes: [['862 Twilight Black', 8], ['850 Storm Cloud', 1], ['862 Twilight Black', 2], ['850 Storm Cloud', 2], ['862 Twilight Black', 1], ['850 Storm Cloud', 3],
       ['9100 Metallic Yellow Gold', 3], ['850 Storm Cloud', 2], ['9100 Metallic Yellow Gold', 2], ['850 Storm Cloud', 1], ['9100 Metallic Yellow Gold', 3]] },
-    { name: 'Green Stripes', trim: '9520 Metallic Green', stripes: [['807 White', 3], ['9520 Metallic Green', 2], ['862 Twilight Black', 1], ['9520 Metallic Green', 2], ['862 Twilight Black', 1], ['513 Guacamole', 4], ['807 White', 1], ['513 Guacamole', 2]] },
-    { name: 'Redfish & Copper', trim: '319 Redfish', stripes: [['740 Copper', 1], ['862 Twilight Black', 2], ['319 Redfish', 5], ['740 Copper', 1], ['862 Twilight Black', 1], ['740 Copper', 1], ['319 Redfish', 2]] },
-    { name: 'Black-Out Silver', trim: '862 Twilight Black', stripes: [['862 Twilight Black', 3], ['9860 Metallic Silver', 1], ['862 Twilight Black', 1], ['9860 Metallic Silver', 1], ['841 Iron Ore', 4], ['9860 Metallic Silver', 2]] }];
+    { name: 'Green Stripes', open: 0.4, trim: '9520 Metallic Green', stripes: [['807 White', 3], ['9520 Metallic Green', 2], ['862 Twilight Black', 1], ['9520 Metallic Green', 2], ['862 Twilight Black', 1], ['513 Guacamole', 4], ['807 White', 1], ['513 Guacamole', 2]] },
+    { name: 'Redfish & Copper', open: 0.4, trim: '319 Redfish', stripes: [['740 Copper', 1], ['862 Twilight Black', 2], ['319 Redfish', 5], ['740 Copper', 1], ['862 Twilight Black', 1], ['740 Copper', 1], ['319 Redfish', 2]] },
+    { name: 'Black-Out Silver', open: 0.4, trim: '862 Twilight Black', stripes: [['862 Twilight Black', 3], ['9860 Metallic Silver', 1], ['862 Twilight Black', 1], ['9860 Metallic Silver', 1], ['841 Iron Ore', 4], ['9860 Metallic Silver', 2]] }];
   // Preset 1-5 (not the photo examples, so no one gets a wrap that's already on someone else's rod); the customizer opens on Preset 1
   function presetsFor() {
     var w = wrapNamed(S.wrapId), L = (w && CUSTOM_PRESETS[w.name]) || BASE_PRESETS;
-    return L.slice(0, 5).map(function (x, i) { return { name: 'Preset ' + (i + 1), trim: x.trim, stripes: x.stripes, exact: x.exact }; });
+    return L.slice(0, 5).map(function (x, i) { return { name: 'Preset ' + (i + 1), trim: x.trim, stripes: x.stripes, exact: x.exact, open: x.open }; });
   }
   function presetBox(dd) {
     var tb = dd.getElementById('threadsBox'); if (!tb || dd.getElementById('sfswPresets')) return;
@@ -675,12 +675,12 @@
   }
   // find the total thread count that leaves half the wrap open; mk(T) builds the design for a total of T
   var fitMemo = {};   // the same design on the same wrap again: no need to measure again
-  async function fitHalf(mk, lo, hi, tok) {
-    var key = JSON.stringify(mk(1, true)) + '|' + lo + '|' + hi; if (fitMemo[key]) return fitMemo[key];
+  async function fitHalf(mk, lo, hi, tok, target) {
+    target = target || 0.5; var key = JSON.stringify(mk(1, true)) + '|' + lo + '|' + hi + '|' + target; if (fitMemo[key]) return fitMemo[key];
     var fw = await measFrame(), sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
     if (!fw) return Math.round((lo + hi) / 2);
     while (hi - lo > 2) { if (tok !== fitTok) return null; var mid = Math.round((lo + hi) / 2), c = mk(mid, true); fw.wlApply(c); await sleep(0);
-      if (openShare(fw, c) > 0.5) lo = mid; else hi = mid; }
+      if (openShare(fw, c) > target) lo = mid; else hi = mid; }
     if (tok !== fitTok) return null; return (fitMemo[key] = Math.round((lo + hi) / 2));
   }
   async function presetApply(pr, fresh) {
@@ -692,7 +692,7 @@
       keep.inner = { on: false, pattern: 'diamond', place: 'center', auto: true, stripes: [] }; keep.unit = 'in'; keep.len = wrapLen().toFixed(2); }
     var mk = function (T, measuring) { var c = JSON.parse(JSON.stringify(keep)), f = T / sum; c.stripes = base.map(function (x) { return { c: x.c, t: Math.max(1, Math.round(x.t * f)) }; });
       if (c.trims) { c.trims.c = hx(pr.trim); c.trims.bands = []; c.trims.ends = []; } if (measuring) { c.arms = 'show'; if (c.inner) c.inner.on = false; } return c; };
-    var T = keep.pattern === 'diamond' && !pr.exact ? await fitHalf(mk, 4, 120, tok) : sum;
+    var T = keep.pattern === 'diamond' && !pr.exact ? await fitHalf(mk, 4, 120, tok, pr.open) : sum;
     if (T == null || tok !== fitTok) return;   // another preset was picked meanwhile
     w.wlApply(mk(T)); clearTimeout(readT); readT = setTimeout(readDesign, 20);
   }
@@ -730,13 +730,15 @@
     c.center = { on: false, c: c.stripes[0].c, t: 1 }; if (c.inner) c.inner.on = false; if (c.trims) { c.trims.bands = []; c.trims.ends = []; }
     w.wlApply(c); clearTimeout(readT); readT = setTimeout(readDesign, 150);
   }
-  function openShare(w, c) {   // how much of the wrap (between the trims) is still bare blank
+  function openShare(w, c) {   // how much of the wrap (between the trims) still looks like bare blank
     var r = w.WL_unrolled(900, 240); if (!r) return 0.5;
     var B = [1, 3, 5].map(function (i) { return parseInt((c.blankC || '#101010').slice(i, i + 2), 16); }), x = r.canvas.getContext('2d'), W = r.canvas.width, H = r.canvas.height;
     var t0 = Math.round((r.trimMM || 0) / (r.lengthMM || 1) * W) + 3, d = x.getImageData(t0, 0, Math.max(1, W - 2 * t0), H).data, bl = 0, n = 0;
-    for (var i = 0; i < d.length; i += 16) { n++; if (d[i + 3] < 10 || Math.abs(d[i] - B[0]) + Math.abs(d[i + 1] - B[1]) + Math.abs(d[i + 2] - B[2]) < 18) bl++; }
+    for (var i = 0; i < d.length; i += 16) { n++; if (d[i + 3] < 10 || Math.abs(d[i] - B[0]) + Math.abs(d[i + 1] - B[1]) + Math.abs(d[i + 2] - B[2]) < 80) bl++; }   // thread close to the blank's color (black on black) reads as open, so it counts as open
     return bl / n;
   }
+
+
   function presetPick(v) { try { var sel = dz.contentDocument.getElementById('sfswPreset'); if (sel) sel.value = String(v); } catch (e) {} }
   function presetFill() {   // the list for the picked wrap: Build From Scratch, then Preset 1-5
     try { var sel = dz.contentDocument.getElementById('sfswPreset'); if (!sel) return;
@@ -816,7 +818,7 @@
     dzBusy = false; underSync(); axisSync();
     var w = dw(); if (!w || !w.wlCapture || !presetOf(S.wrapId) || S.wrapMode === 'random') return;
     var cap; try { cap = clean(w.wlCapture()); } catch (e) { return; }
-    var kind = dzKind, cols = colorsOf(cap, kind), name = function (h) { try { return (w.WL_THREADS && w.WL_THREADS.name(h)) || h; } catch (e) { return h; } };
+    var kind = dzKind, cols = colorsOf(cap, kind), name = function (h) { try { return (w.WL_THREADS && (w.WL_THREADS.fullName || w.WL_THREADS.name)(h)) || h; } catch (e) { return h; } };
     var MET = {}, UV = {}; try { w.WL_THREADS.BRANDS.sfsw.metallic.forEach(function (h) { MET[h.toLowerCase()] = 1; }); w.WL_THREADS.BRANDS.fuji.metallic.forEach(function (h) { UV[h.toLowerCase()] = 1; }); } catch (e) {}
     var thumb = (S.customDesign && S.customDesign.thumb) || '';   // the thumbnail (cart / summary) is redrawn just after, out of the way of the 3D rod
     clearTimeout(thumbT); thumbT = setTimeout(function () { try { var u = w.WL_unrolled(900, 220); if (u && u.canvas && S.customDesign) { var c = document.createElement('canvas'); c.width = 640; c.height = Math.round(640 * (u.canvas.height / 2) / u.canvas.width); c.getContext('2d').drawImage(u.canvas, 0, 0, u.canvas.width, u.canvas.height / 2, 0, 0, c.width, c.height); S.customDesign.thumb = c.toDataURL('image/jpeg', .8); } } catch (e) {} }, 900);
@@ -867,13 +869,16 @@
     top.classList.toggle('rb-wtop', onWrap && !!wphoto && !wphoto.hidden && !rnd && S.wrapMode !== 'build');   // no wrap photo while customizing
     if (rnd) renderRandom();
   }
+  // customers see color names without thread numbers (Brett's order keeps them)
+  function shown(n) { return String(n || '').replace(/^\d+[A-Z]?\s+/, ''); }
+  function lumOf(h) { h = String(h || '').replace('#', ''); return .299 * parseInt(h.slice(0, 2), 16) + .587 * parseInt(h.slice(2, 4), 16) + .114 * parseInt(h.slice(4, 6), 16); }
   // Random: tap a slot in the floating bar (Main, Supporting 1, 2 …), then tap colors below to fill it
   var rndBar, rndPal, rndSlot = 'main';
   function renderRandom() {
     var W = val('WRAP_COLORS') || []; if (!rndBar || !W.length) return; var sup = S.supportIdxs || (S.supportIdxs = []), inc = 3, fee = 10;
     if (rndSlot !== 'main' && !(rndSlot < sup.length)) rndSlot = 'main';
     var slot = function (k, i, label) { var c = W[i] || {}, on = rndSlot === k;
-      return '<button type="button" class="rb-rs' + (on ? ' on' : '') + '" data-k="' + k + '"><i style="background:' + (c.hex || '#333') + '"></i><span><small>' + label + '</small>' + (c.name || '—') + '</span>' +
+      return '<button type="button" class="rb-rs' + (on ? ' on' : '') + '" data-k="' + k + '"><i style="background:' + (c.hex || '#333') + '"></i><span><small>' + label + '</small>' + (shown(c.name) || '—') + '</span>' +
         (k !== 'main' ? '<b data-x="' + k + '" title="Remove">×</b>' : '') + '</button>'; };
     rndBar.innerHTML = slot('main', S.mainIdx, 'Main') + sup.map(function (i, k) { return slot(k, i, 'Supporting ' + (k + 1) + (k >= inc ? ' · +$' + fee : '')); }).join('') +
       '<button type="button" class="rb-rs add">+ Add supporting color' + (sup.length >= inc ? ' <small>+$' + fee + '</small>' : '') + '</button>' +
@@ -883,8 +888,8 @@
       if (b.classList.contains('add')) { sup.push(S.mainIdx === 1 ? 0 : 1); rndSlot = sup.length - 1; call('renderSupportingRows'); updateAll(); return; }
       rndSlot = b.dataset.k === 'main' ? 'main' : +b.dataset.k; renderRandom(); }; });
     var cur2 = rndSlot === 'main' ? S.mainIdx : sup[rndSlot], groups = [['', 'Colors'], ['metallic', 'Metallic'], ['uv-metallic', 'Ultra-UV Metallic · +$10']];
-    rndPal.innerHTML = groups.map(function (g) { var items = W.map(function (c, i) { return [c, i]; }).filter(function (x) { return (x[0].group || '') === g[0]; }); if (!items.length) return '';
-      return '<div class="rb-rp-h">' + g[1] + '</div><div class="rb-rp">' + items.map(function (x) { return '<button type="button" class="' + (x[1] === cur2 ? 'on' : '') + '" data-i="' + x[1] + '" title="' + x[0].name + '" style="background:' + x[0].hex + '"></button>'; }).join('') + '</div>'; }).join('');
+    rndPal.innerHTML = groups.map(function (g) { var items = W.map(function (c, i) { return [c, i]; }).filter(function (x) { return (x[0].group || '') === g[0]; }).sort(function (a, b) { return lumOf(b[0].hex) - lumOf(a[0].hex); }); if (!items.length) return '';   /* lightest to darkest */
+      return '<div class="rb-rp-h">' + g[1] + '</div><div class="rb-rp">' + items.map(function (x) { return '<button type="button" class="' + (x[1] === cur2 ? 'on' : '') + '" data-i="' + x[1] + '" title="' + shown(x[0].name) + '" style="background:' + x[0].hex + '"></button>'; }).join('') + '</div>'; }).join('');
     [].forEach.call(rndPal.querySelectorAll('.rb-rp button'), function (b) { b.onclick = function () { var i = +b.dataset.i; if (rndSlot === 'main') S.mainIdx = i; else sup[rndSlot] = i; call('renderSupportingRows'); updateAll(); }; });
   }
   // wrap length: starts at the rod type's length (9 in here); each extra inch is +$10
@@ -1146,8 +1151,8 @@
     var it = _order.apply(this, arguments), d = designOn();
     if (lenFee() && it.lines) it.lines.push({ label: 'Wrap Length', value: wrapLen() + ' in  +$' + lenFee() });
     if (innerOn() && it.lines) { var ic = designOn().setup.inner; it.lines.push({ label: 'Pattern Between', value: (ic.pattern === 'chevron' ? 'Chevron' : 'Diamond') + (ic.fillOn && ic.pattern !== 'chevron' ? ' with filler over it' : '') + '  +$' + INNER_FEE + ' (up to 2 new colors included)' }); }
-    if (fillerOn() && it.lines) { var fn; try { fn = dw().WL_THREADS.name(designOn().setup.fillC); } catch (e) {} it.lines.push({ label: 'Color Filler', value: (fn || designOn().setup.fillC || '') + '  +$' + FILL_FEE }); }
-    if (underOn() && it.lines) { var un; try { un = dw().WL_THREADS.name(S.under.c); } catch (e) {} it.lines.push({ label: 'Underwrap', value: (un || S.under.c) + '  +$' + UNDER_FEE }); }
+    if (fillerOn() && it.lines) { var fn; try { fn = (dw().WL_THREADS.fullName || dw().WL_THREADS.name)(designOn().setup.fillC); } catch (e) {} it.lines.push({ label: 'Color Filler', value: (fn || designOn().setup.fillC || '') + '  +$' + FILL_FEE }); }
+    if (underOn() && it.lines) { var un; try { un = (dw().WL_THREADS.fullName || dw().WL_THREADS.name)(S.under.c); } catch (e) {} it.lines.push({ label: 'Underwrap', value: (un || S.under.c) + '  +$' + UNDER_FEE }); }
     if (!d) return it;
     var fee = call('supportExtraFee') || 0, extra = Math.max(0, d.colors.length - 3), mets = d.colors.filter(function (c) { return c.uv; }).length, twists = d.colors.filter(function (c) { return c.twist; }).length;
     var notes = []; if (fee) notes.push('+$' + fee + ' for ' + extra + ' extra color' + (extra > 1 ? 's' : '')); if (mets) notes.push('+$' + mets * 10 + ' for ' + mets + ' Ultra-UV metallic' + (mets > 1 ? 's' : '')); if (twists) notes.push('+$' + twists * 10 + ' for ' + twists + ' Metallic Twist' + (twists > 1 ? 's' : ''));

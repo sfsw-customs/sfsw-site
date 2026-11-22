@@ -124,3 +124,18 @@
   addEventListener('wl-thread',later);
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>{ mount(); startTags(); }); else { mount(); startTags(); }
 })();
+
+/* SFSW_SHADES */ (function () { var T = window.WL_THREADS; if (!T || T.fullName) return;
+  var strip = function (n) { return String(n || '').replace(/^\d+[A-Z]?\s+/, ''); }, lum = function (h) { h = String(h || '').replace('#', ''); return .299 * parseInt(h.slice(0, 2), 16) + .587 * parseInt(h.slice(2, 4), 16) + .114 * parseInt(h.slice(4, 6), 16); };
+  var g0 = T.groups, n0 = T.name; T.fullName = n0; T.name = function (h) { return strip(n0(h)); };
+  var ORDER = ['Black & White', 'Greys', 'Blues', 'Reds', 'Pinks', 'Greens', 'Purples', 'Oranges', 'Yellows', 'Browns'];
+  var split = function (gs) { var out = [];   // Pro-Wrap's groups, regrouped the way Brett lists colors
+    gs.forEach(function (g) { var L = g[1] || [], lab = g[0];
+      if (/^Whites, grays/i.test(lab)) { out.push(['Black & White', L.filter(function (x) { return /White|Cream|Eggshell|Twilight Black/.test(x[0]); })]); out.push(['Greys', L.filter(function (x) { return !/White|Cream|Eggshell|Twilight Black/.test(x[0]); })]); }
+      else if (/^Reds & pinks/i.test(lab)) { var pk = /Bubblegum|Fuchsia|Rose|Pink|Raspberry/; out.push(['Reds', L.filter(function (x) { return !pk.test(x[0]); })]); out.push(['Pinks', L.filter(function (x) { return pk.test(x[0]); })]); }
+      else out.push([lab.replace(/^Blues & teals$/i, 'Blues').replace(/^Golds & browns$/i, 'Browns'), L]); });
+    var rank = function (g) { var i = ORDER.indexOf(g[0]); return i < 0 ? 100 : i; };
+    return out.map(function (g, i) { return [g, i]; }).sort(function (a, b) { return rank(a[0]) - rank(b[0]) || a[1] - b[1]; }).map(function (x) { return x[0]; }); };
+  T.groups = function (base) { return split((g0(base) || []).map(function (g) { return [g[0], (g[1] || []).slice().sort(function (a, b) { return lum(b[1]) - lum(a[1]); })]; }))
+    .map(function (g) { return [g[0], g[1].map(function (x) { return [strip(x[0]), x[1]].concat(x.slice(2)); })]; }); };
+})();
