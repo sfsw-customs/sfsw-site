@@ -492,7 +492,11 @@
           ['9100 Metallic Yellow Gold', 6], ['819 Ghost Grey', 2], ['862 Twilight Black', 2], ['9100 Metallic Yellow Gold', 2]] } ] }, 'Chevron — 2 Axis': { k: 'taper', p: 'chevron', a: 2 },
     'Dragon Scale': { k: 'taper', p: 'dragon', a: 8, recs: [   // photo 1: metallic green scales, photo 3: metallic silver
       { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9520 Metallic Green', line: '862 Twilight Black' } },
-      { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9860 Metallic Silver', line: '862 Twilight Black' } } ] }, 'Chevron — 4 Axis': { k: 'taper', p: 'chevron', a: 4 },
+      { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9860 Metallic Silver', line: '862 Twilight Black' } } ] }, 'Chevron — 4 Axis': { k: 'taper', p: 'chevron', a: 4, recs: [{}, {},   // examples 1-2 are photos only; example 3 has a chevron pattern between, against the main pattern, pointing to the tip
+      { trim: '862 Twilight Black', stripes: [['807 White', 3], ['850 Storm Cloud', 1], ['807 White', 2], ['850 Storm Cloud', 2], ['807 White', 1], ['850 Storm Cloud', 3], ['862 Twilight Black', 1], ['850 Storm Cloud', 2],
+          ['862 Twilight Black', 2], ['850 Storm Cloud', 1], ['862 Twilight Black', 3], ['325 Fire Red', 8], ['862 Twilight Black', 3]],
+        inner: { pattern: 'chevron', place: 'against', chevTo: 'tip', stripes: [['325 Fire Red', 2], ['807 White', 4], ['325 Fire Red', 2], ['807 White', 4], ['325 Fire Red', 4]] } }] },
+    'Chevron — 8 Axis': { k: 'taper', p: 'chevron', a: 8 }, 'Chevron — 16 Axis': { k: 'taper', p: 'chevron', a: 16 },
     'Diamond — 4 Axis': { k: 'taper', p: 'diamond', a: 4, recs: [   // examples 1-3, in photo order; the first stripe is the center
       { trim: '479 Gulfstream',
         stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 3], ['9860 Metallic Silver', 4], ['479 Gulfstream', 8], ['862S Metallic Twist Black/Silver', 2], ['862 Twilight Black', 3]] },
@@ -619,8 +623,8 @@
     if (kind === 'cross') return idByName(/snowflake/i.test(cap.pat || '') && ax < 4 ? 'Snowflake Wrap' : ax >= 4 ? '4 Axis Cross Wrap' : '2 Axis Cross Wrap');
     if (cap.pattern === 'trim') return idByName('Trim Band');
     if (cap.pattern === 'dragon') return idByName(cap.dragon && cap.dragon.over && cap.dragon.over.on ? '2 Axis Wrap Over Dragon Scales' : 'Dragon Scale');
-    if (ax >= 16) return idByName('16 Axis Wrap');
-    if (ax >= 8) return idByName('8 Axis Wrap');
+    if (ax >= 16) return idByName(cap.pattern === 'chevron' ? 'Chevron — 16 Axis' : '16 Axis Wrap');
+    if (ax >= 8) return idByName(cap.pattern === 'chevron' ? 'Chevron — 8 Axis' : '8 Axis Wrap');
     var cur = wrapById(S.wrapId);
     if (ax === 4 && cur && cur.name === '4 Axis Decorative Chevron or Diamond') return cur.id;   // decorative stays decorative
     return idByName((cap.pattern === 'chevron' ? 'Chevron' : 'Diamond') + ' — ' + (ax >= 4 ? 4 : 2) + ' Axis');
@@ -860,7 +864,9 @@
   function threadHex(w) { var m = {}; try { w.WL_THREADS.BRANDS.sfsw.groups.forEach(function (g) { g[1].forEach(function (x) { m[x[0]] = x[1]; }); }); } catch (e) {}
     return function (n) { return m[n] || '#1e1617'; }; }
   var recPick = {};   // which photo design each wrap is on
-  function recOf(pr, id) { return pr && pr.recs ? pr.recs[Math.min(recPick[id] || 0, pr.recs.length - 1)] : null; }
+  function recOf(pr, id) { var r = pr && pr.recs ? pr.recs[Math.min(recPick[id] || 0, pr.recs.length - 1)] : null; return r && r.stripes ? r : null; }   // a photo-only example has no recipe
+  function recInner(R, hx) { var I = R && R.inner; if (!I) return null;   // an example's pattern between
+    return { on: true, pattern: I.pattern || 'diamond', place: I.place || 'center', chevTo: I.chevTo || null, auto: false, touched: true, stripes: I.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; }), fillOn: false, fill: [] }; }
   // Customize / Builder's Choice open right under the picked wrap: the list is laid out by order (moving the designer would reload it)
   function placeModes(card) {
     if (!modeEl || !optList) return; var par = optList.parentNode; if (modeEl.parentNode !== par) return;
@@ -1010,12 +1016,12 @@
     if (WS && !restore) { cap.unit = 'in'; cap.len = (+wrapLen()).toFixed(2); cap.dB = (+WS.dB).toFixed(1); cap.dT = (+WS.dT).toFixed(1); cap.dM = ((+WS.dB + +WS.dT) / 2).toFixed(1); }
     if (!restore && dzKind === 'cross') noCustom(w);
     if (!restore && REC) { var hx0 = threadHex(w);   // the wrap's own design goes in first, so nothing else ever shows
-      cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } if (REC.tb) cap.trims = tbOf(REC.tb, hx0); if (REC.dragon && cap.dragon) { cap.dragon.metal = hx0(REC.dragon.metal); cap.dragon.line = hx0(REC.dragon.line); } }
+      cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } if (REC.tb) cap.trims = tbOf(REC.tb, hx0); if (REC.dragon && cap.dragon) { cap.dragon.metal = hx0(REC.dragon.metal); cap.dragon.line = hx0(REC.dragon.line); } var ri0 = recInner(REC, hx0); if (ri0) cap.inner = ri0; else if (cap.inner) cap.inner.on = false; }
     if (!restore && pr.p !== 'trim' && cap.trims && !(REC && REC.tb)) { cap.trims.mm = 20; cap.trims.bands = []; cap.trims.ends = []; }
     else if (!restore && !prev && dzKind === 'taper') { cap.stripes = JSON.parse(JSON.stringify(START.stripes)); if (cap.trims) { cap.trims.c = START.trim; cap.trims.bands = []; cap.trims.ends = []; } }
     if (!restore) snap(w, cap);
     var same = !restore && !switched && !first && REC && pr.k === 'taper' && cap.pattern === pr.p && +cap.axes === +pr.a && pr.p !== 'dragon';   // same wrap, another example: nothing else to set up
-    if (same) { cap.nOverride = null; cap.chevTo = null; if (cap.inner) cap.inner.on = false; }
+    if (same) { cap.nOverride = null; cap.chevTo = null; if (cap.inner && !REC.inner) cap.inner.on = false; }
     try { w.wlApply(cap); } catch (e) {}
     lastKind = dzKind;
     if (same) { clearTimeout(readT); readT = setTimeout(readDesign, 20); return; }
@@ -1044,6 +1050,7 @@
         if (c2.trims) { c2.trims.c = hx(R.trim || R.stripes[0][0]); c2.trims.bands = []; c2.trims.ends = []; }
         if (R.tb) c2.trims = tbOf(R.tb, hx);
         if (R.dragon && c2.dragon) { c2.dragon.metal = hx(R.dragon.metal); c2.dragon.line = hx(R.dragon.line); }
+        var ri = recInner(R, hx); if (ri) c2.inner = ri; else if (c2.inner) c2.inner.on = false;
       } else if (dzKind === 'cross' || switched || first) { (c2.stripes || []).forEach(function (x, i) { x.c = cols[i % cols.length]; }); if (c2.trims) { c2.trims.c = cols[0]; c2.trims.bands = []; c2.trims.ends = []; } }
       if (pr.p !== 'trim' && c2.trims && !(R && R.tb)) { c2.trims.mm = 20; c2.trims.bands = []; c2.trims.ends = []; }   // the Trim Band's wide band doesn't carry over
       try { w.wlApply(snap(w, c2)); } catch (e) {}
@@ -1062,7 +1069,7 @@
   function wrapPhotos(w) { if (!w) return []; if (w.photo) return [w.photo]; var a = []; if (w.photoNums) return w.photoNums.map(function (i) { return '../preview/rod-wraps/' + (w.photoSlug || w.id) + '-' + i + '.png'; }); for (var i = 1; i <= (w.photoCount || 0); i++) a.push('../preview/rod-wraps/' + (w.photoSlug || w.id) + '-' + i + '.png'); return a; }
   // wrap families: one row in the list ("Diamond Wrap"), with the axis count picked inside it; the row stays put while the axis changes
   var FAMILIES = [{ name: 'Diamond Wrap', ids: ['diam-2', 'diam-4', 'closed-4', 'axis-16'], ax: [2, 4, 8, 16] },
-                  { name: 'Chevron Wrap', ids: ['chev-2', 'chev-4'], ax: [2, 4] }];
+                  { name: 'Chevron Wrap', ids: ['chev-2', 'chev-4', 'chev-8', 'chev-16'], ax: [2, 4, 8, 16] }];
   function famOf(id) { for (var i = 0; i < FAMILIES.length; i++) if (FAMILIES[i].ids.indexOf(id) >= 0) return FAMILIES[i]; return null; }
   function rowId(id) { var f = famOf(id); return f ? f.ids[0] : id; }   // the list row a wrap shows in
   function dressFamilies() {
@@ -1105,7 +1112,7 @@
         box.appendChild(ax); box.appendChild(el('div', 'rb-fbr')); }
       for (var i = 0; i < (id === 'abalone' ? 0 : n); i++) { var b = el('button', i === cur && S.wrapMode === 'example' ? 'on' : '', 'Example ' + (i + 1)); b.type = 'button'; b.dataset.i = i;
         b.onclick = function () { var k = +this.dataset.i; recPick[id] = k; var was = S.wrapMode;
-          if (recs[k]) { setMode('example', true); toDesigner(id, null, null); } else { setMode('example', was === 'example'); exButtons(); } }; box.appendChild(b); }
+          if (recs[k] && recs[k].stripes) { setMode('example', true); toDesigner(id, null, null); } else { setMode('example', was === 'example'); exButtons(); } }; box.appendChild(b); }
       if (id === 'abalone' && w && w.colors) {   // abalone: pick the shell color here (no thread colors)
         w.colors.forEach(function (c, k) { var b = el('button', (S.abaloneColorIdx || 0) === k ? 'on' : '', c); b.type = 'button';
           b.onclick = function () { call('pickAbaloneColor', String(k)); setTimeout(exButtons, 30); }; box.appendChild(b); });
