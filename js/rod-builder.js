@@ -760,16 +760,23 @@
       var c = dw().wlCapture(), p = c.pattern, ok = (p === 'diamond' || p === 'chevron') && S.wrapId !== 'trim-band';
       m.style.setProperty('display', ok ? 'flex' : 'none', 'important');
       [].forEach.call(seg.querySelectorAll('button'), function (b) { b.style.display = ok && axisWrap(p, +b.dataset.v) ? '' : 'none'; });
+      var fee = dd.getElementById('sfswAxFee'), cw = wrapById(S.wrapId) || {}, sb = seg.querySelector('button[aria-pressed="true"]');   // the upcharge, right under the axis count picked
+      if (!fee) { fee = dd.createElement('small'); fee.id = 'sfswAxFee'; fee.style.cssText = 'position:absolute;font-size:12px;font-weight:600;color:#d4a73c;white-space:nowrap;transform:translateX(-50%);pointer-events:none'; m.style.position = 'relative'; m.appendChild(fee); }
+      if (ok && sb && cw.adder) { fee.textContent = '+$' + cw.adder; fee.style.display = ''; var rb = sb.getBoundingClientRect(), rm = m.getBoundingClientRect(); fee.style.left = (rb.left - rm.left + rb.width / 2) + 'px'; fee.style.top = (rb.bottom - rm.top + 3) + 'px'; m.style.marginBottom = '14px'; }
+      else { fee.style.display = 'none'; m.style.marginBottom = ''; }
     } catch (e) {}
   }
+  var axBase = null;   // the design before the axis count was changed (switching 2 → 16 → 2 comes back to it exactly)
   function axisHook(dd) {
     var seg = dd.querySelector('[data-mirror="axes"]'); if (!seg || seg.__sfsw) return; seg.__sfsw = true;
     seg.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; var w = dw(); if (!w || !w.wlCapture) return;
       var c0 = w.wlCapture(), a0 = +c0.axes, a1 = +b.dataset.v, id = axisWrap(c0.pattern, a1); if (!id || a1 === a0) { if (!id) { e.preventDefault(); e.stopImmediatePropagation(); } return; }
+      var cnt = function (c) { return JSON.stringify([c.stripes, c.inner && c.inner.stripes, c.inner && c.inner.fill]); };
+      if (!axBase || axBase.last !== cnt(c0)) axBase = { axes: a0, c: JSON.parse(JSON.stringify(c0)) };   // counts were changed by hand since the last axis switch: scale from these
       setTimeout(function () { try {
-        var c = w.wlCapture(), k = a0 / a1, sc = function (L) { return (L || []).map(function (x) { return { c: x.c, t: Math.max(1, Math.round(x.t * k)) }; }); };
-        c.axes = a1; c.stripes = sc(c0.stripes); if (c.inner && c0.inner) { c.inner.stripes = sc(c0.inner.stripes); c.inner.fill = sc(c0.inner.fill); }
-        w.wlApply(c);
+        var B = axBase.c, c = w.wlCapture(), k = axBase.axes / a1, sc = function (L) { return (L || []).map(function (x, i) { return { c: x.c, t: Math.max(1, Math.round(x.t * k)) }; }); };
+        c.axes = a1; c.stripes = sc(B.stripes); if (c.inner && B.inner) { c.inner.stripes = sc(B.inner.stripes); c.inner.fill = sc(B.inner.fill); }
+        w.wlApply(c); axBase.last = cnt(w.wlCapture());
         S.wrapId = id; S.wrapUserSelected = true; modeWrap = id; call('renderWraps'); exButtons(); updateAll();
         clearTimeout(readT); readT = setTimeout(readDesign, 150);
       } catch (x) {} }, 60);
