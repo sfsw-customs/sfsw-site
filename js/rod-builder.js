@@ -501,7 +501,10 @@
           ['9470 Metallic Bluefin', 4], ['807 White', 1]] },
       { trim: '479 Gulfstream',
         stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 3], ['9860 Metallic Silver', 3], ['479 Gulfstream', 8], ['862S Metallic Twist Black/Silver', 2], ['862 Twilight Black', 3],
-          ['479 Gulfstream', 1], ['862 Twilight Black', 2], ['479 Gulfstream', 2], ['862 Twilight Black', 1], ['479 Gulfstream', 3], ['9860 Metallic Silver', 1]] } ] }, '4 Axis Decorative Chevron or Diamond': { k: 'taper', p: 'diamond', a: 4 },
+          ['479 Gulfstream', 1], ['862 Twilight Black', 2], ['479 Gulfstream', 2], ['862 Twilight Black', 1], ['479 Gulfstream', 3], ['9860 Metallic Silver', 1]] },
+      { trim: '479 Gulfstream',   // example 4 (the photo that was 4 Axis Decorative's example 2)
+        stripes: [['9860 Metallic Silver', 6], ['479 Gulfstream', 3], ['455 Cobalt', 1], ['479 Gulfstream', 2], ['455 Cobalt', 2], ['479 Gulfstream', 1], ['455 Cobalt', 3], ['836 Forged Steel', 1],
+          ['455 Cobalt', 2], ['836 Forged Steel', 2], ['455 Cobalt', 1], ['836 Forged Steel', 3], ['807 White', 1], ['836 Forged Steel', 2], ['807 White', 2]] } ] }, '4 Axis Decorative Chevron or Diamond': { k: 'taper', p: 'diamond', a: 4 },
     '8 Axis Wrap': { k: 'taper', p: 'diamond', a: 8, recs: [   // our own designs in the style of the 4 axis examples (fewer threads per color with more axes)
       { trim: '479 Gulfstream', stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 2], ['9860 Metallic Silver', 2], ['479 Gulfstream', 4], ['862S Metallic Twist Black/Silver', 1], ['862 Twilight Black', 2]] },
       { trim: '9470 Metallic Bluefin', stripes: [['9870 Metallic Steel Grey', 1], ['807 White', 1], ['9470 Metallic Bluefin', 2], ['807 White', 2], ['9870 Metallic Steel Grey', 2], ['807 White', 1]] },
