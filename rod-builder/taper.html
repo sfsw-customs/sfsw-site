@@ -1021,7 +1021,7 @@ runNow();
     close(); pop=document.createElement('div'); pop.className='cpop'; pop.tabIndex=-1; pop.setAttribute('role','dialog'); pop.setAttribute('aria-label','Pick a color');
     const cur=(inp.value||'').toLowerCase();
     // the blank and the guide frame aren't thread: they keep these colors whatever thread brand is picked
-    const GR=/^(blankC|frameC)$/.test(inp.id)?BASE_GROUPS:COLOR_GROUPS, CL=GR.flatMap(g=>g[1]);
+    const GR=/^(frameC)$/.test(inp.id)?BASE_GROUPS:COLOR_GROUPS, CL=GR.flatMap(g=>g[1]);
     pop.innerHTML=`<input type="search" class="csearch" placeholder="Search colors, e.g. navy, metallic gold" aria-label="Search colors" autocomplete="off" spellcheck="false">
       <div class="clist"></div>
       <button type="button" class="more">Color chart…</button>

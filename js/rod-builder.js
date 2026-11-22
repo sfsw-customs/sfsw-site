@@ -525,6 +525,7 @@
     dz.addEventListener('load', function () { setMore();
       try { var dd = dz.contentDocument, ob = dd.getElementById('openBox'), iw = dd.getElementById('innerWrap'); if (ob && iw) iw.parentNode.insertBefore(ob, iw);   // Color filler right under the thread colors
         underBox(dd, iw); presetBox(dd); axisHook(dd);
+        try { var ab = dd.getElementById('armsBtn'); if (ab && !ab.querySelector('.sfswFee')) ab.insertAdjacentHTML('beforeend', ' <small class="sfswFee" style="color:#d4a73c;font-weight:600">+$20</small>'); } catch (e) {}
         [].forEach.call(dd.querySelectorAll('span,label,div,small'), function (x) { if (/^\s*Thread size\s*$/.test(x.textContent) && !x.querySelector('input,button,select')) x.style.display = 'none'; });   // the leftover "Thread size" label
         dd.addEventListener('change', function (e) { if (!e.target || e.target.id !== 'innerOn' || !e.target.checked) return;   // a pattern between starts with a thread line to customize
           setTimeout(function () { try { var w = dz.contentWindow, c = w.wlCapture(); if (c.inner && c.inner.on && !(c.inner.stripes || []).length) { c.inner.stripes = [{ c: (c.stripes[0] || {}).c || '#1e1617', t: 2 }]; w.wlApply(c); } } catch (x) {} }, 30); }, true);
@@ -610,7 +611,7 @@
     return best;
   }
   // Underwrap (+$20): a thread color under the wrap only. The designer's "Blank color" becomes it; the rod's blank keeps its own color.
-  var UNDER_FEE = 20, under0 = null;
+  var UNDER_FEE = 25, under0 = null;
   function underBox(dd, iw) {
     var bc = dd.getElementById('blankC'); if (!bc || !iw || dd.getElementById('sfswUnder')) return;
     if (under0 == null) under0 = bc.value || '#101010';
@@ -640,11 +641,27 @@
     box.innerHTML = '<label style="display:flex;align-items:center;gap:10px"><span>Presets</span><select id="sfswPreset" style="min-width:240px;background:#0f141b;color:inherit;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:7px 10px;font:inherit"></select></label>';
     tb.parentNode.insertBefore(box, tb);
     var sel = box.querySelector('select');
-    sel.addEventListener('change', function () { var pr = presetsFor()[+sel.value]; if (!pr) return; var w = dw(); if (!w || !w.wlCapture) return;
-      try { var hx = threadHex(w), c = w.wlCapture(); c.stripes = pr.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; });
-        if (c.trims) { c.trims.c = hx(pr.trim); c.trims.bands = []; c.trims.ends = []; } w.wlApply(c); } catch (e) {}
-      clearTimeout(readT); readT = setTimeout(readDesign, 120); });
+    sel.addEventListener('change', function () { var pr = presetsFor()[+sel.value]; if (!pr) return; presetApply(pr); });
     presetFill();
+  }
+  // a preset keeps its colors and their ratio; on diamonds the counts are scaled so the diamonds take up as much room as the open space between them
+  async function presetApply(pr) {
+    var w = dw(); if (!w || !w.wlCapture) return; var hx = threadHex(w), sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+    var base = pr.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; }), sum = base.reduce(function (a, x) { return a + x.t; }, 0), keep = w.wlCapture(), arms = keep.arms;
+    var put = function (T, measuring) { var c = w.wlCapture(); var f = T / sum; c.stripes = base.map(function (x) { return { c: x.c, t: Math.max(1, Math.round(x.t * f)) }; });
+      if (c.trims) { c.trims.c = hx(pr.trim); c.trims.bands = []; c.trims.ends = []; } if (measuring) { c.arms = 'show'; if (c.inner) c.inner.on = false; } else { c.arms = arms; if (c.inner && keep.inner) c.inner.on = keep.inner.on; }
+      c.autoT = false; w.wlApply(c); return c; };
+    if (keep.pattern === 'diamond') { var lo = 4, hi = 120;
+      for (var k = 0; k < 7; k++) { var mid = Math.round((lo + hi) / 2), c = put(mid, true); await sleep(220); if (openShare(w, c) > 0.5) lo = mid; else hi = mid; }
+      put(Math.round((lo + hi) / 2)); } else put(sum);
+    clearTimeout(readT); readT = setTimeout(readDesign, 200);
+  }
+  function openShare(w, c) {   // how much of the wrap (between the trims) is still bare blank
+    var r = w.WL_unrolled(900, 240); if (!r) return 0.5;
+    var B = [1, 3, 5].map(function (i) { return parseInt((c.blankC || '#101010').slice(i, i + 2), 16); }), x = r.canvas.getContext('2d'), W = r.canvas.width, H = r.canvas.height;
+    var t0 = Math.round((r.trimMM || 0) / (r.lengthMM || 1) * W) + 3, d = x.getImageData(t0, 0, Math.max(1, W - 2 * t0), H).data, bl = 0, n = 0;
+    for (var i = 0; i < d.length; i += 16) { n++; if (d[i + 3] < 10 || Math.abs(d[i] - B[0]) + Math.abs(d[i + 1] - B[1]) + Math.abs(d[i + 2] - B[2]) < 18) bl++; }
+    return bl / n;
   }
   function presetFill() {   // the list for the picked wrap, starting on "Choose a preset"
     try { var sel = dz.contentDocument.getElementById('sfswPreset'); if (!sel) return;
@@ -693,7 +710,7 @@
     var pat = kind === 'cross' ? (cap.pat || 'Cross wrap') : cap.pattern === 'dragon' ? (over ? 'Chevron over dragon scales' : 'Dragon scale') : cap.pattern === 'chevron' ? 'Chevron' : 'Diamond';
     var ax = kind === 'taper' && cap.pattern === 'dragon' ? (over ? +cap.dragon.over.axes || 2 : +cap.axes || 8) : +cap.axes || 2;
     S.customDesign = { sfsw: kind, kind: kind === 'cross' ? 'Cross wrap' : 'Wrap Designer', pattern: pat, axes: ax, angle: cap.angle && kind !== 'cross' ? cap.angle + '°' : '', size: '', blank: cap.blankC || '',
-      colors: cols.map(function (c) { var uv = !!UV[String(c.hex).toLowerCase()]; return { name: name(c.hex) + (uv ? ' (Ultra-UV)' : ''), hex: c.hex, threads: c.threads, metallic: !!MET[String(c.hex).toLowerCase()], uv: uv }; }), thumb: thumb, setup: cap,
+      colors: cols.map(function (c) { var uv = !!UV[String(c.hex).toLowerCase()], tw = false; try { tw = !!(w.WL_TWIST && w.WL_TWIST.has(c.hex)); } catch (e) {} return { name: name(c.hex) + (uv ? ' (Ultra-UV)' : ''), hex: c.hex, threads: c.threads, metallic: !!MET[String(c.hex).toLowerCase()], uv: uv, twist: tw }; }), thumb: thumb, setup: cap,
       summary: (kind === 'cross' ? pat + ' cross wrap' : pat) + ' · ' + ax + ' axis' + (cap.angle && kind !== 'cross' ? ' · ' + cap.angle + '°' : '') };
     if (cols.length) { S.mainIdx = nearestIdx(cols[0].hex); S.supportIdxs = cols.slice(1).map(function (c) { return nearestIdx(c.hex); }); }
     var id = wrapIdFor(cap, kind) || S.wrapId;
@@ -992,17 +1009,21 @@
     }
   }
   function designOn() { return S.wrapMode !== 'random' && presetOf(S.wrapId) && S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign : null; }
-  var metFee = function () { var d = designOn(); if (d) return d.colors.filter(function (c) { return c.uv; }).length * 10;   // Ultra-UV (Fuji) metallics +$10, Pro-Wrap metallics included
+  var metFee = function () { var d = designOn(); if (d) return d.colors.filter(function (c) { return c.uv || c.twist; }).length * 10;   // Ultra-UV (Fuji) metallics and Metallic Twists +$10 each, Pro-Wrap metallics included
     var W = val('WRAP_COLORS') || []; return [S.mainIdx].concat(S.supportIdxs || []).reduce(function (a, i) { return a + (W[i] && W[i].group === 'uv-metallic' ? 10 : 0); }, 0); };
-  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0); };   // (the wrap length rides along here)
+  // Color filler (+$20): the designer's filler that covers the open space inside the diamonds
+  var FILL_FEE = 20;
+  function fillerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && c.arms === 'cover' && c.pattern === 'diamond'); }
+  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? FILL_FEE : 0); };   // (the wrap length rides along here)
   var _order = window.buildOrderItem;
   if (typeof _order === 'function') window.buildOrderItem = function () {
     var it = _order.apply(this, arguments), d = designOn();
     if (lenFee() && it.lines) it.lines.push({ label: 'Wrap Length', value: wrapLen() + ' in  +$' + lenFee() });
+    if (fillerOn() && it.lines) { var fn; try { fn = dw().WL_THREADS.name(designOn().setup.fillC); } catch (e) {} it.lines.push({ label: 'Color Filler', value: (fn || designOn().setup.fillC || '') + '  +$' + FILL_FEE }); }
     if (underOn() && it.lines) { var un; try { un = dw().WL_THREADS.name(S.under.c); } catch (e) {} it.lines.push({ label: 'Underwrap', value: (un || S.under.c) + '  +$' + UNDER_FEE }); }
     if (!d) return it;
-    var fee = call('supportExtraFee') || 0, extra = Math.max(0, d.colors.length - 3), mets = d.colors.filter(function (c) { return c.uv; }).length;
-    var notes = []; if (fee) notes.push('+$' + fee + ' for ' + extra + ' extra color' + (extra > 1 ? 's' : '')); if (mets) notes.push('+$' + mets * 10 + ' for ' + mets + ' Ultra-UV metallic' + (mets > 1 ? 's' : ''));
+    var fee = call('supportExtraFee') || 0, extra = Math.max(0, d.colors.length - 3), mets = d.colors.filter(function (c) { return c.uv; }).length, twists = d.colors.filter(function (c) { return c.twist; }).length;
+    var notes = []; if (fee) notes.push('+$' + fee + ' for ' + extra + ' extra color' + (extra > 1 ? 's' : '')); if (mets) notes.push('+$' + mets * 10 + ' for ' + mets + ' Ultra-UV metallic' + (mets > 1 ? 's' : '')); if (twists) notes.push('+$' + twists * 10 + ' for ' + twists + ' Metallic Twist' + (twists > 1 ? 's' : ''));
     (it.lines || []).forEach(function (l) { if (l.label === 'Colors') l.value = 'Colors (from the wrap design): ' + d.colors.map(function (c, i) { return (i ? '' : 'Main: ') + c.name; }).join(', ') + (notes.length ? '  (' + notes.join(', ') + ')' : ''); });
     (it.buildStrip || []).forEach(function (b) { if (b.label === 'Colors') { b.name = d.colors.map(function (c) { return c.name; }).join(' / ');
       b.colors = d.colors.map(function (c, i) { return { label: i ? (i === 1 ? 'Supporting' : 'Supporting ' + i) : 'Main', hex: c.hex, name: c.name }; }); } });
