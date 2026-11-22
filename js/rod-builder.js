@@ -628,7 +628,13 @@
     { name: 'Black & Silver', trim: '862 Twilight Black', stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 4], ['9860 Metallic Silver', 2], ['841 Iron Ore', 4], ['862 Twilight Black', 2]] },
     { name: 'Deep Sea & White', trim: '484 Deep Sea', stripes: [['807 White', 1], ['484 Deep Sea', 4], ['807 White', 3], ['819 Ghost Grey', 2], ['484 Deep Sea', 3]] },
     { name: 'Black & Gold', trim: '862 Twilight Black', stripes: [['9100 Metallic Yellow Gold', 1], ['862 Twilight Black', 4], ['9100 Metallic Yellow Gold', 3], ['813 Silver Shiner', 3], ['862 Twilight Black', 2]] }];
-  function presetsFor() { var w = wrapNamed(S.wrapId); return (w && CUSTOM_PRESETS[w.name]) || BASE_PRESETS; }
+  BASE_PRESETS.push({ name: 'Iron Ore & Silver', trim: '841 Iron Ore', stripes: [['807 White', 1], ['841 Iron Ore', 4], ['9860 Metallic Silver', 3], ['479 Gulfstream', 3], ['841 Iron Ore', 2]] });
+  // Preset 1-6: the wrap's own examples first (laid exactly as designed), then ours to make six (sized to the open space)
+  function presetsFor() {
+    var w = wrapNamed(S.wrapId); if (w && CUSTOM_PRESETS[w.name]) return CUSTOM_PRESETS[w.name];
+    var pr = presetOf(S.wrapId), ex = (pr && pr.recs || []).filter(function (r) { return r.stripes && !r.dragon; }).map(function (r) { return { trim: r.trim, stripes: r.stripes, exact: true }; });
+    return ex.concat(BASE_PRESETS).slice(0, 6).map(function (x, i) { return { name: 'Preset ' + (i + 1), trim: x.trim, stripes: x.stripes, exact: x.exact }; });
+  }
   function presetBox(dd) {
     var tb = dd.getElementById('threadsBox'); if (!tb || dd.getElementById('sfswPresets')) return;
     var box = dd.createElement('div'); box.id = 'sfswPresets'; box.className = 'f'; box.style.cssText = 'margin:0 0 10px';
@@ -665,7 +671,7 @@
     var base = pr.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; }), sum = base.reduce(function (a, x) { return a + x.t; }, 0), keep = clean(w.wlCapture());
     var mk = function (T, measuring) { var c = JSON.parse(JSON.stringify(keep)), f = T / sum; c.stripes = base.map(function (x) { return { c: x.c, t: Math.max(1, Math.round(x.t * f)) }; });
       if (c.trims) { c.trims.c = hx(pr.trim); c.trims.bands = []; c.trims.ends = []; } if (measuring) { c.arms = 'show'; if (c.inner) c.inner.on = false; } return c; };
-    var T = keep.pattern === 'diamond' ? await fitHalf(mk, 4, 120, tok) : sum;
+    var T = keep.pattern === 'diamond' && !pr.exact ? await fitHalf(mk, 4, 120, tok) : sum;
     if (T == null || tok !== fitTok) return;   // another preset was picked meanwhile
     w.wlApply(mk(T)); clearTimeout(readT); readT = setTimeout(readDesign, 150);
   }
