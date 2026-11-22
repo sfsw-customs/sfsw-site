@@ -739,6 +739,15 @@
   }
   function fillNote(dd) { var ab = dd.getElementById('armsBtn'); if (!ab || dd.getElementById('sfswFillNote')) return; var row = ab.closest('.seg'); if (!row) return;
     row.insertAdjacentHTML('afterend', '<small id="sfswFillNote" style="font-size:13px;color:var(--muted)">fills the open space inside the diamonds with one thread color</small>'); }
+  // between the thread colors and Color filler: what the extra colors add (4 different colors included, +$10 each after)
+  function extraNote() {
+    try { var dd = dz.contentDocument, ob = dd.getElementById('openBox'); if (!ob) return; var n = dd.getElementById('sfswExtra');
+      if (!n) { n = dd.createElement('div'); n.id = 'sfswExtra'; n.style.cssText = 'font-size:13px;color:var(--muted);margin:2px 0 10px'; ob.parentNode.insertBefore(n, ob); }
+      var total = window.SFSW_designColors ? SFSW_designColors() : null, extra = total == null ? 0 : Math.max(0, total - 4);
+      n.innerHTML = extra ? '<b style="color:#d4a73c">+$' + extra * 10 + '</b> for ' + extra + ' extra color' + (extra > 1 ? 's' : '') + ' <span>(' + total + ' different colors · 4 included · +$10 each extra)</span>' : '';
+      n.style.display = extra ? '' : 'none';
+    } catch (e) {}
+  }
   function tgPaint(inp, btn) { btn.setAttribute('aria-pressed', String(inp.checked)); btn.style.background = inp.checked ? 'var(--ink)' : 'none'; btn.style.color = inp.checked ? '#fff' : 'var(--muted)'; }
   function underOk() { var d = S.customDesign, st = d && d.setup; return S.wrapId !== 'trim-band' && !(st && st.pattern === 'dragon') && S.wrapId !== 'abalone'; }
   function underSync() {   // no Underwrap on the dragon scale wraps (they have their metallic) or the Trim Band
@@ -765,7 +774,7 @@
     var id = wrapIdFor(cap, kind) || S.wrapId;
     if (id !== S.wrapId) { S.wrapId = id; S.wrapPhotoIdx = 0; }
     S.wrapUserSelected = true;
-    call('renderWraps'); updateAll();
+    call('renderWraps'); updateAll(); extraNote();
   }
   // a preset into the designer: its pattern and axis lines, keeping the customer's colors and the wrap's size on this blank
   var applyN = 0;
