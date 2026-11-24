@@ -509,7 +509,11 @@
       { trim: '9470 Metallic Bluefin', chevTo: 'tip', stripes: [['807 White', 4], ['9300 Metallic Red', 4], ['807 White', 2], ['9470 Metallic Bluefin', 2], ['807 White', 2], ['9470 Metallic Bluefin', 2],
           ['807 White', 2], ['9470 Metallic Bluefin', 2]] },
       { trim: '862 Twilight Black', chevTo: 'tip', stripes: [['807 White', 3], ['9300 Metallic Red', 1], ['807 White', 2], ['9300 Metallic Red', 2], ['807 White', 1], ['9300 Metallic Red', 3],
-          ['862 Twilight Black', 1], ['9300 Metallic Red', 2], ['862 Twilight Black', 2], ['9300 Metallic Red', 1], ['862 Twilight Black', 3]] } ] }, 'Chevron — 16 Axis': { k: 'taper', p: 'chevron', a: 16 },
+          ['862 Twilight Black', 1], ['9300 Metallic Red', 2], ['862 Twilight Black', 2], ['9300 Metallic Red', 1], ['862 Twilight Black', 3]] } ] }, 'Chevron — 16 Axis': { k: 'taper', p: 'chevron', a: 16, recs: [   // Brett's three 16 axis examples (all point toward the tip)
+      { trim: '9600 Metallic Purple', chevTo: 'tip', stripes: [['862 Twilight Black', 3], ['9600 Metallic Purple', 1], ['862 Twilight Black', 2], ['807 White', 2], ['862 Twilight Black', 2],
+          ['9600 Metallic Purple', 3], ['862 Twilight Black', 1]] },
+      { trim: '519 Rainforest', chevTo: 'tip', stripes: [['862 Twilight Black', 3], ['519 Rainforest', 2], ['862 Twilight Black', 2], ['519 Rainforest', 3], ['862 Twilight Black', 2]] },
+      { trim: '404 Teal', chevTo: 'tip', stripes: [['404 Teal', 2], ['862 Twilight Black', 2], ['404 Teal', 2], ['862 Twilight Black', 2], ['404 Teal', 2]] } ] },
     'Diamond — 4 Axis': { k: 'taper', p: 'diamond', a: 4, recs: [   // examples 1-3, in photo order; the first stripe is the center
       { trim: '479 Gulfstream',
         stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 3], ['9860 Metallic Silver', 4], ['479 Gulfstream', 8], ['862S Metallic Twist Black/Silver', 2], ['862 Twilight Black', 3]] },
