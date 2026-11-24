@@ -1008,7 +1008,7 @@
   // Trim bands: on/off, width and thread color, written straight into the wrap design
   var tbEl;   // (set by tbBox while the steps are built, earlier in the file)
   function tbBox() { tbEl = el('div', 'cfg-section rb-tb'); tbEl.innerHTML = '<div class="rb-tb-body"></div>'; setTimeout(renderTB, 0); return tbEl; }
-  function abTrim() { return S.abTrim || (S.abTrim = { on: true, mm: 10, c: '#dabd66' }); }   // abalone's own trim bands (default 9130 Metallic Gold)
+  function abTrim() { return S.abTrim || (S.abTrim = { on: true, mm: 10, c: '#1e1617' }); }   // abalone's own trim bands (default 862 Twilight Black)
   function tbCap() { if (S.wrapId === 'abalone') return { trims: abTrim() }; var w = dw(); try { return w && w.wlCapture ? w.wlCapture() : null; } catch (e) { return null; } }
   function tbSet(fn) { if (S.wrapId === 'abalone') { fn(abTrim()); updateAll(); setTimeout(renderTB, 60); return; } var w = dw(), c = tbCap(); if (!c || !c.trims) return; fn(c.trims); try { w.wlApply(c); } catch (e) {} clearTimeout(readT); readT = setTimeout(readDesign, 200); setTimeout(renderTB, 260); }
   // the Trim Bands tab: the designer's own trim band settings, in a second designer that shows only them;
