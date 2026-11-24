@@ -430,7 +430,7 @@ const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: t
 // SFSW: if the graphics chip drops the 3D, stop drawing and let the page show its note (no retry loop that crashes it again)
 cv.addEventListener('webglcontextlost', e => { e.preventDefault(); window.__sfswLost = true; try { parent.postMessage({ sfswRod: 'lost' }, location.origin); } catch (x) {} });
 const sfswLow = (navigator.hardwareConcurrency || 4) <= 4 || (navigator.deviceMemory || 8) <= 4;   // SFSW: older / smaller computers draw at 1x
-renderer.setPixelRatio(Math.min(sfswLow ? 1 : 1.5, devicePixelRatio || 1));
+renderer.setPixelRatio(Math.min(sfswLow ? 1.5 : 2, devicePixelRatio || 1));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
 const scene = new THREE.Scene();
@@ -562,7 +562,9 @@ function sfswFill(w, r) { if (!r) return; try { const bc = (w.wlCapture().blankC
 const sfswSharpN = {};
 function sfswSharpen(k, w) { const n = sfswSharpN[k] = (sfswSharpN[k] || 0) + 1;
   setTimeout(async () => { if (n !== sfswSharpN[k]) return; const old = unrolled[k]; if (!old) return;
-    const r = w.WL_unrolled(sfswLow ? 2800 : 4096, sfswLow ? 700 : 1024); if (!r || n !== sfswSharpN[k]) return; sfswFill(w, r);
+    let ax = 2; try { ax = Math.max(2, +((w.wlCapture && w.wlCapture()) || {}).axes || 2); } catch (e) {}   // more axis lines: more pattern around the rod, so more pixels around it
+    const mx = Math.min(8192, renderer.capabilities.maxTextureSize || 4096), Hs = Math.min(sfswLow ? 2048 : mx, Math.round((sfswLow ? 700 : 1024) * Math.min(4, ax / 2)));
+    const r = w.WL_unrolled(sfswLow ? 2800 : Math.min(mx, ax >= 8 ? 6144 : 4096), Hs); if (!r || n !== sfswSharpN[k]) return; sfswFill(w, r);
     if (window.__sfswAb && window.__sfswAb[k]) await window.__sfswAb[k](r); if (n !== sfswSharpN[k] || unrolled[k] !== old) return;
     r.canvas.__sfswShiny = old.canvas.__sfswShiny;
     rod.traverse(o => { const mt = o.material, mp = mt && mt.map; if (mp && mp.image === old.canvas) { mp.image = r.canvas; mp.needsUpdate = true; } });
