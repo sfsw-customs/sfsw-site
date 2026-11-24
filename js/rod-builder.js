@@ -533,6 +533,9 @@
   var idByName = function (n) { var w = WRAPS.find(function (x) { return x.name === n; }); return w ? w.id : null; };
   var presetOf = function (id) { var w = wrapById(id); return w ? PRESET[w.name] : null; };
   var wrapSec = $('sec-rod-wraps'), colorSec = secOf('sec-wrap-color'), optList = $('rod-wrap-options');
+  if (optList) { var dwT = null; new MutationObserver(function (ms) {   // however and whenever the list gets drawn, it gets its Diamond / Chevron rows and examples
+    if (!ms.some(function (m) { return [].some.call(m.addedNodes, function (n) { return n.classList && n.classList.contains('option-item'); }); })) return;
+    clearTimeout(dwT); dwT = setTimeout(function () { try { dressWraps(); } catch (e) {} }, 0); }).observe(optList, { childList: true }); }
   var dzBox = null, dz = null, dzKind = null, dzReady = null, readT = null, lastKind = null, modeEl = null, wphoto = null;
   if (!S.under) S.under = { on: false, c: null };
   if (!S.wrapMode) S.wrapMode = S.customDesign && S.customDesign.sfsw ? 'build' : 'example';
@@ -1119,6 +1122,7 @@
     if (typeof _render === 'function') window.renderWraps = function () { var r = _render.apply(this, arguments);
       if (S.customDesign && optList) [].forEach.call(optList.querySelectorAll('.option-item'), function (o) { o.classList.toggle('selected', (o.getAttribute('onclick') || '').indexOf("'" + rowId(S.wrapId) + "'") > 0); });
       dressWraps(); return r; };
+    try { window.renderWraps(); } catch (e) {}   // the list may have been drawn before this hook was in place: draw it again through it
   }
   // each wrap gets a small photo (tap for the full photos), split into Included and Upgrades
   function wrapPhotos(w) { if (!w) return []; if (w.photo) return [w.photo]; var a = []; if (w.photoNums) return w.photoNums.map(function (i) { return '../preview/rod-wraps/' + (w.photoSlug || w.id) + '-' + i + '.png'; }); for (var i = 1; i <= (w.photoCount || 0); i++) a.push('../preview/rod-wraps/' + (w.photoSlug || w.id) + '-' + i + '.png'); return a; }
