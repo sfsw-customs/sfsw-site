@@ -589,10 +589,10 @@
   var dw = function () { try { return dz && dz.contentWindow; } catch (e) { return null; } };
   function waitFor(test, ms) { return new Promise(function (res) { var t0 = Date.now(); (function tick() { var w = dw(); try { if (w && test(w)) return res(w); } catch (e) {} if (Date.now() - t0 > (ms || 30000)) return res(null); setTimeout(tick, 120); })(); }); }
   function loadKind(kind) {
-    if (dzKind === kind && dzReady) return dzReady;
+    if (dzKind === kind && dzReady) return dzReady.then(function (w) { if (w) return w; if (dzReady && dzReady.__null) { dzReady = null; return loadKind(kind); } return w; });   // a designer that never got ready isn't kept: try again
     dzKind = kind; dz.src = BASE + (kind === 'cross' ? 'cross.html' : 'taper.html');
-    var mine = dzReady = waitFor(function (w) { return w.location.href.indexOf(kind === 'cross' ? 'cross.html' : 'taper.html') > 0 && w.wlCapture && w.wlApply && w.WL_unrolled && w.__wlRod && w.document.readyState === 'complete'; }).then(function (w) {
-      if (!w || mine !== dzReady) return w; var ld = dzBox.querySelector('.rb-dz-load'); if (ld) ld.remove();
+    var mine = dzReady = waitFor(function (w) { return w.location.href.indexOf(kind === 'cross' ? 'cross.html' : 'taper.html') > 0 && w.wlCapture && w.wlApply && w.WL_unrolled && w.__wlRod && w.document.readyState === 'complete'; }, 120000).then(function (w) {
+      if (!w) { mine.__null = true; return w; } if (mine !== dzReady) return w; var ld = dzBox.querySelector('.rb-dz-load'); if (ld) ld.remove();
       [].forEach.call(w.document.querySelectorAll('label,span,div'), function (x) { if (x.id !== 'thrSize' && !x.children.length && x.textContent.trim() === 'Thread size') x.style.display = 'none'; });   // a label left behind by the thread size row
       var ts = w.document.getElementById('thrSize'); if (ts) { ts.style.display = 'none';   // no thread size choice: we pick it
         for (var up = ts.parentElement, k = 0; up && k < 3; up = up.parentElement, k++) if (up.textContent.replace(ts.textContent, '').trim() === 'Thread size') { up.style.display = 'none'; break; } }
