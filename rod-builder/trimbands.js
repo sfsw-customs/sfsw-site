@@ -81,7 +81,7 @@
       +`<button type="button" data-x="${key}${i}" aria-label="Remove">\u00d7</button></span>`;
     host.innerHTML=!has(T)?`<div class="stripes"><button type="button" class="addbtn" data-k="on">+ Add trim bands</button></div>`
       :`<div class="tbrow"><span class="tblab">Width at each end</span>
-          <span class="stripe" style="padding:2px"><button type="button" data-mm="-1" aria-label="Narrower">\u2212</button><input type="number" id="tbmm" min="2" max="80" step="0.5" value="${T.mm||20}" aria-label="Trim band width in mm" style="width:5.5em;text-align:center"><small class="slab">mm</small><button type="button" data-mm="1" aria-label="Wider">+</button></span>
+          <span class="stripe" style="padding:2px"><button type="button" data-mm="-1" aria-label="Narrower">\u2212</button><input type="number" id="tbmm" class="sfswInch" min="0.25" max="9" step="0.25" value="${(Math.max(1,Math.round((T.mm||20)/6.35))/4).toFixed(2)}" aria-label="Trim band width in inches" style="width:5.5em;text-align:center"><small class="slab">in</small><button type="button" data-mm="1" aria-label="Wider">+</button></span>
           <span class="tblab sfswMainTrim">Main Trim Color</span><input type="color" id="tbbase" value="${T.c||BLUE}" aria-label="Trim band color">
           <button type="button" class="addbtn" data-k="off" style="margin-left:auto">No trim bands</button></div>
         <div class="tbrow"><span id="tbsum" class="tblab"></span></div>
@@ -98,9 +98,9 @@
     const ch=()=>{ sum(); changed(); };
     const redo=()=>{ ui(host,T,changed,twFn); changed(); }, g=id=>host.querySelector('#'+id);
     sum(); host._tbsum=sum;
-    const mmIn=g('tbmm'); if(mmIn){ const setMM=v=>{ T.mm=Math.min(80,Math.max(2,Math.round(v*2)/2)); mmIn.value=T.mm; ch(); };
-      mmIn.addEventListener('change',e=>setMM(parseFloat(e.target.value)||20));
-      host.querySelectorAll('[data-mm]').forEach(x=>x.onclick=()=>setMM((T.mm||20)+ +x.dataset.mm)); }
+    const mmIn=g('tbmm'); if(mmIn){ const qOf=()=>Math.max(1,Math.round((T.mm||20)/6.35)), setMM=v=>{ const q=Math.min(36,Math.max(1,Math.round(v*4))); T.mm=q*6.35; mmIn.value=(q/4).toFixed(2); ch(); };
+      mmIn.addEventListener('change',e=>setMM(parseFloat(e.target.value)||0.75));
+      host.querySelectorAll('[data-mm]').forEach(x=>x.onclick=()=>setMM(qOf()/4 + (+x.dataset.mm)*0.25)); }
     const bc=g('tbbase'); if(bc) bc.addEventListener('input',e=>{ T.c=e.target.value; ch(); });
     (mode==='center'?[['b',T.bands||[]]]:[['e',T.ends||[]]]).forEach(([key,arr])=>arr.forEach((b,i)=>{   // only the list on screen
       if(b.fade){ g('tb'+key+'f'+i).onchange=e=>{ b.t=+e.target.value; ch(); }; return; }
@@ -158,7 +158,7 @@
     :b.saw?{c:String(b.c||'#f0ede5'),t:1,saw:SAW.some(s=>s[0]===b.saw)&&(!center||/^(mid|ends)$/.test(b.saw))?b.saw:'mid',c2:String(b.c2||'#1a1a1a')}:{c:String(b.c||'#f0ede5'),t:Math.max(1,+b.t||1)};
   function clean(o){ if(!o||typeof o!=='object'||Array.isArray(o)) return {on:false,mm:20,c:BLUE,bands:[],ends:[]};
     const bands=(Array.isArray(o.bands)?o.bands:[]).filter(b=>b&&typeof b==='object'); while(bands[0]&&bands[0].fade) bands.shift();
-    return { on:o.on!==false, mm:Math.min(80,Math.max(2,+o.mm||20)), c:/^#[0-9a-f]{6}$/i.test(o.c||'')?o.c:BLUE, bands:bands.map((b,i)=>cb(b,i===0)),
+    return { on:o.on!==false, mm:Math.min(228.6,Math.max(2,+o.mm||20)), c:/^#[0-9a-f]{6}$/i.test(o.c||'')?o.c:BLUE, bands:bands.map((b,i)=>cb(b,i===0)),
       ends:(Array.isArray(o.ends)?o.ends:[]).filter(b=>b&&typeof b==='object').map(b=>cb(b,false)) }; }
   window.WLTrim={has,width,at,ui,steps,clean,refresh,counts,blank:()=>({on:true,mm:20,c:BLUE,bands:[],ends:[]})};   // new designs start with a plain blue trim band
 })();

@@ -985,6 +985,9 @@
   function LEN_RATE() { return isCrossWrap() ? 20 : 10; }
   var MIN_LEN = 3;
   function wrapLen() { return Math.max(MIN_LEN, +S.wrapLen || BASE_LEN()); }
+  // the Trim Band wrap: its band length in quarter inches; 2 in included, +$10 each extra inch ($2.50 a quarter inch)
+  function tbLenQ() { var d = S.customDesign, t = d && d.setup && d.setup.trims; return Math.max(1, Math.round(((t && +t.mm) || 50.8) / 6.35)); }
+  function tbLenFee() { return S.wrapId === 'trim-band' ? Math.max(0, tbLenQ() - 8) * 2.5 : 0; }
   function lenFee() { return CFG.wrap && S.wrapId !== 'trim-band' ? Math.max(0, wrapLen() - BASE_LEN()) * LEN_RATE() : 0; }   // the Trim Band wrap has no length to pick
   function setWrapLen(n) {
     S.wrapLen = Math.max(MIN_LEN, Math.min(BASE_LEN() + 12, n)); renderLen();
@@ -1241,10 +1244,11 @@
   var INNER_FEE = 50;
   function innerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && ((c.inner && c.inner.on && (c.inner.stripes || []).length) || (d.sfsw === 'cross' && c.between && c.between.on))); }
   function fillerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && c.arms === 'cover' && (c.pattern === 'diamond' || d.sfsw === 'cross')); }
-  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? FILL_FEE : 0) + (innerOn() ? INNER_FEE : 0) + dragonFee(); };   // (the wrap length rides along here)
+  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? FILL_FEE : 0) + (innerOn() ? INNER_FEE : 0) + dragonFee() + tbLenFee(); };   // (the wrap length rides along here)
   var _order = window.buildOrderItem;
   if (typeof _order === 'function') window.buildOrderItem = function () {
     var it = _order.apply(this, arguments), d = designOn();
+    if (it.lines && S.wrapId === 'trim-band') it.lines.push({ label: 'Trim Band Length', value: (tbLenQ() / 4) + ' in' + (tbLenFee() ? '  +$' + tbLenFee().toFixed(2).replace(/\.00$/, '') : '') });
     if (CFG.wrap && it.lines && S.wrapId !== 'trim-band' && wrapLen() !== BASE_LEN()) it.lines.push({ label: 'Wrap Length', value: wrapLen() + ' in' + (lenFee() ? '  +$' + lenFee() : ' (shorter than standard)') });
     if (dragonFee() && it.lines) it.lines.push({ label: 'Dragon Scale', value: designOn().setup.axes + ' axis  +$' + dragonFee() });
     if (innerOn() && it.lines) { var ic = designOn().setup.inner || { pattern: 'cross' }; it.lines.push({ label: 'Pattern Between', value: (ic.pattern === 'cross' ? 'Cross' : ic.pattern === 'chevron' ? 'Chevron' : 'Diamond') + (ic.fillOn && ic.pattern !== 'chevron' ? ' with filler over it' : '') + '  +$' + INNER_FEE + ' (up to 2 new colors included)' }); }

@@ -7,8 +7,10 @@
 .sfswd body{background:#0a0e12}
 /* SFSW: the Trim Band wrap's designer is only its trim band settings */
 html.sfswd.sfswtb section.panel:not(:has(#trimWrap)),html.sfswd.sfswtb .view.scroll{display:none!important}
-html.sfswd.sfswtb section.panel :is(div,label,button,p,small,span,select,input,h2,h3):not(:has(#trimWrap)):not(#trimWrap):not(#trimWrap *):not(.tbTitle):not(.tbNote){display:none!important}
+html.sfswd.sfswtb section.panel :is(div,label,button,p,small,span,select,input,h2,h3):not(:has(#trimWrap)):not(:has(.tbLen)):not(#trimWrap):not(#trimWrap *):not(.tbTitle):not(.tbNote):not(.tbLen):not(.tbLen *){display:none!important}
 html.sfswd.sfswtb .f:has(>#trimWrap){display:block!important}
+html.sfswd.sfswtb .tbLen{display:flex!important;flex-wrap:wrap;align-items:center;gap:8px;font-weight:600;margin-bottom:10px}
+html.sfswd.sfswtb .tbLen::after{content:"2 in included · +$10 each extra inch";flex-basis:100%;font-size:12.5px;font-weight:400;opacity:.75}
 /* SFSW: a roomier color picker */
 .sfswd .cpop{width:min(560px,calc(100vw - 24px))!important;max-height:none!important}
 .sfswd .cpop .clist{max-height:min(560px,70vh)!important}
