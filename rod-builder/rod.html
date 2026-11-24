@@ -1938,8 +1938,7 @@ resize(); render(); requestAnimationFrame(loop);
 const sfswBoot = (async () => {
   if (crossOnly()) for (const k of ['main', 'split']) { src[k] = 'cross'; await crossFrame(k); }
   await fitTaper('main', 16, 4); if (!window.frameElement) { await readWrap('main'); build(); }   /* SFSW: inside the site the page sends the wrap and the first update builds the rod */
-  window.__sfswLater = (async () => {   // SFSW: the rod is ready once the main wrap is; the split and guide wraps follow (inside the site: after the first update)
-  if (window.frameElement) await new Promise(r => { window.__sfswFirstDone = r; setTimeout(r, 15000); });
+  window.__sfswLater = (async () => {   // SFSW: the rod is ready once the main wrap is; the split and guide wraps follow
   await fitTaper('split', 6, L.split ? Math.max(0.5, Math.round((L.split[1] - L.split[0] - 0.25) * 4) / 4) : 2.5); await readWrap('split');
   await readGuideWraps(); build();
   })();
