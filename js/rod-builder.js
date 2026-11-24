@@ -501,10 +501,15 @@
           ['484 Deep Sea', 3], ['807 White', 3], ['484 Deep Sea', 4], ['807 White', 2], ['9120 Metallic Goldenrod', 2], ['484 Deep Sea', 3], ['9120 Metallic Goldenrod', 3], ['484 Deep Sea', 2], ['9120 Metallic Goldenrod', 4]] },   // example 1; example 2:
       { trim: '484 Deep Sea', stripes: [['807 White', 5], ['862 Twilight Black', 2], ['807 White', 4], ['862 Twilight Black', 3], ['807 White', 3], ['862 Twilight Black', 4], ['807 White', 2], ['862 Twilight Black', 5],
           ['9860 Metallic Silver', 2], ['862 Twilight Black', 4], ['9860 Metallic Silver', 3], ['862 Twilight Black', 3], ['9860 Metallic Silver', 4], ['862 Twilight Black', 2], ['9860 Metallic Silver', 5]] },   // example 3 has a chevron pattern between, against the main pattern, pointing to the butt
-      { trim: '862 Twilight Black', stripes: [['807 White', 3], ['850 Storm Cloud', 1], ['807 White', 2], ['850 Storm Cloud', 2], ['807 White', 1], ['850 Storm Cloud', 3], ['862 Twilight Black', 1], ['850 Storm Cloud', 2],
+      { trim: '862 Twilight Black', chevTo: 'butt', stripes: [['807 White', 3], ['850 Storm Cloud', 1], ['807 White', 2], ['850 Storm Cloud', 2], ['807 White', 1], ['850 Storm Cloud', 3], ['862 Twilight Black', 1], ['850 Storm Cloud', 2],
           ['862 Twilight Black', 2], ['850 Storm Cloud', 1], ['862 Twilight Black', 3], ['325 Fire Red', 8], ['862 Twilight Black', 3]],
         inner: { pattern: 'chevron', place: 'against', chevTo: 'butt', stripes: [['325 Fire Red', 2], ['807 White', 4], ['325 Fire Red', 2], ['807 White', 4], ['325 Fire Red', 4]] } }] },
-    'Chevron — 8 Axis': { k: 'taper', p: 'chevron', a: 8 }, 'Chevron — 16 Axis': { k: 'taper', p: 'chevron', a: 16 },
+    'Chevron — 8 Axis': { k: 'taper', p: 'chevron', a: 8, recs: [   // Brett's three 8 axis examples (all point toward the tip)
+      { trim: '9470 Metallic Bluefin', chevTo: 'tip', stripes: [['807 White', 4], ['9470 Metallic Bluefin', 4], ['807 White', 4], ['9470 Metallic Bluefin', 4]] },
+      { trim: '9470 Metallic Bluefin', chevTo: 'tip', stripes: [['807 White', 4], ['9300 Metallic Red', 4], ['807 White', 2], ['9470 Metallic Bluefin', 2], ['807 White', 2], ['9470 Metallic Bluefin', 2],
+          ['807 White', 2], ['9470 Metallic Bluefin', 2]] },
+      { trim: '862 Twilight Black', chevTo: 'tip', stripes: [['807 White', 3], ['9300 Metallic Red', 1], ['807 White', 2], ['9300 Metallic Red', 2], ['807 White', 1], ['9300 Metallic Red', 3],
+          ['862 Twilight Black', 1], ['9300 Metallic Red', 2], ['862 Twilight Black', 2], ['9300 Metallic Red', 1], ['862 Twilight Black', 3]] } ] }, 'Chevron — 16 Axis': { k: 'taper', p: 'chevron', a: 16 },
     'Diamond — 4 Axis': { k: 'taper', p: 'diamond', a: 4, recs: [   // examples 1-3, in photo order; the first stripe is the center
       { trim: '479 Gulfstream',
         stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 3], ['9860 Metallic Silver', 4], ['479 Gulfstream', 8], ['862S Metallic Twist Black/Silver', 2], ['862 Twilight Black', 3]] },
@@ -674,7 +679,7 @@
     { name: 'Black-Out Silver', open: 0.4, trim: '862 Twilight Black', stripes: [['862 Twilight Black', 3], ['9860 Metallic Silver', 1], ['862 Twilight Black', 1], ['9860 Metallic Silver', 1], ['841 Iron Ore', 4], ['9860 Metallic Silver', 2]] }];
   // Preset 1-5 (not the photo examples, so no one gets a wrap that's already on someone else's rod); the customizer opens on Preset 1
   // every Chevron Wrap (2 / 4 / 8 / 16 axis): Preset 1-3 are the Chevron 4 Axis examples (counts scaled to the axis count; example 3 has its chevron pattern between)
-  (function () { var ex = (PRESET['Chevron — 4 Axis'] || {}).recs || [], L = [0, 1, 2].map(function (i) { var r = ex[i]; return r && r.stripes ? { trim: r.trim, stripes: r.stripes, inner: r.inner, exact: true, ax: 4 } : BASE_PRESETS[i]; }).concat([BASE_PRESETS[3], BASE_PRESETS[4]]);
+  (function () { var ex = (PRESET['Chevron — 4 Axis'] || {}).recs || [], L = [0, 1, 2].map(function (i) { var r = ex[i]; return r && r.stripes ? { trim: r.trim, stripes: r.stripes, inner: r.inner, chevTo: r.chevTo, exact: true, ax: 4 } : BASE_PRESETS[i]; }).concat([BASE_PRESETS[3], BASE_PRESETS[4]]);
     ['Chevron — 2 Axis', 'Chevron — 4 Axis', 'Chevron — 8 Axis', 'Chevron — 16 Axis'].forEach(function (n) { CUSTOM_PRESETS[n] = L; }); })();
   function presetsFor() {
     var w = wrapNamed(S.wrapId), L = (w && CUSTOM_PRESETS[w.name]) || BASE_PRESETS;
@@ -722,7 +727,7 @@
     if (fresh && pw) { keep.pattern = pw.p; keep.axes = pw.a; keep.nOverride = null; keep.chevTo = null; keep.center = { on: false, c: base[0].c, t: 1 };
       keep.inner = { on: false, pattern: 'diamond', place: 'center', auto: true, stripes: [] }; keep.unit = 'in'; keep.len = wrapLen().toFixed(2); }
     var mk = function (T, measuring) { var c = JSON.parse(JSON.stringify(keep)), f = T / sum; c.stripes = base.map(function (x, i) { return { c: x.c, t: Math.max(i ? 1 : 2, Math.round(x.t * f)) }; });   /* the center starts with at least 2 threads */
-      if (c.trims) { c.trims.c = hx(pr.trim); c.trims.bands = []; c.trims.ends = []; } if (measuring) { c.arms = 'show'; if (c.inner) c.inner.on = false; }
+      if (c.trims) { c.trims.c = hx(pr.trim); c.trims.bands = []; c.trims.ends = []; } if (c.pattern === 'chevron') c.chevTo = pr.chevTo || null;   /* the preset's chevron direction */ if (measuring) { c.arms = 'show'; if (c.inner) c.inner.on = false; }
       else if (pr.inner) { c.inner = recInner(pr, hx); c.inner.stripes = c.inner.stripes.map(function (x) { return { c: x.c, t: Math.max(1, Math.round(x.t * f)) }; }); }   // the preset's own pattern between
       return c; };
     var axK = pr.ax ? pr.ax / (+keep.axes || pr.ax) : 1;   // a preset made for another axis count: scale its counts
