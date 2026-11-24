@@ -534,8 +534,8 @@
   var presetOf = function (id) { var w = wrapById(id); return w ? PRESET[w.name] : null; };
   var wrapSec = $('sec-rod-wraps'), colorSec = secOf('sec-wrap-color'), optList = $('rod-wrap-options');
   if (optList) { var dwT = null; new MutationObserver(function (ms) {   // however and whenever the list gets drawn, it gets its Diamond / Chevron rows and examples
-    if (!ms.some(function (m) { return [].some.call(m.addedNodes, function (n) { return n.classList && n.classList.contains('option-item'); }); })) return;
-    clearTimeout(dwT); dwT = setTimeout(function () { try { dressWraps(); } catch (e) {} }, 0); }).observe(optList, { childList: true }); }
+    var it = optList.querySelector('.option-item'); if (!it || it.__rbd) return;   // only a freshly drawn list (our own moves inside it don't count)
+    clearTimeout(dwT); dwT = setTimeout(function () { var f = optList.querySelector('.option-item'); if (!f || f.__rbd) return; [].forEach.call(optList.querySelectorAll('.option-item'), function (o) { o.__rbd = true; }); try { dressWraps(); } catch (e) {} }, 0); }).observe(optList, { childList: true }); }
   var dzBox = null, dz = null, dzKind = null, dzReady = null, readT = null, lastKind = null, modeEl = null, wphoto = null;
   if (!S.under) S.under = { on: false, c: null };
   if (!S.wrapMode) S.wrapMode = S.customDesign && S.customDesign.sfsw ? 'build' : 'example';
@@ -1140,7 +1140,7 @@
     });
   }
   function dressWraps() {
-    if (!optList) return; var upg = false;
+    if (!optList) return; [].forEach.call(optList.querySelectorAll('.option-item'), function (o) { o.__rbd = true; }); var upg = false;
     [].forEach.call(optList.querySelectorAll('.option-item'), function (o) {
       var m = (o.getAttribute('onclick') || '').match(/pickWrap\('([^']+)'\)/); if (!m) return; var w = wrapById(m[1]); if (!w) return;
       // one list (no Included / Upgrades headings); wraps that cost extra show their price
