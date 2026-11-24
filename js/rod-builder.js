@@ -496,7 +496,9 @@
           ['807 White', 2], ['862 Twilight Black', 5], ['9860 Metallic Silver', 2]] } ] },
     'Dragon Scale': { k: 'taper', p: 'dragon', a: 8, recs: [   // photo 1: metallic green scales, photo 3: metallic silver
       { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9520 Metallic Green', line: '862 Twilight Black' } },
-      { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9860 Metallic Silver', line: '862 Twilight Black' } } ] }, 'Chevron — 4 Axis': { k: 'taper', p: 'chevron', a: 4, recs: [{}, {},   // examples 1-2 are photos only; example 3 has a chevron pattern between, against the main pattern, pointing to the butt
+      { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9860 Metallic Silver', line: '862 Twilight Black' } } ] }, 'Chevron — 4 Axis': { k: 'taper', p: 'chevron', a: 4, recs: [{},   // example 1 is a photo only; example 2:
+      { trim: '484 Deep Sea', stripes: [['807 White', 5], ['862 Twilight Black', 2], ['807 White', 4], ['862 Twilight Black', 3], ['807 White', 3], ['862 Twilight Black', 4], ['807 White', 2], ['862 Twilight Black', 5],
+          ['9860 Metallic Silver', 2], ['862 Twilight Black', 4], ['9860 Metallic Silver', 3], ['862 Twilight Black', 3], ['9860 Metallic Silver', 4], ['862 Twilight Black', 2], ['9860 Metallic Silver', 5]] },   // example 3 has a chevron pattern between, against the main pattern, pointing to the butt
       { trim: '862 Twilight Black', stripes: [['807 White', 3], ['850 Storm Cloud', 1], ['807 White', 2], ['850 Storm Cloud', 2], ['807 White', 1], ['850 Storm Cloud', 3], ['862 Twilight Black', 1], ['850 Storm Cloud', 2],
           ['862 Twilight Black', 2], ['850 Storm Cloud', 1], ['862 Twilight Black', 3], ['325 Fire Red', 8], ['862 Twilight Black', 3]],
         inner: { pattern: 'chevron', place: 'against', chevTo: 'butt', stripes: [['325 Fire Red', 2], ['807 White', 4], ['325 Fire Red', 2], ['807 White', 4], ['325 Fire Red', 4]] } }] },
