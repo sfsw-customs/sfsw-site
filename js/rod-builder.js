@@ -478,7 +478,13 @@
     'Trim Band': { k: 'taper', p: 'trim', a: 2, recs: [   // a trim band on its own, with a design in the middle
       { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], tb: { mm: 50.8, c: '862 Twilight Black',
         bands: [['9100 Metallic Yellow Gold', 4], ['862 Twilight Black', 2], ['807 White', 1, 'mid', '862 Twilight Black'], ['807 White', 2], ['', 3, 'fade'], ['862 Twilight Black', 6], ['9100 Metallic Yellow Gold', 4], ['9100 Metallic Yellow Gold', 1, 'mid', '862 Twilight Black']],
-        ends: [['9100 Metallic Yellow Gold', 6]] } } ] },
+        ends: [['9100 Metallic Yellow Gold', 6]] } },
+      { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], tb: { mm: 50.8, c: '862 Twilight Black',   // example 2: goldenrod, black and white
+        bands: [['9120 Metallic Goldenrod', 2], ['9120 Metallic Goldenrod', 1, 'ends', '862 Twilight Black'], ['862 Twilight Black', 2], ['9120 Metallic Goldenrod', 3], ['', 4, 'fade'], ['807 White', 2]],
+        ends: [['862 Twilight Black', 1, 'mid', '9120 Metallic Goldenrod'], ['9120 Metallic Goldenrod', 3], ['862 Twilight Black', 1, 'mid', '9120 Metallic Goldenrod'], ['862 Twilight Black', 7], ['9120 Metallic Goldenrod', 3], ['862 Twilight Black', 7], ['862 Twilight Black', 1, 'mid', '9120 Metallic Goldenrod'], ['9120 Metallic Goldenrod', 3], ['807 White', 1, 'mid', '9120 Metallic Goldenrod']] } },
+      { trim: '404 Teal', stripes: [['404 Teal', 1]], tb: { mm: 50.8, c: '404 Teal',   // example 3: teal and neon pink
+        bands: [['361 Neon Pink', 2], ['862 Twilight Black', 2], ['361 Neon Pink', 1, 'mid', '862 Twilight Black'], ['361 Neon Pink', 3], ['404 Teal', 1, 'mid', '361 Neon Pink'], ['404 Teal', 4]],
+        ends: [['361 Neon Pink', 3], ['', 4, 'fade'], ['404 Teal', 7], ['404 Teal', 1, 'mid', '361 Neon Pink'], ['361 Neon Pink', 3], ['862 Twilight Black', 2], ['361 Neon Pink', 2], ['862 Twilight Black', 2], ['361 Neon Pink', 3], ['404 Teal', 1, 'mid', '361 Neon Pink'], ['404 Teal', 7], ['', 4, 'fade'], ['361 Neon Pink', 3]] } } ] },
     'Diamond — 2 Axis': { k: 'taper', p: 'diamond', a: 2, recs: [   // one design per photo, in photo order; the first stripe is the center
       { trim: '479 Gulfstream',
         stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 4], ['9860 Metallic Silver', 4], ['841 Iron Ore', 4], ['479 Gulfstream', 6], ['862S Metallic Twist Black/Silver', 2],
@@ -494,9 +500,10 @@
           ['9860 Metallic Silver', 2], ['484 Deep Sea', 5]] },
       { trim: '484 Deep Sea', chevTo: 'butt', stripes: [['807 White', 5], ['862 Twilight Black', 2], ['807 White', 4], ['862 Twilight Black', 3], ['807 White', 3], ['862 Twilight Black', 4],
           ['807 White', 2], ['862 Twilight Black', 5], ['9860 Metallic Silver', 2]] } ] },
-    'Dragon Scale': { k: 'taper', p: 'dragon', a: 8, recs: [   // photo 1: metallic green scales, photo 3: metallic silver
-      { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9520 Metallic Green', line: '862 Twilight Black' } },
-      { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9860 Metallic Silver', line: '862 Twilight Black' } } ] }, 'Chevron — 4 Axis': { k: 'taper', p: 'chevron', a: 4, recs: [
+    'Dragon Scale': { k: 'taper', p: 'dragon', a: 8, recs: [   // photo 1: metallic green scales, photo 3: metallic silver at 30°, photo 2: metallic blue; the trim bands start in the scales' metallic
+      { trim: '9520 Metallic Green', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9520 Metallic Green', line: '862 Twilight Black' } },
+      { trim: '9860 Metallic Silver', angle: '30', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9860 Metallic Silver', line: '862 Twilight Black' } },
+      { trim: '9460 Metallic Deep Blue', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9460 Metallic Deep Blue', line: '862 Twilight Black' } } ] }, 'Chevron — 4 Axis': { k: 'taper', p: 'chevron', a: 4, recs: [
       { trim: '484 Deep Sea', stripes: [['807 White', 2], ['9860 Metallic Silver', 4], ['807 White', 3], ['9860 Metallic Silver', 3], ['807 White', 4], ['9860 Metallic Silver', 2], ['484 Deep Sea', 2], ['807 White', 4],
           ['484 Deep Sea', 3], ['807 White', 3], ['484 Deep Sea', 4], ['807 White', 2], ['9120 Metallic Goldenrod', 2], ['484 Deep Sea', 3], ['9120 Metallic Goldenrod', 3], ['484 Deep Sea', 2], ['9120 Metallic Goldenrod', 4]] },   // example 1; example 2:
       { trim: '484 Deep Sea', stripes: [['807 White', 5], ['862 Twilight Black', 2], ['807 White', 4], ['862 Twilight Black', 3], ['807 White', 3], ['862 Twilight Black', 4], ['807 White', 2], ['862 Twilight Black', 5],
@@ -1085,7 +1092,7 @@
     if (WS && !restore) { cap.unit = 'in'; cap.len = (+wrapLen()).toFixed(2); cap.dB = (+WS.dB).toFixed(1); cap.dT = (+WS.dT).toFixed(1); cap.dM = ((+WS.dB + +WS.dT) / 2).toFixed(1); }
     if (!restore && dzKind === 'cross') { noCustom(w); cap.reps = null; }   // repetitions: auto, to fill the wrap
     if (!restore && REC && REC.stripes) { var hx0 = threadHex(w);   // the wrap's own design goes in first, so nothing else ever shows
-      cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } if (REC.tb) cap.trims = tbOf(REC.tb, hx0); if (REC.dragon && cap.dragon) { cap.dragon.metal = hx0(REC.dragon.metal); cap.dragon.line = hx0(REC.dragon.line); } var ri0 = recInner(REC, hx0); if (ri0) cap.inner = ri0; else if (cap.inner) cap.inner.on = false; if (REC.chevTo) cap.chevTo = REC.chevTo; }
+      cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } if (REC.tb) cap.trims = tbOf(REC.tb, hx0); if (REC.dragon && cap.dragon) { cap.dragon.metal = hx0(REC.dragon.metal); cap.dragon.line = hx0(REC.dragon.line); } var ri0 = recInner(REC, hx0); if (ri0) cap.inner = ri0; else if (cap.inner) cap.inner.on = false; if (REC.chevTo) cap.chevTo = REC.chevTo; if (REC.angle || REC.dragon) cap.angle = REC.angle || '45'; }
     if (!restore && pr.p !== 'trim' && cap.trims && !(REC && REC.tb)) { cap.trims.mm = 20; cap.trims.bands = []; cap.trims.ends = []; }
     else if (!restore && !prev && dzKind === 'taper') { cap.stripes = JSON.parse(JSON.stringify(START.stripes)); if (cap.trims) { cap.trims.c = START.trim; cap.trims.bands = []; cap.trims.ends = []; } }
     if (!restore) snap(w, cap);
@@ -1121,6 +1128,7 @@
         if (R.dragon && c2.dragon) { c2.dragon.metal = hx(R.dragon.metal); c2.dragon.line = hx(R.dragon.line); }
         var ri = recInner(R, hx); if (ri) c2.inner = ri; else if (c2.inner) c2.inner.on = false;
         if (R.chevTo) c2.chevTo = R.chevTo;   // which way the chevrons point
+        if (R.angle || R.dragon) c2.angle = R.angle || '45';   // an example's thread angle (dragon scale examples go back to 45 unless set)
       } else if (dzKind === 'cross' || switched || first) { (c2.stripes || []).forEach(function (x, i) { x.c = cols[i % cols.length]; }); if (c2.trims) { c2.trims.c = cols[0]; c2.trims.bands = []; c2.trims.ends = []; } }
       if (pr.p !== 'trim' && c2.trims && !(R && R.tb)) { c2.trims.mm = 20; c2.trims.bands = []; c2.trims.ends = []; }   // the Trim Band's wide band doesn't carry over
       if (pr.p === 'dragon' && S.dragonAx) { c2.axes = S.dragonAx; if (S.dragonAx === 32) c2.angle = '45'; }   // the dragon scale axes they picked stay
