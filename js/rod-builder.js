@@ -489,7 +489,11 @@
           ['819 Ghost Grey', 6], ['807 White', 2]] },
       { trim: '862 Twilight Black',
         stripes: [['9100 Metallic Yellow Gold', 1], ['862 Twilight Black', 4], ['9100 Metallic Yellow Gold', 3], ['813 Silver Shiner', 6], ['862 Twilight Black', 6],
-          ['9100 Metallic Yellow Gold', 6], ['819 Ghost Grey', 2], ['862 Twilight Black', 2], ['9100 Metallic Yellow Gold', 2]] } ] }, 'Chevron — 2 Axis': { k: 'taper', p: 'chevron', a: 2 },
+          ['9100 Metallic Yellow Gold', 6], ['819 Ghost Grey', 2], ['862 Twilight Black', 2], ['9100 Metallic Yellow Gold', 2]] } ] }, 'Chevron — 2 Axis': { k: 'taper', p: 'chevron', a: 2, recs: [   // example 1 points to the tip, example 2 to the butt
+      { trim: '484 Deep Sea', chevTo: 'tip', stripes: [['9860 Metallic Silver', 5], ['484 Deep Sea', 2], ['9860 Metallic Silver', 4], ['484 Deep Sea', 3], ['9860 Metallic Silver', 3], ['479 Gulfstream', 4],
+          ['9860 Metallic Silver', 2], ['484 Deep Sea', 5]] },
+      { trim: '484 Deep Sea', chevTo: 'butt', stripes: [['807 White', 5], ['862 Twilight Black', 2], ['807 White', 4], ['862 Twilight Black', 3], ['807 White', 3], ['862 Twilight Black', 4],
+          ['807 White', 2], ['862 Twilight Black', 5], ['9860 Metallic Silver', 2]] } ] },
     'Dragon Scale': { k: 'taper', p: 'dragon', a: 8, recs: [   // photo 1: metallic green scales, photo 3: metallic silver
       { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9520 Metallic Green', line: '862 Twilight Black' } },
       { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9860 Metallic Silver', line: '862 Twilight Black' } } ] }, 'Chevron — 4 Axis': { k: 'taper', p: 'chevron', a: 4, recs: [{}, {},   // examples 1-2 are photos only; example 3 has a chevron pattern between, against the main pattern, pointing to the butt
@@ -1061,12 +1065,12 @@
     if (WS && !restore) { cap.unit = 'in'; cap.len = (+wrapLen()).toFixed(2); cap.dB = (+WS.dB).toFixed(1); cap.dT = (+WS.dT).toFixed(1); cap.dM = ((+WS.dB + +WS.dT) / 2).toFixed(1); }
     if (!restore && dzKind === 'cross') { noCustom(w); cap.reps = null; }   // repetitions: auto, to fill the wrap
     if (!restore && REC && REC.stripes) { var hx0 = threadHex(w);   // the wrap's own design goes in first, so nothing else ever shows
-      cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } if (REC.tb) cap.trims = tbOf(REC.tb, hx0); if (REC.dragon && cap.dragon) { cap.dragon.metal = hx0(REC.dragon.metal); cap.dragon.line = hx0(REC.dragon.line); } var ri0 = recInner(REC, hx0); if (ri0) cap.inner = ri0; else if (cap.inner) cap.inner.on = false; }
+      cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } if (REC.tb) cap.trims = tbOf(REC.tb, hx0); if (REC.dragon && cap.dragon) { cap.dragon.metal = hx0(REC.dragon.metal); cap.dragon.line = hx0(REC.dragon.line); } var ri0 = recInner(REC, hx0); if (ri0) cap.inner = ri0; else if (cap.inner) cap.inner.on = false; if (REC.chevTo) cap.chevTo = REC.chevTo; }
     if (!restore && pr.p !== 'trim' && cap.trims && !(REC && REC.tb)) { cap.trims.mm = 20; cap.trims.bands = []; cap.trims.ends = []; }
     else if (!restore && !prev && dzKind === 'taper') { cap.stripes = JSON.parse(JSON.stringify(START.stripes)); if (cap.trims) { cap.trims.c = START.trim; cap.trims.bands = []; cap.trims.ends = []; } }
     if (!restore) snap(w, cap);
     var same = !restore && !switched && !first && REC && pr.k === 'taper' && cap.pattern === pr.p && +cap.axes === +pr.a && pr.p !== 'dragon';   // same wrap, another example: nothing else to set up
-    if (same) { cap.nOverride = null; cap.chevTo = null; if (cap.inner && !REC.inner) cap.inner.on = false; }
+    if (same) { cap.nOverride = null; cap.chevTo = (REC && REC.chevTo) || null; if (cap.inner && !REC.inner) cap.inner.on = false; }
     try { w.wlApply(cap); } catch (e) {}
     lastKind = dzKind;
     if (same) { clearTimeout(readT); readT = setTimeout(readDesign, 20); return; }
@@ -1096,6 +1100,7 @@
         if (R.tb) c2.trims = tbOf(R.tb, hx);
         if (R.dragon && c2.dragon) { c2.dragon.metal = hx(R.dragon.metal); c2.dragon.line = hx(R.dragon.line); }
         var ri = recInner(R, hx); if (ri) c2.inner = ri; else if (c2.inner) c2.inner.on = false;
+        if (R.chevTo) c2.chevTo = R.chevTo;   // which way the chevrons point
       } else if (dzKind === 'cross' || switched || first) { (c2.stripes || []).forEach(function (x, i) { x.c = cols[i % cols.length]; }); if (c2.trims) { c2.trims.c = cols[0]; c2.trims.bands = []; c2.trims.ends = []; } }
       if (pr.p !== 'trim' && c2.trims && !(R && R.tb)) { c2.trims.mm = 20; c2.trims.bands = []; c2.trims.ends = []; }   // the Trim Band's wide band doesn't carry over
       if (pr.p === 'dragon' && S.dragonAx) { c2.axes = S.dragonAx; if (S.dragonAx === 32) c2.angle = '45'; }   // the dragon scale axes they picked stay
