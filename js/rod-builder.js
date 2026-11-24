@@ -542,7 +542,14 @@
       { trim: '479 Gulfstream', stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 1], ['479 Gulfstream', 2], ['862S Metallic Twist Black/Silver', 1], ['862 Twilight Black', 1]] },
       { trim: '9470 Metallic Bluefin', stripes: [['807 White', 1], ['9470 Metallic Bluefin', 1], ['9870 Metallic Steel Grey', 2], ['807 White', 1], ['9470 Metallic Bluefin', 1]] },
       { trim: '862 Twilight Black', stripes: [['9100 Metallic Yellow Gold', 1], ['862 Twilight Black', 1], ['9860 Metallic Silver', 1], ['479 Gulfstream', 2], ['862 Twilight Black', 1]] } ] },
-    '2 Axis Wrap Over Dragon Scales': { k: 'taper', p: 'dragon', a: 8, over: true },
+    '2 Axis Wrap Over Dragon Scales': { k: 'taper', p: 'dragon', a: 8, over: true, recs: [   // sax / angle: the scales; over: the diamond wrap on top
+      { trim: '479 Gulfstream', sax: 16, angle: '45', dragon: { metal: '9870 Metallic Steel Grey', line: '862 Twilight Black', over: { on: true, pattern: 'diamond', axes: 2, angle: 60 } },
+        stripes: [['9120 Metallic Goldenrod', 6], ['862 Twilight Black', 2], ['479 Gulfstream', 5], ['862 Twilight Black', 2], ['850 Storm Cloud', 5], ['807 White', 3], ['325 Fire Red', 5],
+          ['807 White', 3], ['862 Twilight Black', 2], ['9120 Metallic Goldenrod', 5], ['862 Twilight Black', 2]] },
+      { trim: '9860 Metallic Silver', sax: 8, angle: '30', dragon: { metal: '9860 Metallic Silver', line: '862 Twilight Black', over: { on: true, pattern: 'diamond', axes: 2, angle: 45 } },
+        stripes: [['Light Blue', 6], ['850 Storm Cloud', 5], ['807 White', 1], ['9470 Metallic Bluefin', 5], ['Light Blue', 5], ['850 Storm Cloud', 4], ['807 White', 1], ['9470 Metallic Bluefin', 5], ['807 White', 1]] },
+      { trim: '9120 Metallic Goldenrod', sax: 8, angle: '45', dragon: { metal: '9120 Metallic Goldenrod', line: '862 Twilight Black', over: { on: true, pattern: 'diamond', axes: 2, angle: 45 } },
+        stripes: [['807 White', 10], ['9120 Metallic Goldenrod', 3], ['862 Twilight Black', 5], ['9120 Metallic Goldenrod', 3], ['807 White', 5], ['9120 Metallic Goldenrod', 3], ['862 Twilight Black', 4]] } ] },
     'Snowflake Wrap': { k: 'cross', pat: 'Snowflake', a: 2 }, '2 Axis Cross Wrap': { k: 'cross', a: 2, other: true, recs: [{}, { pat: 'Snowflake' }, {}] }, '4 Axis Cross Wrap': { k: 'cross', a: 4, other: true }
   };
   var WRAPS = val('ROD_WRAPS') || [];
@@ -922,7 +929,7 @@
       summary: (kind === 'cross' ? pat + ' cross wrap' : pat) + ' · ' + ax + ' axis' + (cap.angle && kind !== 'cross' ? ' · ' + cap.angle + '°' : '') };
     if (cols.length) { S.mainIdx = nearestIdx(cols[0].hex); S.supportIdxs = cols.slice(1).map(function (c) { return nearestIdx(c.hex); }); }
     var id = wrapIdFor(cap, kind) || S.wrapId;
-    if (id !== S.wrapId) { S.wrapId = id; S.wrapPhotoIdx = 0; }
+    if (id !== S.wrapId && !(dzHold && Date.now() - dzHold < 10000)) { S.wrapId = id; S.wrapPhotoIdx = 0; }
     S.wrapUserSelected = true;
     call('renderWraps'); updateAll(); extraNote();
   }
@@ -933,7 +940,7 @@
     return { on: true, mm: T.mm, c: hx(T.c), bands: T.bands.map(it), ends: (T.ends || []).map(it) }; }
   function threadHex(w) { var m = {}; try { w.WL_THREADS.BRANDS.sfsw.groups.forEach(function (g) { g[1].forEach(function (x) { m[x[0]] = x[1]; }); }); } catch (e) {}
     return function (n) { return m[n] || '#1e1617'; }; }
-  var recPick = {};   // which photo design each wrap is on
+  var recPick = {}, dzHold = 0;   // which photo design each wrap is on
   function recOf(pr, id) { var r = pr && pr.recs ? pr.recs[Math.min(recPick[id] || 0, pr.recs.length - 1)] : null; return r && (r.stripes || r.pat) ? r : null; }   // a photo-only example has no recipe
   function recInner(R, hx) { var I = R && R.inner; if (!I) return null;   // an example's pattern between
     return { on: true, pattern: I.pattern || 'diamond', place: I.place || 'center', chevTo: I.chevTo || null, auto: false, touched: true, stripes: I.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; }), fillOn: false, fill: [] }; }
@@ -1078,7 +1085,7 @@
   }
   async function toDesigner(id, restore, prevCols) {
     dzBusy = true; clearTimeout(busyT); busyT = setTimeout(function () { dzBusy = false; }, 6000);   // (safety: never hold the rod for long)
-    if (!dz) return; var n = ++applyN;
+    if (!dz) return; var n = ++applyN; dzHold = Date.now();   // while the designer switches (pattern, then axis lines), a read in between doesn't re-pick the wrap
     var pr = presetOf(id);
     dzBox.style.display = pr ? '' : 'none';
     if (!pr) return;
@@ -1094,7 +1101,7 @@
     if (WS && !restore) { cap.unit = 'in'; cap.len = (+wrapLen()).toFixed(2); cap.dB = (+WS.dB).toFixed(1); cap.dT = (+WS.dT).toFixed(1); cap.dM = ((+WS.dB + +WS.dT) / 2).toFixed(1); }
     if (!restore && dzKind === 'cross') { noCustom(w); cap.reps = null; }   // repetitions: auto, to fill the wrap
     if (!restore && REC && REC.stripes) { var hx0 = threadHex(w);   // the wrap's own design goes in first, so nothing else ever shows
-      cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } if (REC.tb) cap.trims = tbOf(REC.tb, hx0); if (REC.dragon && cap.dragon) { cap.dragon.metal = hx0(REC.dragon.metal); cap.dragon.line = hx0(REC.dragon.line); } var ri0 = recInner(REC, hx0); if (ri0) cap.inner = ri0; else if (cap.inner) cap.inner.on = false; if (REC.chevTo) cap.chevTo = REC.chevTo; if (REC.angle || REC.dragon) cap.angle = REC.angle || '45'; }
+      cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } if (REC.tb) cap.trims = tbOf(REC.tb, hx0); if (REC.dragon && cap.dragon) { cap.dragon.metal = hx0(REC.dragon.metal); cap.dragon.line = hx0(REC.dragon.line); if (REC.dragon.over) cap.dragon.over = Object.assign({}, cap.dragon.over, REC.dragon.over); } if (REC.sax) cap.axes = REC.sax; var ri0 = recInner(REC, hx0); if (ri0) cap.inner = ri0; else if (cap.inner) cap.inner.on = false; if (REC.chevTo) cap.chevTo = REC.chevTo; if (REC.angle || REC.dragon) cap.angle = REC.angle || '45'; }
     if (!restore && pr.p !== 'trim' && cap.trims && !(REC && REC.tb)) { cap.trims.mm = 20; cap.trims.bands = []; cap.trims.ends = []; }
     else if (!restore && !prev && dzKind === 'taper') { cap.stripes = JSON.parse(JSON.stringify(START.stripes)); if (cap.trims) { cap.trims.c = START.trim; cap.trims.bands = []; cap.trims.ends = []; } }
     if (!restore) snap(w, cap);
@@ -1102,7 +1109,7 @@
     if (same) { cap.nOverride = null; cap.chevTo = (REC && REC.chevTo) || null; if (cap.inner && !REC.inner) cap.inner.on = false; }
     try { w.wlApply(cap); } catch (e) {}
     lastKind = dzKind;
-    if (same) { clearTimeout(readT); readT = setTimeout(readDesign, 20); return; }
+    if (same) { clearTimeout(readT); readT = setTimeout(function () { dzHold = 0; readDesign(); }, 20); return; }
     if (!restore) {
       await new Promise(function (r) { setTimeout(r, 80); });
       if (pr.k === 'taper') {
@@ -1127,16 +1134,18 @@
         c2.stripes = R.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; });
         if (c2.trims) { c2.trims.c = hx(R.trim || R.stripes[0][0]); c2.trims.bands = []; c2.trims.ends = []; }
         if (R.tb) c2.trims = tbOf(R.tb, hx);
-        if (R.dragon && c2.dragon) { c2.dragon.metal = hx(R.dragon.metal); c2.dragon.line = hx(R.dragon.line); }
+        if (R.dragon && c2.dragon) { c2.dragon.metal = hx(R.dragon.metal); c2.dragon.line = hx(R.dragon.line); if (R.dragon.over) c2.dragon.over = Object.assign({}, c2.dragon.over, R.dragon.over); }
         var ri = recInner(R, hx); if (ri) c2.inner = ri; else if (c2.inner) c2.inner.on = false;
         if (R.chevTo) c2.chevTo = R.chevTo;   // which way the chevrons point
         if (R.angle || R.dragon) c2.angle = R.angle || '45';   // an example's thread angle (dragon scale examples go back to 45 unless set)
       } else if (dzKind === 'cross' || switched || first) { (c2.stripes || []).forEach(function (x, i) { x.c = cols[i % cols.length]; }); if (c2.trims) { c2.trims.c = cols[0]; c2.trims.bands = []; c2.trims.ends = []; } }
       if (pr.p !== 'trim' && c2.trims && !(R && R.tb)) { c2.trims.mm = 20; c2.trims.bands = []; c2.trims.ends = []; }   // the Trim Band's wide band doesn't carry over
-      if (pr.p === 'dragon' && S.dragonAx) { c2.axes = S.dragonAx; if (S.dragonAx === 32) c2.angle = '45'; }   // the dragon scale axes they picked stay
+      if (pr.k === 'taper' && pr.p !== 'trim') { c2.pattern = pr.p; c2.axes = pr.a; if (pr.p === 'dragon' && c2.dragon) { c2.dragon.over = Object.assign({}, c2.dragon.over, (R && R.dragon && R.dragon.over) || {}, { on: !!pr.over }); } }   // each wrap starts on its own pattern and axis count (a hidden axis button can miss the press)
+      if (pr.p === 'dragon' && S.dragonAx && !pr.over) { c2.axes = S.dragonAx; if (S.dragonAx === 32) c2.angle = '45'; }
+      if (R && R.sax) c2.axes = R.sax;   // the scales' own axis lines under a wrap over them   // the dragon scale axes they picked stay
       try { w.wlApply(snap(w, c2)); } catch (e) {}
     }
-    clearTimeout(readT); readT = setTimeout(readDesign, 120);
+    clearTimeout(readT); readT = setTimeout(function () { if (n === applyN) dzHold = 0; readDesign(); }, 120);
   }
   if (dz) {
     var _pick = window.pickWrap, _render = window.renderWraps;

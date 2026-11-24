@@ -276,7 +276,7 @@ body.trimOnly .dsinl.tbLen{display:flex!important}
     <div style="height:10px"></div>
     <div class="dsrow" style="display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center">
     <div class="mirrow" style="margin:0;align-self:center"><span class="mirlbl">Pattern</span><div class="seg" data-mirror="pattern"></div><span class="mirlbl">Axis lines</span><div class="seg" data-mirror="axes"></div></div>
-      <div class="f dsinl">Thread angle
+      <div class="f dsinl"><span id="angleLbl">Thread angle</span>
         <div class="seg" id="angle"><button type="button" data-v="45" aria-pressed="true">Square 45°</button><button type="button" data-v="30" aria-pressed="false">30°</button><button type="button" data-v="60" aria-pressed="false">60°</button></div>
         <div class="hint" id="angleHint">Measured from the blank's length. Diamonds are as long as they are wide.</div>
       </div>
@@ -306,10 +306,12 @@ body.trimOnly .dsinl.tbLen{display:flex!important}
           <span id="ovCtl" hidden style="display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center">
             <span style="display:flex;align-items:center;gap:8px;font-size:17px;font-weight:700;color:var(--fg)">Wrap <span class="seg" id="ovPat"><button type="button" data-v="diamond" aria-pressed="false">Diamond</button><button type="button" data-v="chevron" aria-pressed="true">Chevron</button></span></span>
             <span style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)">Its axis lines <span class="seg" id="ovAx"><button type="button" data-v="2" aria-pressed="true">2</button><button type="button" data-v="4" aria-pressed="false">4</button><button type="button" data-v="8" aria-pressed="false">8</button></span></span>
+            <span style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)">Its thread angle <span class="seg" id="ovAng"><button type="button" data-v="30" aria-pressed="false">30°</button><button type="button" data-v="45" aria-pressed="true">45°</button><button type="button" data-v="60" aria-pressed="false">60°</button></span></span>
           </span></div>
         <div class="hint" id="ovHint" hidden style="margin-top:6px">The marks, the count and the how-to below are for the wrap over the scales. The scales go on first, on their own axis lines.</div></div>
       <div class="f" id="threadsBox">Thread colors, in the order you lay them <small>(number of threads of each color)</small>
         <div class="stripes" id="stripes"></div>
+        <div class="innernote warn" id="fitNote" hidden style="margin-top:6px"></div>
         <div><button type="button" class="copy" id="resetThreads" style="margin-top:4px">Reset threads to original</button></div>
         <label class="chk" style="display:none"><input id="fill" type="checkbox"> Repeat colors to fill the pattern</label>
       </div>
@@ -376,23 +378,26 @@ function lineNames(n){
   return {A,B};
 }
 
-state.over=state.over||{on:false,pattern:'chevron',axes:2};
+state.over=state.over||{on:false,pattern:'chevron',axes:2,angle:45}; if(![30,45,60].includes(state.over.angle)) state.over.angle=45;
 const overOn=()=>state.pattern==='dragon' && !!state.over.on;
 const patEff=()=>overOn()?state.over.pattern:state.pattern;
 const axesEff=()=>overOn()?state.over.axes:state.axes;
+const angEff=()=>overOn()?state.over.angle:state.angle;   // a wrap over dragon scales has its own thread angle
 function run(){
   const L = parseFloat($('len').value) * (state.unit==='in'?25.4:1);
   $('lenConv').textContent = L>0 ? (state.unit==='in' ? '= '+L.toFixed(1)+' mm' : '= '+(L/25.4).toFixed(2)+' in') : '';
   const dB=parseFloat($('dB').value), dT=parseFloat($('dT').value);
   let dM=parseFloat($('dM').value);
-  const n=axesEff(), tanT=Math.tan(state.angle*Math.PI/180);
+  const n=axesEff(), tanT=Math.tan(angEff()*Math.PI/180);
   const chev = patEff()==='chevron', dragon = state.pattern==='dragon' && !overOn();   // dragon scales sit on the diamond layout; a wrap over them drives the layout
   if(dragon) state.nOverride=null;   // plain dragon scales always fill the wrap (no count to set)
   const word = chev?'chevron':dragon?'scale':'diamond', Word = chev?'Chevron':dragon?'Scale':'Diamond';
   const per = 2; // mark steps per diamond / chevron (same layout for both)
-  $('angleHint').textContent = state.angle===45 ? `Measured from the blank's length. Square: ${word}s are as long as they are wide.`
-    : state.angle===30 ? `Measured from the blank's length. Long, narrow ${word}s (about 1.7× longer than wide).`
-    : `Measured from the blank's length. Short, wide ${word}s (about 0.58× as long as wide).`;
+  { const w2=state.pattern==='dragon'?'scale':word;   // this control is the scales' angle when a wrap goes over them
+  $('angleLbl').textContent = overOn() ? 'Scales thread angle' : 'Thread angle';
+  $('angleHint').textContent = state.angle===45 ? `Measured from the blank's length. Square: ${w2}s are as long as they are wide.`
+    : state.angle===30 ? `Measured from the blank's length. Long, narrow ${w2}s (about 1.7× longer than wide).`
+    : `Measured from the blank's length. Short, wide ${w2}s (about 0.58× as long as wide).`; }
   $('modeHint').textContent = state.mode==='fit' ? `Stretches or compresses slightly so the wrap ends on a whole ${word}.` : 'Keeps the true angle. Any leftover length at the end is shown.';
   $('fitLabel').textContent = Word+'s down the wrap';
 
@@ -404,9 +409,9 @@ function run(){
   const D = state.from==='butt' ? Dbutt : x=>Dbutt(L-x);
 
   // one step = distance a thread travels lengthwise while crossing one axis-line gap
-  const half = (z,s,nn=n) => { let h=Math.PI*D(z)/nn/tanT*s; for(let i=0;i<25;i++) h=Math.PI*D(z+h/2)/nn/tanT*s; return h; };
-  const walk = (s, maxSteps, nn=n) => { const p=[0]; let z=0;
-    for(let i=0;i<maxSteps;i++){ const h=half(z,s,nn); if(maxSteps===Infinity && z+h>L+1e-6) break; z+=h; p.push(z); if(p.length>4000) break; }
+  const half = (z,s,nn=n,tt=tanT) => { let h=Math.PI*D(z)/nn/tt*s; for(let i=0;i<25;i++) h=Math.PI*D(z+h/2)/nn/tt*s; return h; };
+  const walk = (s, maxSteps, nn=n, tt=tanT) => { const p=[0]; let z=0;
+    for(let i=0;i<maxSteps;i++){ const h=half(z,s,nn,tt); if(maxSteps===Infinity && z+h>L+1e-6) break; z+=h; p.push(z); if(p.length>4000) break; }
     return p; };
 
   let pos, scale=1, N, leftover=0;
@@ -480,7 +485,7 @@ function run(){
   });
   hook('#lists .copy[data-g]','g','exact'); hook('#zones .copy[data-r]','r','round');
 
-  const dpos = overOn() ? walk(1, Infinity, state.axes) : null;   // the dragon scale lattice under a wrap, on its own axis lines
+  const dpos = overOn() ? walk(1, Infinity, state.axes, Math.tan(state.angle*Math.PI/180)) : null;   // the dragon scale lattice under a wrap, on its own axis lines
   last={pos,L,n,chev,D,dpos,nd:state.axes}; render();
 }
 
@@ -650,7 +655,7 @@ function render(){
   if(trimOnly && state.trims.on===false){ state.trims.on=true; WLTrim.ui($('trimWrap'),state.trims,()=>render(),()=>state.tsize); }
   const chevSel = !trimOnly && patEff()==='chevron', dragonSel = state.pattern==='dragon', ovOn=overOn();
   $('dragonBox').hidden=!dragonSel; $('threadsBox').hidden=dragonSel && !ovOn; $('ovCtl').hidden=!ovOn; $('fitBox').hidden=dragonSel && !ovOn; $('ovHint').hidden=!ovOn; $('ovOn').checked=ovOn;
-  [...$('ovPat').children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===state.over.pattern))); [...$('ovAx').children].forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v===+state.over.axes))); if($('innerWrap')) $('innerWrap').hidden=dragonSel;
+  [...$('ovPat').children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===state.over.pattern))); [...$('ovAx').children].forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v===+state.over.axes))); [...$('ovAng').children].forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v===+state.over.angle))); if($('innerWrap')) $('innerWrap').hidden=dragonSel;
   [...$('axes').children].forEach(b=>{ b.hidden = dragonSel && +b.dataset.v<8; });
   $('openBox').hidden = chevSel || dragonSel; $('chevDirRow').hidden = !chevSel;
   [...$('chevDir').children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===chevToward()));
@@ -663,13 +668,15 @@ function render(){
   document.querySelectorAll('.endA').forEach(e=>e.textContent=(state.from==='butt'?'Butt':'Tip')+' · 0 mm');
   const Lt=Math.max(L,pos[pos.length-1]);   // drawn length: the wrap, or further if the marks run past it
   document.querySelectorAll('.endB').forEach(e=>e.textContent=(Lt>L+0.05?'Pattern end · '+Lt.toFixed(1):'Tip · '+L.toFixed(1))+' mm');
-  const sinT=Math.sin(state.angle*Math.PI/180);
+  const sinT=Math.sin(angEff()*Math.PI/180);
   const chevMode = patEff()==='chevron';
   if(state.autoT && stripes.length){
     // fill half of each band's room with thread so the patterns match the open space; split evenly between colors
     const tw1=state.tsize/sinT, st=(pos[1]-pos[0]);
     const per = chevMode ? Math.max(1,Math.round(st/tw1/stripes.length)) : Math.max(1,Math.round((st/tw1/2-(state.center.on?state.center.t/2:0.5))/stripes.length));
-    stripes.forEach((s2,i)=>{ s2.t=(i===0&&!chevMode&&!state.center.on)?2*per+1:per; const el=$('st'+i); if(el && document.activeElement!==el) el.value=s2.t; });
+    // tight room (32 axis lines, thin blanks): a single center thread instead of 3 when 3 would run the bands into each other at the tip
+    const stTip=pos[pos.length-1]-pos[pos.length-2], one=!chevMode && !state.center.on && per===1 && (1.5+(stripes.length-1))*2*tw1>2*stTip;
+    stripes.forEach((s2,i)=>{ s2.t=(i===0&&!chevMode&&!state.center.on)?(one?1:2*per+1):per; const el=$('st'+i); if(el && document.activeElement!==el) el.value=s2.t; });
   }
   // diamond bands are measured from the line both ways, so one thread takes twice as much in that measure;
   // each color's count is the threads on EACH side, and the first color also has the center thread
@@ -680,6 +687,11 @@ function render(){
   const cols=S.map(s=>hex(s.c)).concat(state.inner.on?state.inner.stripes.map(s=>hex(s.c)):[]), cum=[0];
   S.forEach((s,i)=>cum.push(cum[cum.length-1]+(i===0&&!chevMode&&!useC?s.t/2:s.t)*tw*TF(s.c)));   // diamond: the center color's count is its total threads (1 = one thread on the mark)   // metallic threads at their own size
   const c0=useC?cum[1]:0, bandW=cum[cum.length-1], fill=$('fill').checked;
+  { // more thread than room: the bands from neighboring axis lines run into each other (shows first toward the tip, where the gaps are smallest)
+    let stMin=Infinity; for(let i=1;i<pos.length;i++) stMin=Math.min(stMin,pos[i]-pos[i-1]);
+    const fn=$('fitNote'), over=!fill && stripes.length && patEff()!=='dragon' && patEff()!=='trim' && bandW>2*stMin+1e-6;
+    if(fn){ fn.hidden=!over; if(over) fn.textContent=`Too many threads for ${n} axis lines on this blank: toward the tip the colors run into each other and the last ones get covered. That's fine to wrap as is, or use fewer colors or threads, a smaller thread size, or fewer axis lines.`; }
+  }
   const blank=hex($('blankC').value);
   // Pattern between: the open space runs F mark-units wide, centered c units past each main line (x = dir*(u-v) or dir*(u+v)).
   const IN=state.inner, inOn=IN.on && !fill && IN.stripes.length>0;
@@ -905,7 +917,7 @@ function drawHow({at,tw,mod,dir,chev,n,st0,C0,cols,blank,cum,inner}){
   if(inner){ const IN=state.inner, ch2=inner.chev2, offMM=chev?((inner.cIn-1)*st0).toFixed(1):'';
     const where=`<b>${inner.whereIn}</b> (the in-between marks are halfway between the main patterns, the ones the main patterns skip)`;
     const two=!ch2&&IN.stripes[0].t%2===0;   // diamond: the first color's count is its total threads at the center
-    panels.push({limD:Infinity,inLimD:(ch2?1:(two?1:0.5))*state.tsize/Math.sin(state.angle*Math.PI/180)*(ch2?1:2),U0:inner.cIn,color:IN.stripes[0].c,marks:true,
+    panels.push({limD:Infinity,inLimD:(ch2?1:(two?1:0.5))*state.tsize/Math.sin(angEff()*Math.PI/180)*(ch2?1:2),U0:inner.cIn,color:IN.stripes[0].c,marks:true,
       title:`${panels.length+1}. Start the pattern between`,text:`With the main pattern done, put a mark ${where}. ${two?'Lay two threads of this color each way, side by side, with that mark between them.':'Lay one thread of this color each way so they cross right on that mark.'}`});
     let acc=0; IN.stripes.forEach((s2,k)=>{ acc=inner.cum2[k+1];
       const each=!ch2&&k===0?Math.floor((s2.t-(two?2:1))/2):s2.t, add=ch2?(k===0?s2.t-1:s2.t):each; if(add===0) return;
@@ -1149,7 +1161,7 @@ document.querySelectorAll('.howbox').forEach(d=>d.addEventListener('toggle',()=>
     $('len').value=o.len; $('dB').value=o.dB; $('dM').value=o.dM; $('dT').value=o.dT;
     state.pattern=o.pattern; press('pattern',o.pattern);
     if(o.dragon){ $('dgLine').value=o.dragon.line||'#1a1a1a'; $('dgMetal').value=o.dragon.metal||'#b9bec4'; }
-    state.over=(o.dragon&&o.dragon.over)?{on:!!o.dragon.over.on,pattern:o.dragon.over.pattern==='diamond'?'diamond':'chevron',axes:[2,4,8].includes(+o.dragon.over.axes)?+o.dragon.over.axes:2}:{on:false,pattern:'chevron',axes:2};
+    state.over=(o.dragon&&o.dragon.over)?{on:!!o.dragon.over.on,pattern:o.dragon.over.pattern==='diamond'?'diamond':'chevron',axes:[2,4,8].includes(+o.dragon.over.axes)?+o.dragon.over.axes:2,angle:[30,45,60].includes(+o.dragon.over.angle)?+o.dragon.over.angle:45}:{on:false,pattern:'chevron',axes:2,angle:45};
     state.axes=+o.axes; press('axes',o.axes);
     state.angle=+o.angle; press('angle',o.angle);
     state.mode='exact'; press('mode','exact');   // the layout choice is gone: always the true angle
@@ -1332,6 +1344,7 @@ document.querySelectorAll('[data-mirror]').forEach(m=>{ const src=$(m.dataset.mi
   $('ovOn').addEventListener('change',e=>{ state.over.on=e.target.checked; state.nOverride=null; run(); });
   $('ovPat').addEventListener('click',e=>{ const b=e.target.closest('button[data-v]'); if(!b) return; state.over.pattern=b.dataset.v; state.nOverride=null; run(); });
   $('ovAx').addEventListener('click',e=>{ const b=e.target.closest('button[data-v]'); if(!b) return; state.over.axes=+b.dataset.v; state.nOverride=null; run(); });
+  $('ovAng').addEventListener('click',e=>{ const b=e.target.closest('button[data-v]'); if(!b) return; state.over.angle=+b.dataset.v; state.nOverride=null; run(); });
 })();
 </script>
 <!-- WL-WRAP-PIN: the wrap picture stays at the top of the screen while you scroll through the Designer -->
