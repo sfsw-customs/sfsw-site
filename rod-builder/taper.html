@@ -838,7 +838,12 @@ function render(){
 // The rod builder asks for the wrap laid flat: across = along the wrap from its start, down = once around the rod.
 // Bare blank comes back see-through so the rod's own blank shows.
 window.WL_unrolled=function(W,H){ const r=window.__wlRod; if(!r) return null;
-  const TWS=(px,py,c,fr,k,t,u,vv,stp)=>{ if(!window.WL_TWIST) return r.shade(c,fr,k); const zz=za+(px+0.5)/W*(zb-za), Cc=Math.PI*(r.D?r.D(Math.max(0,zz)):10);
+  const MSET=new Set([...(window.SFSW_METALLIC||[])].map(h=>{ h=String(h).replace('#',''); return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16)).join(','); }));
+  const TWS=(px,py,c,fr,k,t,u,vv,stp)=>{ const col=TWS0(px,py,c,fr,k,t,u,vv,stp); if(!c||!MSET.has(c.join(','))) return col;
+    const hh=Math.sin(px*12.9898+py*78.233)*43758.5453, g=hh-Math.floor(hh), ridge=Math.sin(Math.PI*Math.min(1,Math.max(0,fr))), lum=(c[0]+c[1]+c[2])/765;
+    const k2=(0.34+0.78*ridge)*(0.8+0.4*g), glint=Math.pow(ridge,8)*0.5+(g>0.955?0.75:0), tint=lum>0.6?0.6:0.95;
+    return [0,1,2].map(i=>Math.max(0,Math.min(255,c[i]*tint*k2*(i===2?1.06:1)+(c[i]*0.45+255*0.55)*glint))); };
+  const TWS0=(px,py,c,fr,k,t,u,vv,stp)=>{ if(!window.WL_TWIST) return r.shade(c,fr,k); const zz=za+(px+0.5)/W*(zb-za), Cc=Math.PI*(r.D?r.D(Math.max(0,zz)):10);
     const a=t&&t[2]?0.5*(u+t[2]*vv)*Math.hypot(stp,Cc/r.n):(py+0.5)/H*Cc; return r.shade(WL_TWIST.rgb(c,a,fr,t&&t[3]||0),fr,k); };
   const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d'), im=x.createImageData(W,H), d=im.data, end=r.pos[r.steps];
   // with a trim band the wrap runs from the outside of one trim band to the outside of the other
