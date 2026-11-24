@@ -979,7 +979,7 @@ function paint(cv,cssW,cssH,dpr,fn){
   const ctx=cv.getContext('2d'); const im=ctx.createImageData(W,H); fn(W,H,im.data); ctx.putImageData(im,0,0);
 }
 let rT, rW=innerWidth; window.addEventListener('resize',()=>{ if(innerWidth===rW) return; rW=innerWidth; clearTimeout(rT);rT=setTimeout(render,150);});
-const runNow=run; let runRq=0;
+const runNow=run; let runRq=0; window.WL_runNow=()=>{ cancelAnimationFrame(runRq); runNow(); };
 run=function(){ cancelAnimationFrame(runRq); runRq=requestAnimationFrame(runNow); };
 runNow();
 

@@ -1960,7 +1960,7 @@ const sfswBoot = (async () => {
       src[k] = spec.kind === 'cross' ? 'cross' : 'taper'; if (src[k] === 'cross') await crossFrame(k);
       const w = await whenReady(fk(k), w => w.WL_unrolled && w.__wlRod); w.__wlFitted = true;
       try { w.wlApply(clone(spec.full)); } catch (e) { console.warn('design', k, e); }
-      await wait(40); await readWrap(k); return true;
+      try { if (w.WL_runNow) w.WL_runNow(); } catch (e) {} await wait(20); await readWrap(k); return true;
     }
     if (src[k] !== 'taper') src[k] = 'taper';
     const w = await taperReady(k);
@@ -1979,7 +1979,7 @@ const sfswBoot = (async () => {
     try { w.wlApply(o); } catch (e) { console.warn('wrap', k, e); }
     const ab = window.__sfswAb || (window.__sfswAb = {}), mm = o.trims && o.trims.on ? +o.trims.mm : 0;   // every re-read of this wrap paints the shell again
     ab[k] = spec.abalone ? (rr => paintAbalone(rr, spec.abalone.img, mm).catch(e => console.warn('abalone', e))) : spec.veil ? (rr => paintVeil(rr, spec.veil.colors || [], mm, spec.veil.name || '')) : null;
-    await wait(40); await readWrap(k);
+    try { if (w.WL_runNow) w.WL_runNow(); } catch (e) {} await wait(20); await readWrap(k);
     return true;
   }
   // SFSW: abalone shell laid between the trim bands (the photo, mirrored tile to tile so there are no seams)

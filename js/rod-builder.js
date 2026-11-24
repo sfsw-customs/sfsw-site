@@ -313,12 +313,12 @@
   var rod = null, lastView = null, lastSent = '', dzBusy = false, lastMain = null, busyT = null;
   var stepAt = 0;
   // "Loading" over the page until the 3D rod, its first wrap and the wrap designer are all ready (at most 25 s, and never on a device without 3D)
-  var loadEl = el('div', 'rb-load', '<div class="rb-load-in"><div class="rb-load-sp"></div><b>Loading the Rod Builder…</b><span>Setting up your 3D rod</span></div>');
-  document.body.appendChild(loadEl); document.documentElement.classList.add('rb-loading');
+  var loadEl = document.getElementById('rb-load0') || el('div', 'rb-load', '<div class="rb-load-in"><div class="rb-load-sp"></div><b>Loading the Rod Builder…</b><span>Setting up your 3D rod</span></div>');
+  window.__rbLoadOwned = true; if (!loadEl.parentNode) document.body.appendChild(loadEl); document.documentElement.classList.add('rb-loading');
   var loadAt = Date.now(), loadT = setInterval(function () {
     var fw = null; try { fw = frame && frame.contentWindow; } catch (e) {}
     var ready = !frame.isConnected || (rod && fw && fw.__sfswDone >= 1 && !fw.__sfswHoldMain && S.customDesign && S.customDesign.sfsw && dw() && dw().wlCapture);
-    if (ready || Date.now() - loadAt > 25000) { clearInterval(loadT); loadEl.classList.add('rb-load-out'); document.documentElement.classList.remove('rb-loading'); setTimeout(function () { loadEl.remove(); }, 450); }
+    if (ready || Date.now() - loadAt > 25000) { clearInterval(loadT); loadEl.classList.add('rb-load-out'); document.documentElement.classList.remove('rb-loading', 'rb-loading0'); setTimeout(function () { loadEl.remove(); }, 450); }
   }, 150);
   function view(v, step) { if (!v || (v === lastView && !step)) return; lastView = v; if (step) stepAt = Date.now(); if (rod) rod.view(v, !!step); }
   var poll = setInterval(function () {
@@ -536,6 +536,7 @@
   if (optList) { var dwT = null; new MutationObserver(function (ms) {   // however and whenever the list gets drawn, it gets its Diamond / Chevron rows and examples
     var it = optList.querySelector('.option-item'); if (!it || it.__rbd) return;   // only a freshly drawn list (our own moves inside it don't count)
     clearTimeout(dwT); dwT = setTimeout(function () { var f = optList.querySelector('.option-item'); if (!f || f.__rbd) return; [].forEach.call(optList.querySelectorAll('.option-item'), function (o) { o.__rbd = true; }); try { dressWraps(); } catch (e) {} }, 0); }).observe(optList, { childList: true }); }
+  setTimeout(function () { if (optList && optList.querySelector('.option-item')) try { dressWraps(); } catch (e) {} }, 0);   // the list the page drew before this script ran
   var dzBox = null, dz = null, dzKind = null, dzReady = null, readT = null, lastKind = null, modeEl = null, wphoto = null;
   if (!S.under) S.under = { on: false, c: null };
   if (!S.wrapMode) S.wrapMode = S.customDesign && S.customDesign.sfsw ? 'build' : 'example';

@@ -245,6 +245,10 @@
   window.SFSW_NO_PHOTOS = true; document.documentElement.classList.add('rb-boot'); setTimeout(function () { document.documentElement.classList.remove('rb-boot'); }, 6000);</script>
 </head>
 <body>
+<!-- Loading screen, shown from the first paint until the Rod Builder is ready (the builder takes it away; it lifts on its own after 30 s if the builder never starts) -->
+<div id="rb-load0" class="rb-load" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#0d1117;transition:opacity .4s"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;color:#e6e8eb;font-family:Barlow,Arial,sans-serif;text-align:center"><div style="width:44px;height:44px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:#d4a73c;animation:rbspin0 .8s linear infinite;margin-bottom:6px"></div><b style="font-size:20px;letter-spacing:.02em">Loading the Rod Builder…</b><span style="font-size:14px;color:#8a94a3">Setting up your 3D rod</span></div></div>
+<style>@keyframes rbspin0{to{transform:rotate(360deg)}}html.rb-loading0{overflow:hidden}</style>
+<script>document.documentElement.classList.add('rb-loading0'); setTimeout(function () { var l = document.getElementById('rb-load0'); if (l && !window.__rbLoadOwned) { l.remove(); document.documentElement.classList.remove('rb-loading0'); } }, 30000);</script>
 <div id="nav-mount"></div>
 
 <div class="page-hero">
