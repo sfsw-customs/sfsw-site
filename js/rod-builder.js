@@ -70,7 +70,7 @@
     '.rb-no3d{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;font-size:14px;line-height:1.5;color:var(--c-muted)}.rb-no3d b{color:var(--c-text);font-weight:600}',
     '.rb-flash{animation:rbflash 1.2s ease}',
     '.rb-on #rod-wrap-options{display:flex;flex-direction:column;gap:6px}',
-    '.rb-on #rod-wrap-options .option-item-body{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 14px}.rb-on #rod-wrap-options .option-item-name{min-width:200px}.rb-on #rod-wrap-options .rb-exs{margin-top:0}',
+    '.rb-on #rod-wrap-options .option-item-body{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 14px}.rb-on #rod-wrap-options .option-item-name{min-width:200px}.rb-on #rod-wrap-options .rb-exs{margin-top:0}.rb-on #rod-wrap-options .rb-exs:has(.rb-fax){flex-basis:100%}',
     '.rb-on #rod-wrap-options .design-tile{display:none!important}',
     '.rb-on #rod-wrap-options .option-item{margin:0}',
     '.rb-on #rod-wrap-options > div:not(.option-item){grid-column:1/-1;margin:0!important}',
@@ -89,6 +89,7 @@
     '.rb-rs i{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}.rb-rs small{display:block;font:600 9.5px var(--font-cond);letter-spacing:.12em;text-transform:uppercase;color:var(--c-muted)}',
     '.rb-rs.on{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.25)}.rb-rs b{margin-left:4px;color:var(--c-muted);font-weight:400;padding:0 2px}.rb-rs b:hover{color:#fff}',
     '.rb-rs.add{padding:8px 14px;border-style:dashed;color:var(--c-muted)}.rb-rs.add small{display:inline;color:var(--c-gold)}.rb-rs-tip{font-size:12px;color:var(--c-muted);margin-left:auto}',
+    '.rb-exs .rb-len.rb-len-ab{display:inline-flex;margin:0 0 0 auto!important;padding:4px 10px;gap:8px}.rb-len-ab .rb-len-l{flex:0 1 auto;font-size:13px}.rb-len-ab .rb-len-fee{display:none}' +
     '.rb-len{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-len-l{flex:1;font-size:14px}.rb-len-l small{display:block;color:var(--c-muted);font-size:12px}.rb-len button{width:32px;height:32px;border-radius:50%;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);color:var(--c-text);font-size:18px;cursor:pointer}.rb-len button:disabled{opacity:.35;cursor:default}.rb-len b{min-width:52px;text-align:center;font-weight:600}.rb-len-fee{min-width:64px;text-align:right;color:var(--c-gold);font:600 13px var(--font-cond)}',
     '.rb-tb-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:12px}.rb-tb-w{flex:0 1 360px}.rb-tb-now{font-size:14px;margin:4px 0}.rb-tb-note{color:var(--c-muted);font-size:14px}',
     '.rb-wflow{display:flex!important;flex-direction:column;gap:6px}.rb-wflat{display:contents!important}.rb-wflow>.rb-modes{margin:2px 0 8px}',
@@ -424,7 +425,7 @@
     if (S.wrapId === 'abalone') p.main = abSpec(S.abaloneColorIdx);
     else if (dzBusy && !rnd && presetOf(S.wrapId) && lastMain) p.main = lastMain;
     else if (!rnd && S.customDesign && S.customDesign.setup && S.customDesign.sfsw) p.main = { full: S.customDesign.setup, kind: S.customDesign.sfsw };
-    else if (!rnd && wrapLen() === BASE_LEN() && LOOK[(wrapNamed(S.wrapId) || {}).name]) p.main = { full: LOOK[wrapNamed(S.wrapId).name], kind: 'taper' };   // until the designer is up: the wrap's own design
+    else if (!rnd && wrapLen() === BASE_LEN() && LOOK[(wrapNamed(S.wrapId) || {}).name]) p.main = { full: Object.assign({}, LOOK[wrapNamed(S.wrapId).name], { unit: 'in', len: wrapLen().toFixed(2) }), kind: 'taper' };   // until the designer is up: the wrap's own design
     else p.main = wrapSpec(S.wrapId, main, sup, rnd ? null : S.customDesign, notes, 'rod wrap');
     if (p.main && !p.main.full && CFG.wrap) p.main.len = wrapLen();
     if (rnd && p.main && !p.main.full && S.wrapId !== 'abalone') p.main.veil = { colors: [main].concat(sup).filter(Boolean), name: ((wrapNamed(S.wrapId) || {}).name || '').replace(/\s*\u2014\s*/g, ' - ') };   // Builder's Choice: a sheet over the wrap with their colors
@@ -588,7 +589,7 @@
       try { new dz.contentWindow.ResizeObserver(fitDz).observe(dz.contentDocument.querySelector('.wrap')); new dz.contentWindow.MutationObserver(function () { setTimeout(fitDz, 0); }).observe(dz.contentDocument.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'hidden', 'class'] }); } catch (e) {} fitDz(); }); setMore();
     // three ways to get a wrap: one of our examples, build your own in the designer, or pick colors and let us lay it out (Random)
     modeEl = el('div', 'rb-modes');
-    modeEl.innerHTML = (CFG.wrap ? '<div class="rb-len"><span class="rb-len-l">Wrap length <small>' + BASE_LEN() + ' in included · +$10 each added inch</small></span><button type="button" data-d="-1" aria-label="Shorter">−</button><b></b><button type="button" data-d="1" aria-label="Longer">+</button><span class="rb-len-fee"></span></div>' : '') +
+    modeEl.innerHTML = (CFG.wrap ? '<div class="rb-len"><span class="rb-len-l">Wrap length <small>' + BASE_LEN() + ' in included · +$15 each added inch</small></span><button type="button" data-d="-1" aria-label="Shorter">−</button><b></b><button type="button" data-d="1" aria-label="Longer">+</button><span class="rb-len-fee"></span></div>' : '') +
 
       '<div class="rb-dz-slot"></div>' +
       '<div class="rb-rnd-note">Builder\u2019s Choice: Choose a main color and supporting colors, and we will do a unique design of our choice. 1 Main and 3 supporting colors included (4 colors) · +$10 each extra color.</div>' +
@@ -597,7 +598,7 @@
     modeEl.querySelector('.rb-dz-slot').appendChild(dzBox);
     rndPal = modeEl.querySelector('.rb-rpal'); rndBar = el('div', 'rb-rbar'); rndPal.parentNode.insertBefore(rndBar, rndPal);   // the color slots sit right above the colors, under the note
     [].forEach.call(modeEl.querySelectorAll('.rb-mode'), function (b) { b.onclick = function () { setMode(b.dataset.m === S.wrapMode ? 'example' : b.dataset.m); }; });
-    var lenEl = modeEl.querySelector('.rb-len'), lbl0 = wrapSec.querySelector('.rb-presets-lbl'); if (lenEl) { lenEl.style.margin = '0 0 12px'; dzBox.insertBefore(lenEl, dzBox.firstChild); }   // wrap length lives in the wrap designer (Customize)
+    var lenEl = lenBox = modeEl.querySelector('.rb-len'), lbl0 = wrapSec.querySelector('.rb-presets-lbl'); if (lenEl) { lenEl.style.margin = '0 0 12px'; dzBox.insertBefore(lenEl, dzBox.firstChild); }   // wrap length lives in the wrap designer (Customize)
     [].forEach.call(document.querySelectorAll('.rb-len button'), function (b) { b.onclick = function () { setWrapLen(wrapLen() + +b.dataset.d); }; });
     setTimeout(function () { renderModes(); renderLen(); }, 0);
     addEventListener('message', function (e) { if (dz && e.source === dz.contentWindow && e.data && e.data.wlH) fitDz(); });
@@ -988,23 +989,24 @@
   // wrap length: starts at the rod type's length (9 in here); each extra inch is +$10
   // wrap length: included length per wrap (cross wraps 8 in, the rest this rod type's length); longer costs per inch (cross wraps +$20, the rest +$10); shorter is allowed and doesn't lower the price
   function isCrossWrap() { var pr = presetOf(S.wrapId); return !!(pr && pr.k === 'cross'); }
-  function BASE_LEN() { return isCrossWrap() ? 8 : ((CFG.wrap && +CFG.wrap.len) || 8); }
-  function LEN_RATE() { return isCrossWrap() ? 20 : 10; }
-  var MIN_LEN = 3;
-  function wrapLen() { return Math.max(MIN_LEN, +S.wrapLen || BASE_LEN()); }
+  function BASE_LEN() { return S.wrapId === 'abalone' ? 9 : 8; }   // every wrap starts at 8 in; abalone at 9 in (and only goes shorter)
+  function LEN_RATE() { return 15; }   // +$15 each added inch
+  function MAX_LEN() { return S.wrapId === 'abalone' ? 9 : BASE_LEN() + 12; }
+  var MIN_LEN = 3, lenBox;   // lenBox: the wrap length box (in the designer, or beside the abalone colors)
+  function wrapLen() { return Math.min(MAX_LEN(), Math.max(MIN_LEN, +S.wrapLen || BASE_LEN())); }
   // the Trim Band wrap: its band length in quarter inches; 2 in included, +$10 each extra inch ($2.50 a quarter inch)
   function tbLenQ() { var d = S.customDesign, t = d && d.setup && d.setup.trims; return Math.max(1, Math.round(((t && +t.mm) || 50.8) / 6.35)); }
   function tbLenFee() { return S.wrapId === 'trim-band' ? Math.max(0, tbLenQ() - 8) * 2.5 : 0; }
   function lenFee() { return CFG.wrap && S.wrapId !== 'trim-band' ? Math.max(0, wrapLen() - BASE_LEN()) * LEN_RATE() : 0; }   // the Trim Band wrap has no length to pick
   function setWrapLen(n) {
-    S.wrapLen = Math.max(MIN_LEN, Math.min(BASE_LEN() + 12, n)); renderLen();
+    S.wrapLen = Math.max(MIN_LEN, Math.min(MAX_LEN(), n)); renderLen();
     var w = dw(); if (w && w.wlCapture && S.wrapMode !== 'random') { try { var c = w.wlCapture(); c.unit = 'in'; c.len = wrapLen().toFixed(2); w.wlApply(c); } catch (e) {} clearTimeout(readT); readT = setTimeout(readDesign, 300); }
     updateAll();
   }
-  function renderLen() { var b = document.querySelector('.rb-len'); if (!b) return; var f = lenFee();
-    b.querySelector('b').textContent = wrapLen() + ' in'; b.querySelector('.rb-len-fee').textContent = f ? '+$' + f : 'Included'; b.querySelector('[data-d="-1"]').disabled = wrapLen() <= MIN_LEN; var lab = b.querySelector('.rb-len-l small'); if (lab) lab.textContent = BASE_LEN() + ' in included · +$' + LEN_RATE() + ' each added inch · shorter is fine (same price)';
+  function renderLen() { var b = lenBox; if (!b) return; var f = lenFee(), ab = S.wrapId === 'abalone';
+    b.querySelector('b').textContent = wrapLen() + ' in'; b.querySelector('.rb-len-fee').textContent = f ? '+$' + f : 'Included'; b.querySelector('[data-d="-1"]').disabled = wrapLen() <= MIN_LEN; var lab = b.querySelector('.rb-len-l small'); if (lab) lab.textContent = ab ? '9 in max · shorter is fine (same price)' : BASE_LEN() + ' in included · +$' + LEN_RATE() + ' each added inch · shorter is fine (same price)';
     var off = S.wrapId === 'trim-band'; b.classList.toggle('rb-len-off', off); b.title = off ? 'Wrap length is set for the Trim Band wrap. Pick another wrap to change it.' : '';
-    [].forEach.call(b.querySelectorAll('button'), function (x) { if (off) x.disabled = true; else if (x.dataset.d === '1') x.disabled = false; }); }
+    [].forEach.call(b.querySelectorAll('button'), function (x) { if (off) x.disabled = true; else if (x.dataset.d === '1') x.disabled = wrapLen() >= MAX_LEN(); }); }
   // Trim bands: on/off, width and thread color, written straight into the wrap design
   var tbEl;   // (set by tbBox while the steps are built, earlier in the file)
   function tbBox() { tbEl = el('div', 'cfg-section rb-tb'); tbEl.innerHTML = '<div class="rb-tb-body"></div>'; setTimeout(renderTB, 0); return tbEl; }
@@ -1149,7 +1151,8 @@
   function wrapPhotos(w) { if (!w) return []; if (w.photo) return [w.photo]; var a = []; if (w.photoNums) return w.photoNums.map(function (i) { return '../preview/rod-wraps/' + (w.photoSlug || w.id) + '-' + i + '.png'; }); for (var i = 1; i <= (w.photoCount || 0); i++) a.push('../preview/rod-wraps/' + (w.photoSlug || w.id) + '-' + i + '.png'); return a; }
   // wrap families: one row in the list ("Diamond Wrap"), with the axis count picked inside it; the row stays put while the axis changes
   var FAMILIES = [{ name: 'Diamond Wrap', ids: ['diam-2', 'diam-4', 'closed-4', 'axis-16'], ax: [2, 4, 8, 16] },
-                  { name: 'Chevron Wrap', ids: ['chev-2', 'chev-4', 'chev-8', 'chev-16'], ax: [2, 4, 8, 16] }];
+                  { name: 'Chevron Wrap', ids: ['chev-2', 'chev-4', 'chev-8', 'chev-16'], ax: [2, 4, 8, 16] },
+                  { name: 'Dragon Scale', ids: ['dragon', '2axis-dragon'], labels: ['Scales Only', '2 Axis Wrap Over'] }];   // the wrap over the scales is a switch in the Dragon Scale row
   function famOf(id) { for (var i = 0; i < FAMILIES.length; i++) if (FAMILIES[i].ids.indexOf(id) >= 0) return FAMILIES[i]; return null; }
   function rowId(id) { var f = famOf(id); return f ? f.ids[0] : id; }   // the list row a wrap shows in
   function dressFamilies() {
@@ -1158,6 +1161,7 @@
       if (m[1] !== f.ids[0]) { o.style.display = 'none'; return; }
       var nm = o.querySelector('.option-item-name'); if (nm) nm.textContent = f.name;
       o.classList.toggle('selected', f.ids.indexOf(S.wrapId) >= 0);
+      var pe = o.querySelector('.option-item-price'), on = f.ids.indexOf(S.wrapId) >= 0 ? wrapById(S.wrapId) : null; if (pe && on) pe.textContent = on.adder ? '+$' + on.adder : 'Included';   // the row shows the picked one's price
     });
   }
   function dressWraps() {
@@ -1180,23 +1184,25 @@
     if (S.wrapMode === 'random' && modeWrap && modeWrap !== S.wrapId) { S.wrapMode = 'example'; setTimeout(function () { renderModes(); updTop(); updateAll(); }, 0); }   // another wrap picked: leave Builder's Choice, show that wrap's example
     modeWrap = S.wrapId;
     if (!optList) return; var id = S.wrapId, w = wrapNamed(id), pr = presetOf(id), recs = (pr && pr.recs) || [], ph = wrapPhotos(w), n = Math.max(ph.length, recs.length), cur = recPick[id] || 0;
+    if (lenBox && dzBox && lenBox.closest('.rb-exs')) { lenBox.classList.remove('rb-len-ab'); dzBox.insertBefore(lenBox, dzBox.firstChild); }   // the length box goes back into the designer
     [].forEach.call(optList.querySelectorAll('.rb-exs'), function (x) { x.remove(); });
     var card = [].find.call(optList.querySelectorAll('.option-item'), function (o) { return (o.getAttribute('onclick') || '').indexOf("'" + rowId(id) + "'") > 0; });
     if (card) {
       var box = el('div', 'rb-exs'); box.addEventListener('click', function (e) { e.stopPropagation(); });
+      var fam = famOf(id); if (fam) { var ax = el('div', 'rb-fax');   // 2 / 4 / 8 / 16 axis: each shows its own examples
+        fam.ids.forEach(function (fid, k) { var fw = wrapById(fid), b = el('button', fid === id ? 'on' : '', (fam.labels ? fam.labels[k] : fam.ax[k] + ' Axis') + (fw && fw.adder ? ' <small>+$' + fw.adder + '</small>' : ''));   /* each axis count's own upcharge */ b.type = 'button';
+          b.onclick = function () { if (fid !== S.wrapId) window.pickWrap(fid); }; ax.appendChild(b); });
+        box.appendChild(ax); box.appendChild(el('div', 'rb-fbr')); }
       if (pr && pr.p === 'dragon' && !pr.over) { var dax = el('div', 'rb-fax'), curA = (designOn() && designOn().setup && +designOn().setup.axes) || S.dragonAx || 8;   // dragon scales: 8 / 16 / 32 axis
         [8, 16, 32].forEach(function (a) { var b = el('button', a === curA ? 'on' : '', a + ' Axis' + (DRAG_AX[a] ? ' <small>+$' + DRAG_AX[a] + '</small>' : '')); b.type = 'button'; b.onclick = function () { setDragonAx(a); }; dax.appendChild(b); });
         box.appendChild(dax); box.appendChild(el('div', 'rb-fbr')); }
-      var fam = famOf(id); if (fam) { var ax = el('div', 'rb-fax');   // 2 / 4 / 8 / 16 axis: each shows its own examples
-        fam.ids.forEach(function (fid, k) { var fw = wrapById(fid), b = el('button', fid === id ? 'on' : '', fam.ax[k] + ' Axis' + (fw && fw.adder ? ' <small>+$' + fw.adder + '</small>' : ''));   /* each axis count's own upcharge */ b.type = 'button';
-          b.onclick = function () { if (fid !== S.wrapId) window.pickWrap(fid); }; ax.appendChild(b); });
-        box.appendChild(ax); box.appendChild(el('div', 'rb-fbr')); }
       for (var i = 0; i < (id === 'abalone' ? 0 : n); i++) { var b = el('button', i === cur && S.wrapMode === 'example' ? 'on' : '', 'Example ' + (i + 1)); b.type = 'button'; b.dataset.i = i;
         b.onclick = function () { var k = +this.dataset.i; recPick[id] = k; var was = S.wrapMode;
           if (recs[k] && (recs[k].stripes || recs[k].pat || (recs.some(function (r) { return r && r.pat; }) && pr.k === 'cross'))) { setMode('example', true); toDesigner(id, null, null); } else { setMode('example', was === 'example'); exButtons(); } }; box.appendChild(b); }
       if (id === 'abalone' && w && w.colors) {   // abalone: pick the shell color here (no thread colors)
         w.colors.forEach(function (c, k) { var b = el('button', (S.abaloneColorIdx || 0) === k ? 'on' : '', c); b.type = 'button';
           b.onclick = function () { call('pickAbaloneColor', String(k)); setTimeout(exButtons, 30); }; box.appendChild(b); });
+        if (lenBox) { lenBox.classList.add('rb-len-ab'); box.appendChild(lenBox); renderLen(); }   // abalone has no designer: its length sits to the right of the shell colors
       }
       if (pr) [['build', 'Customize'], ['random', 'Builder\u2019s Choice']].forEach(function (x) { var b = el('button', 'rb-exm' + (S.wrapMode === x[0] ? ' on' : ''), x[1]); b.type = 'button';
         b.onclick = function () { setMode(S.wrapMode === x[0] ? 'example' : x[0]); exButtons(); }; box.appendChild(b); });
