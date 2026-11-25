@@ -993,7 +993,14 @@
       if (b.classList.contains('add')) { sup.push(S.mainIdx === 1 ? 0 : 1); rndSlot = sup.length - 1; call('renderSupportingRows'); updateAll(); return; }
       rndSlot = b.dataset.k === 'main' ? 'main' : +b.dataset.k; renderRandom(); }; });
     var cur2 = rndSlot === 'main' ? S.mainIdx : sup[rndSlot], groups = [['', 'Colors'], ['metallic', 'Metallic'], ['uv-metallic', 'Ultra-UV Metallic · +$10']];
-    rndPal.innerHTML = groups.map(function (g) { var items = W.map(function (c, i) { return [c, i]; }).filter(function (x) { return (x[0].group || '') === g[0]; }).sort(function (a, b) { return lumOf(b[0].hex) - lumOf(a[0].hex); }); if (!items.length) return '';   /* lightest to darkest */
+    // the thread colors in the designer's own groups and order (Black & White, Greys, Blues ... each lightest to darkest); the metallics after
+    var TT = null, dgs = null; try { TT = (dw() || {}).WL_THREADS; dgs = TT && TT.groups([]); } catch (e) { dgs = null; }
+    if (dgs && dgs.length) groups = dgs.map(function (g) { var met = /metallic/i.test(g[0]), uv = /ultra-uv/i.test(g[0]);
+        return [g[1].map(function (x) { var hx = String(x[1]).toLowerCase(), k = -1;
+          W.forEach(function (c, i) { if (k < 0 && !!c.metallic === met && (!met || (c.group === 'uv-metallic') === uv) && String(c.hex).toLowerCase() === hx) k = i; });
+          if (k < 0 && !met) { W.push({ name: (TT.fullName ? TT.fullName(x[1]) : x[0]) || x[0], hex: x[1], group: '' }); k = W.length - 1; }   // a designer color the page list lacks
+          return k; }).filter(function (k) { return k >= 0; }), uv ? 'Ultra-UV Metallic · +$10' : met ? 'Metallic' : g[0]]; }).filter(function (g) { return g[0].length; });   // (Builder's Choice has no metallic twist)
+    rndPal.innerHTML = groups.map(function (g) { var items = Array.isArray(g[0]) ? g[0].map(function (i) { return [W[i], i]; }) : W.map(function (c, i) { return [c, i]; }).filter(function (x) { return (x[0].group || '') === g[0]; }).sort(function (a, b) { return lumOf(b[0].hex) - lumOf(a[0].hex); }); if (!items.length) return '';   /* lightest to darkest */
       return '<div class="rb-rp-h">' + g[1] + '</div><div class="rb-rp">' + items.map(function (x) { return '<button type="button" class="' + (x[1] === cur2 ? 'on' : '') + '" data-i="' + x[1] + '" title="' + shown(x[0].name) + '" style="background:' + x[0].hex + '"></button>'; }).join('') + '</div>'; }).join('');
     [].forEach.call(rndPal.querySelectorAll('.rb-rp button'), function (b) { b.onclick = function () { var i = +b.dataset.i; if (rndSlot === 'main') S.mainIdx = i; else sup[rndSlot] = i; call('renderSupportingRows'); updateAll(); }; });
   }
