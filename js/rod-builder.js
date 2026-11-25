@@ -874,7 +874,7 @@
   function tgSkin(dd) {
     var ref = dd.getElementById('armsBtn'); if (!ref) return; var cs = dd.defaultView.getComputedStyle(ref), seg = dd.defaultView.getComputedStyle(ref.parentNode);
     ['underOn', 'innerOn', 'innerFillOn', 'btOn'].forEach(function (id) {
-      if (id === 'innerOn' || id === 'btOn') { var iI = dd.getElementById(id), sm = iI && iI.closest('label.chk') && iI.closest('label.chk').querySelector('small'); if (sm && !/\+\$/.test(sm.textContent)) sm.textContent = '+$50 · ' + sm.textContent.replace(/^\(|\)$/g, '') + (id === 'innerOn' ? ' · up to 2 new colors included' : ''); }
+      if (id === 'innerOn' || id === 'btOn') { var iI = dd.getElementById(id), sm = iI && iI.closest('label.chk') && iI.closest('label.chk').querySelector('small'); if (sm && !/\+\$/.test(sm.textContent)) sm.textContent = (id === 'btOn' ? '+$100' : '+$50') + ' · ' + sm.textContent.replace(/^\(|\)$/g, '') + (id === 'innerOn' ? ' · up to 2 new colors included' : ''); }
       var inp = dd.getElementById(id), lab = inp && inp.closest('label.chk'); if (!lab) return;
       var btn = lab.querySelector('.sfswTgB');
       if (!btn) {
@@ -896,7 +896,7 @@
     });
   }
   function fillNote(dd) { var ab = dd.getElementById('armsBtn'); if (!ab || dd.getElementById('sfswFillNote')) return; var row = ab.closest('.seg'); if (!row) return;
-    row.insertAdjacentHTML('afterend', '<small id="sfswFillNote" style="font-size:13px;color:var(--muted)">fills the open space inside the diamonds with one thread color</small>'); }
+    row.insertAdjacentHTML('afterend', '<small id="sfswFillNote" style="font-size:13px;color:var(--muted)">' + (dd.getElementById('btOn') ? 'fills the open space between the cross wraps with one thread color · included with a pattern between' : 'fills the open space inside the diamonds with one thread color') + '</small>'); }
   // the color bubbles: one per different color in the design; past the included ones each shows its +$10 in gold
   function bubFill(dd, bub) { var d = designOn(), cs = (d && d.colors) || [], inc = 4 + innerFree(), ex = Math.max(0, cs.length - inc), nm = function (c) { return String(c.name || '').replace(/^\d+[A-Z]?\s+/, ''); };
     var fe = cs.map(function (c, i) { return (i >= inc ? 10 : 0) + (c.uv || c.twist ? 10 : 0); }), tot = fe.reduce(function (a, b) { return a + b; }, 0);   // past the included: +$10; Ultra-UV / Metallic Twist: +$10 more
@@ -906,7 +906,10 @@
     if (!dd.getElementById('sfswBubCss')) { var css = dd.createElement('style'); css.id = 'sfswBubCss'; css.textContent = '#sfswBub,.sfswBubT{margin:4px 0 12px}.sfswBubH{font-size:13px;color:var(--muted);margin-bottom:6px}.sfswBubH b{color:#e0b13a;margin-left:4px}.sfswBubs{display:flex;flex-wrap:wrap;gap:8px}.sfswB{display:inline-flex;flex-direction:column;align-items:center;gap:3px}.sfswB i{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.25);display:block}.sfswB.x i{border-color:#e0b13a;box-shadow:0 0 0 2px rgba(224,177,58,.35)}.sfswB em{font:700 11px var(--body);font-style:normal;color:#e0b13a}'; dd.head.appendChild(css); } }
   // between the thread colors and Color filler: what the extra colors add (4 different colors included, +$10 each after)
   function extraNote() {
-    try { var dd = dz.contentDocument, ob = dd.getElementById('openBox'); if (!ob) return; var n = dd.getElementById('sfswExtra');
+    try { var dd = dz.contentDocument, ob = dd.getElementById('openBox');
+      var fe = dd.querySelector('#armsBtn .sfswFee'); if (fe) { var ff = fillFee(); fe.textContent = ff ? '+$' + ff : 'Included'; }   // the filler's price (included with a cross wrap's pattern between)
+      if (!ob) { if (window.__sfswTbPaintNow) window.__sfswTbPaintNow(); var st0 = dd.getElementById('stripes'), bx0 = st0 && st0.closest('.f'), bb0 = dd.getElementById('sfswBub'); if (bx0) { if (!bb0) { bb0 = dd.createElement('div'); bb0.id = 'sfswBub'; bx0.parentNode.insertBefore(bb0, bx0); } bubFill(dd, bb0); } return; }
+      var n = dd.getElementById('sfswExtra');
       if (!n) { n = dd.createElement('div'); n.id = 'sfswExtra'; n.style.cssText = 'font-size:13px;color:var(--muted);margin:2px 0 10px'; ob.parentNode.insertBefore(n, ob); }
       var total = window.SFSW_designColors ? SFSW_designColors() : null, extra = total == null ? 0 : Math.max(0, total - 4);
       n.innerHTML = extra ? '<b style="color:#d4a73c">+$' + extra * 10 + '</b> for ' + extra + ' extra color' + (extra > 1 ? 's' : '') + ' <span>(' + total + ' different colors · 4 included · +$10 each extra)</span>' : '';
@@ -1059,6 +1062,7 @@
   function sizeFeeOf(pct) { var n = Math.floor((+pct || 0) / 10 + 1e-9); return 5 * Math.min(n, 5) + 10 * Math.max(0, n - 5); }
   function crossSizeFee() { if (!isCrossWrap() || S.wrapMode !== 'build') return 0; var d = S.customDesign; return sizeFeeOf(d && d.setup && d.setup.sizePct); }
   function crossSizeHook(w) { try { if (!w || w.__sfswSz) return; var d = w.document, sp = d.getElementById('sizePct'), out = d.getElementById('sizeOut'); if (!sp || !out) return; w.__sfswSz = true;
+    sp.step = '5'; sp.value = String(Math.round((+sp.value || 0) / 5) * 5);   // 5% at a time
     var tag = d.createElement('b'); tag.id = 'sfswSizeFee'; tag.style.cssText = 'margin-left:10px;color:#e0b13a;font-weight:700;min-width:4ch'; out.parentNode.insertBefore(tag, out.nextSibling);
     var note = d.getElementById('sizeNote'); if (note) note.insertAdjacentHTML('beforeend', ' <span style="color:#e0b13a;font-weight:600">· +$5 each 10% up to 50%, +$10 each 10% after</span>');
     var paint = function () { var f = sizeFeeOf(sp.value); tag.textContent = f ? '+$' + f : 'Included'; };
@@ -1329,8 +1333,10 @@
   var FILL_FEE = 20;
   var INNER_FEE = 50;
   function innerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && ((c.inner && c.inner.on && (c.inner.stripes || []).length) || (d.sfsw === 'cross' && c.between && c.between.on))); }
+  function innerFee() { return isCrossWrap() ? 100 : INNER_FEE; }   // a cross wrap's pattern between is +$100
+  function fillFee() { return isCrossWrap() && innerOn() ? 0 : FILL_FEE; }   // on a cross wrap with a pattern between, Color filler is included
   function fillerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && c.arms === 'cover' && (c.pattern === 'diamond' || d.sfsw === 'cross')); }
-  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? FILL_FEE : 0) + (innerOn() ? INNER_FEE : 0) + dragonFee() + tbLenFee() + tbPartFee() + crossSizeFee(); };   // (the wrap length rides along here)
+  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? fillFee() : 0) + (innerOn() ? innerFee() : 0) + dragonFee() + tbLenFee() + tbPartFee() + crossSizeFee(); };   // (the wrap length rides along here)
   var _order = window.buildOrderItem;
   if (typeof _order === 'function') window.buildOrderItem = function () {
     var it = _order.apply(this, arguments), d = designOn();
@@ -1339,8 +1345,8 @@
     if (it.lines && S.wrapId === 'trim-band') it.lines.push({ label: 'Trim Band Length', value: (tbLenQ() / 4) + ' in' + (tbLenFee() ? '  +$' + tbLenFee().toFixed(2).replace(/\.00$/, '') : '') });
     if (CFG.wrap && it.lines && S.wrapId !== 'trim-band' && wrapLen() !== BASE_LEN()) it.lines.push({ label: 'Wrap Length', value: wrapLen() + ' in' + (lenFee() ? '  +$' + lenFee() : ' (shorter than standard)') });
     if (dragonFee() && it.lines) it.lines.push({ label: 'Dragon Scale', value: designOn().setup.axes + ' axis  +$' + dragonFee() });
-    if (innerOn() && it.lines) { var ic = designOn().setup.inner || { pattern: 'cross' }; it.lines.push({ label: 'Pattern Between', value: (ic.pattern === 'cross' ? 'Cross' : ic.pattern === 'chevron' ? 'Chevron' : 'Diamond') + (ic.fillOn && ic.pattern !== 'chevron' ? ' with filler over it' : '') + '  +$' + INNER_FEE + ' (up to 2 new colors included)' }); }
-    if (fillerOn() && it.lines) { var fn; try { fn = (dw().WL_THREADS.fullName || dw().WL_THREADS.name)(designOn().setup.fillC); } catch (e) {} it.lines.push({ label: 'Color Filler', value: (fn || designOn().setup.fillC || '') + '  +$' + FILL_FEE }); }
+    if (innerOn() && it.lines) { var ic = designOn().setup.inner || { pattern: 'cross' }; it.lines.push({ label: 'Pattern Between', value: (ic.pattern === 'cross' ? 'Cross' : ic.pattern === 'chevron' ? 'Chevron' : 'Diamond') + (ic.fillOn && ic.pattern !== 'chevron' ? ' with filler over it' : '') + '  +$' + innerFee() + ' (up to 2 new colors included)' }); }
+    if (fillerOn() && it.lines) { var fn; try { fn = (dw().WL_THREADS.fullName || dw().WL_THREADS.name)(designOn().setup.fillC); } catch (e) {} it.lines.push({ label: 'Color Filler', value: (fn || designOn().setup.fillC || '') + (fillFee() ? '  +$' + fillFee() : '  (included with the pattern between)') }); }
     if (underOn() && it.lines) { var un; try { un = (dw().WL_THREADS.fullName || dw().WL_THREADS.name)(S.under.c); } catch (e) {} it.lines.push({ label: 'Underwrap', value: (un || S.under.c) + '  +$' + UNDER_FEE }); }
     if (!d) return it;
     var fee = call('supportExtraFee') || 0, extra = call('extraSupportCount') || 0, mets = d.colors.filter(function (c) { return c.uv; }).length, twists = d.colors.filter(function (c) { return c.twist; }).length;

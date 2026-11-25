@@ -2323,7 +2323,7 @@ function render(){
       if(inner) return inner;
       return state.arms==='cover' ? [-1,0] : null;   // filler covers the open blank between snowflakes too
     }
-    if(!A || !B){ if(state.arms==='cover') return [-1,0]; const X=A||B; return [X.c, frac(A?pa:pb), A?1:-1, A?ia:ib]; }   // [color, across, which way it runs, which thread]
+    if(!A || !B){ const X=A||B;   /* SFSW: the filler stays outside the cross wraps */ return [X.c, frac(A?pa:pb), A?1:-1, A?ia:ib]; }   // [color, across, which way it runs, which thread]
     // the thread laid later lies on top; setup threads alternate over and under
     const aTop = A.t!==B.t ? A.t>B.t : ((ia+ib)%2===0);
     return aTop ? [A.c,frac(pa),1,ia] : [B.c,frac(pb),-1,ib];
