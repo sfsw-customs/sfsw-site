@@ -922,11 +922,11 @@
     var thumb = (S.customDesign && S.customDesign.thumb) || '';   // the thumbnail (cart / summary) is redrawn just after, out of the way of the 3D rod
     clearTimeout(thumbT); thumbT = setTimeout(function () { try { var u = w.WL_unrolled(900, 220); if (u && u.canvas && S.customDesign) { var c = document.createElement('canvas'); c.width = 640; c.height = Math.round(640 * (u.canvas.height / 2) / u.canvas.width); c.getContext('2d').drawImage(u.canvas, 0, 0, u.canvas.width, u.canvas.height / 2, 0, 0, c.width, c.height); S.customDesign.thumb = c.toDataURL('image/jpeg', .8); } } catch (e) {} }, 900);
     var over = cap.dragon && cap.dragon.over && cap.dragon.over.on;
-    var pat = kind === 'cross' ? (cap.pat || 'Cross wrap') : cap.pattern === 'dragon' ? (over ? 'Chevron over dragon scales' : 'Dragon scale') : cap.pattern === 'chevron' ? 'Chevron' : 'Diamond';
+    var pat = kind === 'cross' ? (cap.pat || 'Cross wrap') : cap.pattern === 'dragon' ? (over ? (cap.dragon.over.pattern === 'diamond' ? 'Diamond' : 'Chevron') + ' over dragon scales' : 'Dragon scale') : cap.pattern === 'trim' ? 'Trim band' : cap.pattern === 'chevron' ? 'Chevron' : 'Diamond';
     var ax = kind === 'taper' && cap.pattern === 'dragon' ? (over ? +cap.dragon.over.axes || 2 : +cap.axes || 8) : +cap.axes || 2;
     S.customDesign = { sfsw: kind, kind: kind === 'cross' ? 'Cross wrap' : 'Wrap Designer', pattern: pat, axes: ax, angle: cap.angle && kind !== 'cross' ? cap.angle + '°' : '', size: '', blank: cap.blankC || '',
       colors: cols.map(function (c) { var uv = !!UV[String(c.hex).toLowerCase()], tw = false; try { tw = !!(w.WL_TWIST && w.WL_TWIST.has(c.hex)); } catch (e) {} return { name: name(c.hex) + (uv ? ' (Ultra-UV)' : ''), hex: c.hex, threads: c.threads, metallic: !!MET[String(c.hex).toLowerCase()], uv: uv, twist: tw }; }), thumb: thumb, setup: cap,
-      summary: (kind === 'cross' ? pat + ' cross wrap' : pat) + ' · ' + ax + ' axis' + (cap.angle && kind !== 'cross' ? ' · ' + cap.angle + '°' : '') };
+      summary: cap.pattern === 'trim' && kind !== 'cross' ? 'Trim band' : (kind === 'cross' ? pat + ' cross wrap' : pat) + ' · ' + ax + ' axis' + (cap.angle && kind !== 'cross' ? ' · ' + cap.angle + '°' : '') };
     if (cols.length) { S.mainIdx = nearestIdx(cols[0].hex); S.supportIdxs = cols.slice(1).map(function (c) { return nearestIdx(c.hex); }); }
     var id = wrapIdFor(cap, kind) || S.wrapId;
     if (id !== S.wrapId && !(dzHold && Date.now() - dzHold < 10000)) { S.wrapId = id; S.wrapPhotoIdx = 0; }
@@ -1313,7 +1313,7 @@
     if (fillerOn() && it.lines) { var fn; try { fn = (dw().WL_THREADS.fullName || dw().WL_THREADS.name)(designOn().setup.fillC); } catch (e) {} it.lines.push({ label: 'Color Filler', value: (fn || designOn().setup.fillC || '') + '  +$' + FILL_FEE }); }
     if (underOn() && it.lines) { var un; try { un = (dw().WL_THREADS.fullName || dw().WL_THREADS.name)(S.under.c); } catch (e) {} it.lines.push({ label: 'Underwrap', value: (un || S.under.c) + '  +$' + UNDER_FEE }); }
     if (!d) return it;
-    var fee = call('supportExtraFee') || 0, extra = Math.max(0, d.colors.length - 3), mets = d.colors.filter(function (c) { return c.uv; }).length, twists = d.colors.filter(function (c) { return c.twist; }).length;
+    var fee = call('supportExtraFee') || 0, extra = call('extraSupportCount') || 0, mets = d.colors.filter(function (c) { return c.uv; }).length, twists = d.colors.filter(function (c) { return c.twist; }).length;
     var notes = []; if (fee) notes.push('+$' + fee + ' for ' + extra + ' extra color' + (extra > 1 ? 's' : '')); if (mets) notes.push('+$' + mets * 10 + ' for ' + mets + ' Ultra-UV metallic' + (mets > 1 ? 's' : '')); if (twists) notes.push('+$' + twists * 10 + ' for ' + twists + ' Metallic Twist' + (twists > 1 ? 's' : ''));
     (it.lines || []).forEach(function (l) { if (l.label === 'Colors') l.value = 'Colors (from the wrap design): ' + d.colors.map(function (c, i) { return (i ? '' : 'Main: ') + c.name; }).join(', ') + (notes.length ? '  (' + notes.join(', ') + ')' : ''); });
     (it.buildStrip || []).forEach(function (b) { if (b.label === 'Colors') { b.name = d.colors.map(function (c) { return c.name; }).join(' / ');
