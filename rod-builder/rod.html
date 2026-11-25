@@ -518,8 +518,19 @@ function sleeve(x0, x1, over, mat, seg = 64) {
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
   g.setIndex(idx); g.computeVertexNormals(); return new THREE.Mesh(g, mat);
 }
-const wrapMat = canvas => { const t = new THREE.CanvasTexture(canvas); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy());
-  /* SFSW: no glare on the wrap, so the threads read like the designer */ const sh = !!(t.image && t.image.__sfswShiny);   /* SFSW: abalone sits under glossy clear coat */ return new THREE.MeshPhysicalMaterial({ map: t, color: 0xd2d2d2 /* SFSW: a touch darker so bright threads don't wash out */, roughness: sh ? 0.3 : 0.62, metalness: 0, clearcoat: sh ? 1 : 0.25, clearcoatRoughness: sh ? 0.06 : 0.45, envMapIntensity: sh ? 0.5 : 0.42, specularIntensity: sh ? 0.45 : 0.3, alphaTest: 0.5, side: THREE.DoubleSide }); };
+const wrapMat0 = canvas => { const t = new THREE.CanvasTexture(canvas); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy());
+  /* SFSW: no glare on the wrap, so the threads read like the designer */ const sh = !!(t.image && t.image.__sfswShiny);   /* SFSW: abalone sits under glossy clear coat */ return new THREE.MeshPhysicalMaterial({ toneMapped: false /* SFSW: true thread colors (the film-style tone curve shifted and darkened them) */, map: t, color: 0xffffff, roughness: sh ? 0.3 : 0.62, metalness: 0, clearcoat: sh ? 1 : 0.25, clearcoatRoughness: sh ? 0.06 : 0.45, envMapIntensity: sh ? 0.5 : 0.42, specularIntensity: sh ? 0.45 : 0.3, alphaTest: 0.5, side: THREE.DoubleSide }); };
+const sfswMetTex = cv => { const m = cv && cv.__sfswMet; if (!m || !m.mk) return null; if (cv.__sfswMetTex) return cv.__sfswMetTex;
+  const w2 = Math.max(1, m.W >> 1), h2 = Math.max(1, m.H >> 1), c = document.createElement('canvas'); c.width = w2; c.height = h2;
+  const x = c.getContext('2d'), im = x.createImageData(w2, h2), d = im.data;   // green: roughness, blue: metalness (half size is plenty)
+  for (let y = 0; y < h2; y++) { const row = y * 2 * m.W; for (let i = 0; i < w2; i++) { const o = (y * w2 + i) * 4, mt = m.mk[row + i * 2]; d[o] = 0; d[o + 1] = mt ? 80 : 158; d[o + 2] = mt ? 210 : 0; d[o + 3] = 255; } }
+  x.putImageData(im, 0, 0); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.NoColorSpace; t.anisotropy = 8; cv.__sfswMetTex = t; return t; };
+const sfswMetSet = (mt, cv) => { if (!mt || !mt.isMeshPhysicalMaterial) return; const t = sfswMetTex(cv), had = !!mt.metalnessMap, mp = mt.map;
+  if (t && mp) { t.wrapS = mp.wrapS; t.repeat.copy(mp.repeat); t.offset.copy(mp.offset); }
+  if (t) { mt.metalnessMap = t; mt.roughnessMap = t; mt.metalness = 1; mt.roughness = 1; } else if (had) { mt.metalnessMap = null; mt.roughnessMap = null; mt.metalness = 0; mt.roughness = mt.userData.r0 || 0.62; }
+  if (had !== !!t) mt.needsUpdate = true; };
+window.__sfswMetSet = sfswMetSet;
+const wrapMat = canvas => { const m = wrapMat0(canvas); m.userData.r0 = m.roughness; sfswMetSet(m, canvas); return m; };
 const hexRGB = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 
 // ---------- the designers: real WrapLab tools in the drawer, read straight off their pages ----------
@@ -567,7 +578,7 @@ function sfswSharpen(k, w) { const n = sfswSharpN[k] = (sfswSharpN[k] || 0) + 1;
     const r = w.WL_unrolled(sfswLow ? 2800 : 4096, Hs); if (!r || n !== sfswSharpN[k]) return; sfswFill(w, r);
     if (window.__sfswAb && window.__sfswAb[k]) await window.__sfswAb[k](r); if (n !== sfswSharpN[k] || unrolled[k] !== old) return;
     r.canvas.__sfswShiny = old.canvas.__sfswShiny;
-    rod.traverse(o => { const mt = o.material, mp = mt && mt.map; if (mp && mp.image === old.canvas) { mp.image = r.canvas; mp.needsUpdate = true; } });
+    rod.traverse(o => { const mt = o.material, mp = mt && mt.map; if (mp && mp.image === old.canvas) { mp.image = r.canvas; mp.needsUpdate = true; sfswMetSet(mt, r.canvas); } });
     unrolled[k] = r; window.__sfswDirty = 12; }, 350); }
 async function readWrap(k) {
   const w = await whenReady(fk(k), w => w.WL_unrolled && w.__wlRod); const r = w.WL_unrolled(1280, 320); sfswFill(w, r); sfswSharpen(k, w);   // SFSW: a quick picture first, the sharp one follows if (!r) return null;
@@ -773,7 +784,7 @@ async function build() {
   blank.position.x = (bEnd + L.buttStart + 0.3) / 2; g.add(blank);
   // wraps from the Wrap Designer
   const putWrap = (k, at, maxLen = Infinity) => { const r = unrolled[k]; if (!r) return null; const lenIn = Math.min(r.lengthMM / IN, maxLen), flip = r.from === 'tip';
-    const m = tag(sleeve(at, at + lenIn, 0.011, wrapMat(r.canvas)), 's-wrap'); if (flip) { m.material.map.wrapS = THREE.RepeatWrapping; m.material.map.repeat.x = -1; } m.material.map.wrapT = THREE.RepeatWrapping; m.material.map.offset.y = window.__sfswWrapTurn != null ? window.__sfswWrapTurn : 0.0;   /* SFSW: a diamond faces the viewer, like the designer */ g.add(m); return [at, at + lenIn]; };
+    const m = tag(sleeve(at, at + lenIn, 0.011, wrapMat(r.canvas)), 's-wrap'); if (flip) { m.material.map.wrapS = THREE.RepeatWrapping; m.material.map.repeat.x = -1; sfswMetSet(m.material, r.canvas); } m.material.map.wrapT = THREE.RepeatWrapping; m.material.map.offset.y = window.__sfswWrapTurn != null ? window.__sfswWrapTurn : 0.0;   /* SFSW: a diamond faces the viewer, like the designer */ g.add(m); return [at, at + lenIn]; };
   // with a trim band, the butt-side trim fills the space from the wrap down to the foregrip
   if (window.__sfswHoldMain === undefined) window.__sfswHoldMain = !!window.frameElement;   // SFSW: inside the site, wait for the page's wrap before drawing one
   L.wrap = st.mainOn && !GRIP && !window.__sfswHoldMain ? putWrap('main', st.chkFore && unrolled.main && unrolled.main.trimMM ? x - 0.01 :   /* SFSW: the trim band butts right up to the trim ring */ x + (unrolled.main && unrolled.main.trimMM ? 0.02 : 0.6)) : null;
@@ -2052,7 +2063,7 @@ const sfswBoot = (async () => {
       // SFSW: only the wrap changed and it's the same size: put the new picture on the rod as it is (no rebuild — much faster)
       const nw = unrolled.main;
       if (onlyMain && old && nw && old !== nw && Math.abs(old.lengthMM - nw.lengthMM) < 0.05 && (old.trimMM || 0) === (nw.trimMM || 0) && old.from === nw.from && !!old.canvas.__sfswShiny === !!nw.canvas.__sfswShiny) {
-        let hit = 0; rod.traverse(o => { const mt = o.material, mp = mt && mt.map; if (mp && mp.image === old.canvas) { mp.image = nw.canvas; mp.needsUpdate = true; hit++; } });
+        let hit = 0; rod.traverse(o => { const mt = o.material, mp = mt && mt.map; if (mp && mp.image === old.canvas) { mp.image = nw.canvas; mp.needsUpdate = true; if (window.__sfswMetSet) window.__sfswMetSet(mt, nw.canvas); hit++; } });
         if (hit) { window.__sfswHoldMain = false; window.__sfswDirty = 12; return; } }
     }
     if (p.main) window.__sfswHoldMain = false;   // the customer's wrap is in: show it

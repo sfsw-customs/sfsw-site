@@ -857,12 +857,14 @@ function render(){
 // The rod builder asks for the wrap laid flat: across = along the wrap from its start, down = once around the rod.
 // Bare blank comes back see-through so the rod's own blank shows.
 window.WL_unrolled=function(W,H){ const r=window.__wlRod; if(!r) return null;
+  const MKW=W|0, MK=new Uint8Array((W|0)*(H|0)); let MKn=0;   // SFSW: which pixels are metallic thread (the 3D rod makes those real metal)
   const MSET=new Set([...(window.SFSW_METALLIC||[])].map(h=>{ h=String(h).replace('#',''); return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16)).join(','); }));
   const MC=new Map(), isM=c=>{ let v=MC.get(c); if(v===undefined){ v=MSET.has(c.join(',')); MC.set(c,v); } return v; };   // looked up once per color, not per pixel
   const TWS=(px,py,c,fr,k,t,u,vv,stp)=>{ const col=TWS0(px,py,c,fr,k,t,u,vv,stp); if(!c||!isM(c)) return col;
-    const hh=Math.sin(px*12.9898+py*78.233)*43758.5453, g=hh-Math.floor(hh), ridge=Math.sin(Math.PI*Math.min(1,Math.max(0,fr))), lum=(c[0]+c[1]+c[2])/765;
-    const k2=(0.34+0.78*ridge)*(0.8+0.4*g), glint=Math.pow(ridge,8)*0.5+(g>0.955?0.75:0), tint=lum>0.6?0.6:0.95;
-    return [0,1,2].map(i=>Math.max(0,Math.min(255,c[i]*tint*k2*(i===2?1.06:1)+(c[i]*0.45+255*0.55)*glint))); };
+    MK[(py|0)*MKW+(px|0)]=1; MKn++;
+    // smooth, saturated metal: each thread a rounded strand (darker at its edges), no glitter; the shine comes from the 3D light on it
+    const ridge=Math.sin(Math.PI*Math.min(1,Math.max(0,fr))), k2=0.55+0.5*Math.pow(ridge,0.7), hi=Math.pow(ridge,6)*0.18, lum=(c[0]+c[1]+c[2])/765, sat=lum>0.6?0.92:1.08;
+    return [0,1,2].map(i=>{ const m=(c[0]+c[1]+c[2])/3, v=m+(c[i]-m)*sat; return Math.max(0,Math.min(255,v*k2+255*hi)); }); };
   const TWS0=(px,py,c,fr,k,t,u,vv,stp)=>{ if(!window.WL_TWIST) return r.shade(c,fr,k); const zz=za+(px+0.5)/W*(zb-za), Cc=Math.PI*(r.D?r.D(Math.max(0,zz)):10);
     const a=t&&t[2]?0.5*(u+t[2]*vv)*Math.hypot(stp,Cc/r.n):(py+0.5)/H*Cc; return r.shade(WL_TWIST.rgb(c,a,fr,t&&t[3]||0),fr,k); };
   const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d'), im=x.createImageData(W,H), d=im.data, end=r.pos[r.steps];
@@ -871,12 +873,12 @@ window.WL_unrolled=function(W,H){ const r=window.__wlRod; if(!r) return null;
   for(let px=0;px<W;px++){ const z=za+(px+0.5)/W*(zb-za), [u,stp]=r.zToU(z), td=r.trimOnly?z:(Wo?(z<Wo?Wo-z:z>end-Wo?z-(end-Wo):-1):-1);
     if(td>=0){ for(let py=0;py<H;py++){ const o=(py*W+px)*4, t=WLTrim.at(r.trims,td,r.tw,(py+0.5)/H,z<Wo?-1:1,r.blankHex,r.D(z));
         if(!t){ d[o+3]=0; continue; } const col=TWS(px,py,rgb[t[0]]||(rgb[t[0]]=[1,3,5].map(i=>parseInt(t[0].slice(i,i+2),16))),t[1],1); d[o]=col[0]; d[o+1]=col[1]; d[o+2]=col[2]; d[o+3]=255; } continue; }
-    if(r.dragon && z>=0 && z<=end+1e-6){ for(let py=0;py<H;py++){ const o=(py*W+px)*4, vv=(py+0.5)/H*r.n, c=r.dragon(u,vv,stp,z); if(c){ d[o]=Math.min(255,c[0]); d[o+1]=Math.min(255,c[1]); d[o+2]=Math.min(255,c[2]); d[o+3]=255; continue; }
+    if(r.dragon && z>=0 && z<=end+1e-6){ for(let py=0;py<H;py++){ const o=(py*W+px)*4, vv=(py+0.5)/H*r.n, c=r.dragon(u,vv,stp,z); if(c){ MK[py*MKW+px]=1; MKn++; d[o]=Math.min(255,c[0]); d[o+1]=Math.min(255,c[1]); d[o+2]=Math.min(255,c[2]); d[o+3]=255; continue; }
         const t=r.surf(u,vv,stp); if(!t){ d[o+3]=0; continue; } const col=t[0]<0?r.fillRGB:TWS(px,py,r.cols[t[0]],t[1],1,t,u,vv,stp); d[o]=col[0]; d[o+1]=col[1]; d[o+2]=col[2]; d[o+3]=255; } continue; }
     for(let py=0;py<H;py++){ const o=(py*W+px)*4, vv=(py+0.5)/H*r.n, t=(z>=0&&z<=end+1e-6)?r.surf(u,vv,stp):null;
       if(!t){ d[o+3]=0; continue; } const col=t[0]<0?r.fillRGB:TWS(px,py,r.cols[t[0]],t[1],1,t,u,vv,stp);
       d[o]=col[0]; d[o+1]=col[1]; d[o+2]=col[2]; d[o+3]=255; } }
-  x.putImageData(im,0,0); return {canvas:c,lengthMM:zb-za,from:r.from,trimMM:r.trimOnly?Wt:Wo}; };
+  x.putImageData(im,0,0); c.__sfswMet=MKn?{mk:MK,W:MKW,H:H|0}:null; return {canvas:c,lengthMM:zb-za,from:r.from,trimMM:r.trimOnly?Wt:Wo}; };
 function drawHow({at,tw,mod,dir,chev,n,st0,C0,cols,blank,cum,inner}){
   if(state.pattern==='trim'){ const st=WLTrim.steps(state.trims,c=>`<i class="dot" style="background:${c}"></i>`,$('blankC').value,state.tsize);
     $('howGrid').innerHTML=st.length?`<figure class="stepfig"><figcaption><b>Trim band</b><br>From the middle of the trim band out:<ol style="margin:6px 0 0;padding-left:20px">${st.map(t=>`<li>${t}</li>`).join('')}</ol></figcaption></figure>`:'<p class="sub">Add a trim band to see the steps.</p>';
