@@ -777,7 +777,8 @@
   }
   function trimPresetSync(dd, fw) {   // show Preset 1 for the Trim Band example, Build From Scratch for plain trims
     try { var sel = dd.getElementById('sfswTrimPreset'); if (!sel) return; var t0 = fw.wlCapture().trims || {};
-      sel.value = S.wrapId === 'trim-band' || (t0.bands || []).length || (t0.ends || []).length ? (sel.value === 'scratch' ? '0' : sel.value) : 'scratch'; } catch (e) {}
+      sel.value = S.wrapId === 'trim-band' ? String(Math.min(recPick['trim-band'] || 0, 2))   // Trim Band Example 1-3 = Preset 1-3
+        : S.wrapId === 'trim-band' || (t0.bands || []).length || (t0.ends || []).length ? (sel.value === 'scratch' ? '0' : sel.value) : 'scratch'; } catch (e) {}
   }
   function presetClear(c) {   // a new preset starts clean: Underwrap and the pattern between go off
     if (c.inner) c.inner.on = false;
@@ -1110,7 +1111,7 @@
   }
   // Customize starts from a plain 3-color wrap of the picked style, with the threads set so the diamonds
   // take up as much of the wrap as the open space between them
-  function genericDesign() { var pr = presetOf(S.wrapId); if (!pr || pr.k !== 'taper' || !/diamond|chevron/.test(pr.p)) return; presetFill(); presetPick(0); return presetApply(presetsFor()[0], true); }   // the customizer opens on Preset 1
+  function genericDesign() { var pr = presetOf(S.wrapId); if (!pr || pr.k !== 'taper' || !/diamond|chevron/.test(pr.p)) return; presetFill(); var L = presetsFor(), k = S.wrapId === 'chev-4' ? Math.min(recPick[S.wrapId] || 0, L.length - 1) : 0; presetPick(k); return presetApply(L[k], true); }   // the customizer opens on Preset 1 (on Chevron 4 Axis, whose presets are its examples: the preset of the example picked)
 
   // the pattern between brings up to 2 new colors free; colors it shares with the main wrap are free anyway
   function innerFree() { var d = designOn(), c = d && d.setup; if (!c || !c.inner || !c.inner.on || S.wrapMode !== 'build') return 0;
@@ -1119,7 +1120,7 @@
   window.SFSW_designColors = function () { var d = designOn(); return d && d.colors ? d.colors.length - innerFree() : null; };
   function setMode(m, quiet) {
     var was = S.wrapMode; S.wrapMode = m;
-    if (m === 'build' && was !== 'build') { lastPreset = null; presetFill(); genericDesign(); if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
+    if (m === 'build' && was !== 'build') { lastPreset = null; presetFill(); genericDesign(); if (S.wrapId === 'trim-band') try { var tps = dz.contentDocument.getElementById('sfswTrimPreset'); if (tps) tps.value = String(Math.min(recPick['trim-band'] || 0, 2)); } catch (e) {}   /* Trim Band Example 1-3 = Preset 1-3 */ if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
     if (m === 'random' && was !== 'random') { S.supportIdxs = (S.supportIdxs || []).slice(0, 3); call('renderSupportingRows'); }   // Builder's Choice starts at main + 3 supporting
     renderModes(); updTop(); if (quiet) return;
     if (was === 'random' && m !== 'random') { clearTimeout(readT); readT = setTimeout(readDesign, 50); }
