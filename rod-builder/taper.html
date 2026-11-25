@@ -9,6 +9,8 @@
 html.sfswd.sfswtb section.panel:not(:has(#trimWrap)),html.sfswd.sfswtb .view.scroll{display:none!important}
 html.sfswd.sfswtb section.panel :is(div,label,button,p,small,span,select,input,h2,h3):not(:has(#trimWrap)):not(:has(.tbLen)):not(#trimWrap):not(#trimWrap *):not(.tbTitle):not(.tbNote):not(.tbLen):not(.tbLen *){display:none!important}
 html.sfswd.sfswtb .f:has(>#trimWrap){display:block!important}
+.sfswd .sfswNF{display:inline-flex;align-items:center;gap:6px;font-size:14px;margin:0 6px;cursor:pointer}.sfswd .sfswNF input{width:18px;height:18px;accent-color:#c9941a}
+.sfswd .sfswNF:has(input:not(:checked)) ~ *:not(.addbtn){opacity:.35;pointer-events:none}
 html.sfswd.sfswtb .tbLen{display:flex!important;flex-wrap:wrap;align-items:center;gap:8px;font-weight:600;margin-bottom:10px}
 html.sfswd.sfswtb .tbLen::after{content:"2 in included · +$10 each extra inch\A 2 saw blades and 4 fades on each side included · +$5 each extra";white-space:pre-line;flex-basis:100%;font-size:12.5px;font-weight:400;opacity:.75;line-height:1.5}
 /* SFSW: a roomier color picker */

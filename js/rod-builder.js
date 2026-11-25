@@ -481,7 +481,7 @@
       { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], tb: { mm: 50.8, c: '862 Twilight Black',
         bands: [['9100 Metallic Yellow Gold', 4], ['862 Twilight Black', 2], ['807 White', 1, 'mid', '862 Twilight Black'], ['807 White', 2], ['', 3, 'fade'], ['862 Twilight Black', 6], ['9100 Metallic Yellow Gold', 4], ['9100 Metallic Yellow Gold', 1, 'mid', '862 Twilight Black']],
         ends: [['9100 Metallic Yellow Gold', 6]] } },
-      { trim: '404 Teal', stripes: [['404 Teal', 1]], tb: Object.assign({ mm: 50.8 }, { c: '404 Teal', bands: [['404 Teal', 2], ['464 Blurple', 4], ['404 Teal', 1, 'tip', '464 Blurple'], ['404 Teal', 3], ['464 Blurple', 1, 'tip', '404 Teal']],
+      { trim: '404 Teal', stripes: [['404 Teal', 1]], tb: Object.assign({ mm: 50.8 }, { c: '404 Teal', bands: [['404 Teal', 2], ['464 Blurple', 4], ['404 Teal', 1, 'tip', '464 Blurple'], ['404 Teal', 3], ['404 Teal', 1, 'tip', '464 Blurple'], ['464 Blurple', 2], ['', 3, 'fade']], noFill: true,
         ends: [['404 Teal', 4], ['', 3, 'fade'], ['434 Maui Surf', 4], ['', 3, 'fade'], ['428 Summer Sky', 4], ['', 3, 'fade'], ['449 Wildberry', 4], ['', 3, 'fade'], ['455 Cobalt', 4], ['', 3, 'fade'], ['464 Blurple', 4], ['', 3, 'fade'], ['455 Cobalt', 4], ['', 3, 'fade'], ['449 Wildberry', 4], ['', 3, 'fade'], ['428 Summer Sky', 4], ['', 3, 'fade'], ['434 Maui Surf', 4], ['', 3, 'fade'], ['404 Teal', 4], ['', 3, 'fade']] }) },   // example 2: teal to blurple fade
       { trim: '404 Teal', stripes: [['404 Teal', 1]], tb: { mm: 50.8, c: '404 Teal',   // example 3: teal and neon pink
         bands: [['361 Neon Pink', 2], ['862 Twilight Black', 2], ['361 Neon Pink', 1, 'mid', '862 Twilight Black'], ['361 Neon Pink', 3], ['404 Teal', 1, 'mid', '361 Neon Pink'], ['404 Teal', 4]],
@@ -746,7 +746,7 @@
     if (fresh && pw) { keep.pattern = pw.p; keep.axes = pw.a; keep.nOverride = null; keep.chevTo = null; keep.center = { on: false, c: base[0].c, t: 1 };
       keep.inner = { on: false, pattern: 'diamond', place: 'center', auto: true, stripes: [] }; keep.unit = 'in'; keep.len = wrapLen().toFixed(2); }
     var mk = function (T, measuring) { var c = JSON.parse(JSON.stringify(keep)), f = T / sum; c.stripes = base.map(function (x, i) { return { c: x.c, t: Math.max(i ? 1 : 2, Math.round(x.t * f)) }; });   /* the center starts with at least 2 threads */
-      if (c.trims) { c.trims.c = hx(pr.trim); c.trims.bands = []; c.trims.ends = []; } if (c.pattern === 'chevron') c.chevTo = pr.chevTo || null;   /* the preset's chevron direction */ if (measuring) { c.arms = 'show'; if (c.inner) c.inner.on = false; }
+      if (c.trims) { c.trims.c = hx(pr.trim); c.trims.bands = []; c.trims.noFill = false; c.trims.ends = []; } if (c.pattern === 'chevron') c.chevTo = pr.chevTo || null;   /* the preset's chevron direction */ if (measuring) { c.arms = 'show'; if (c.inner) c.inner.on = false; }
       else if (pr.inner) { c.inner = recInner(pr, hx); c.inner.stripes = c.inner.stripes.map(function (x) { return { c: x.c, t: Math.max(1, Math.round(x.t * f)) }; }); }   // the preset's own pattern between
       return c; };
     var axK = pr.ax ? pr.ax / (+keep.axes || pr.ax) : 1;   // a preset made for another axis count: scale its counts
@@ -756,7 +756,7 @@
   }
   // Trim band presets (Trim Band wrap's customizer and the Trim Bands tab): Build From Scratch, then Preset 1-5; Preset 1 is the Trim Band example
   var TRIM_PRESETS = [null,
-    { c: '404 Teal', bands: [['404 Teal', 2], ['464 Blurple', 4], ['404 Teal', 1, 'tip', '464 Blurple'], ['404 Teal', 3], ['464 Blurple', 1, 'tip', '404 Teal']],
+    { c: '404 Teal', bands: [['404 Teal', 2], ['464 Blurple', 4], ['404 Teal', 1, 'tip', '464 Blurple'], ['404 Teal', 3], ['404 Teal', 1, 'tip', '464 Blurple'], ['464 Blurple', 2], ['', 3, 'fade']], noFill: true,
         ends: [['404 Teal', 4], ['', 3, 'fade'], ['434 Maui Surf', 4], ['', 3, 'fade'], ['428 Summer Sky', 4], ['', 3, 'fade'], ['449 Wildberry', 4], ['', 3, 'fade'], ['455 Cobalt', 4], ['', 3, 'fade'], ['464 Blurple', 4], ['', 3, 'fade'], ['455 Cobalt', 4], ['', 3, 'fade'], ['449 Wildberry', 4], ['', 3, 'fade'], ['428 Summer Sky', 4], ['', 3, 'fade'], ['434 Maui Surf', 4], ['', 3, 'fade'], ['404 Teal', 4], ['', 3, 'fade']] },   // Preset 2: teal to blurple fade (= Trim Band example 2)
     { c: '862 Twilight Black', bands: [['9860 Metallic Silver', 3], ['862 Twilight Black', 2], ['9860 Metallic Silver', 1, 'mid', '862 Twilight Black'], ['841 Iron Ore', 3]], ends: [['9860 Metallic Silver', 5]] },
     { c: '862 Twilight Black', bands: [['9520 Metallic Green', 4], ['807 White', 2], ['513 Guacamole', 3], ['', 3, 'fade']], ends: [['9520 Metallic Green', 4]] },
@@ -772,7 +772,7 @@
     sel.addEventListener('change', function () { try {
       var c = fw.wlCapture(), hx = threadHex(fw), mm = (c.trims && c.trims.mm) || 20, ex = ((PRESET['Trim Band'] || {}).recs || [])[0];
       if (sel.value === 'scratch') c.trims = { on: true, mm: mm, c: (c.trims && c.trims.c) || hx('862 Twilight Black'), bands: [], ends: [] };
-      else { var T = +sel.value === 0 && ex ? ex.tb : TRIM_PRESETS[+sel.value]; c.trims = tbOf({ mm: S.wrapId === 'trim-band' ? 50.8 : mm, c: T.c, bands: T.bands, ends: T.ends }, hx); }
+      else { var T = +sel.value === 0 && ex ? ex.tb : TRIM_PRESETS[+sel.value]; c.trims = tbOf({ mm: S.wrapId === 'trim-band' ? 50.8 : mm, c: T.c, bands: T.bands, ends: T.ends, noFill: T.noFill }, hx); }
       fw.wlApply(c); if (after) after(); } catch (e) {} });
   }
   function trimPresetSync(dd, fw) {   // show Preset 1 for the Trim Band example, Build From Scratch for plain trims
@@ -786,7 +786,7 @@
   function presetScratch() {   // Build From Scratch: just a center line to build on
     lastPreset = 'scratch'; fitTok++; var w = dw(); if (!w || !w.wlCapture) return;
     var c = clean(w.wlCapture()), hx = threadHex(w); presetClear(c); c.stripes = [{ c: hx('807 White'), t: 2 }];   /* 2 white threads in the center */
-    c.center = { on: false, c: c.stripes[0].c, t: 1 }; if (c.inner) c.inner.on = false; if (c.trims) { c.trims.bands = []; c.trims.ends = []; }
+    c.center = { on: false, c: c.stripes[0].c, t: 1 }; if (c.inner) c.inner.on = false; if (c.trims) { c.trims.bands = []; c.trims.noFill = false; c.trims.ends = []; }
     w.wlApply(c); clearTimeout(readT); readT = setTimeout(readDesign, 150);
   }
   function openShare(w, c) {   // how much of the wrap (between the trims) still looks like bare blank
@@ -938,7 +938,7 @@
   var applyN = 0;
   var designCols = function () { return S.customDesign && S.customDesign.colors && S.customDesign.colors.length ? S.customDesign.colors.map(function (c) { return c.hex; }) : null; };
   function tbOf(T, hx) { var it = function (x) { var o = { c: x[0] ? hx(x[0]) : '', t: x[1] }; if (x[2] === 'fade') o.fade = true; else if (x[2]) { o.saw = x[2]; o.c2 = hx(x[3]); } return o; };
-    return { on: true, mm: T.mm, c: hx(T.c), bands: T.bands.map(it), ends: (T.ends || []).map(it) }; }
+    return { on: true, noFill: !!T.noFill, mm: T.mm, c: hx(T.c), bands: T.bands.map(it), ends: (T.ends || []).map(it) }; }
   function threadHex(w) { var m = {}; try { w.WL_THREADS.BRANDS.sfsw.groups.forEach(function (g) { g[1].forEach(function (x) { m[x[0]] = x[1]; }); }); } catch (e) {}
     return function (n) { return m[n] || '#1e1617'; }; }
   var recPick = {}, dzHold = 0;   // which photo design each wrap is on
@@ -1000,7 +1000,7 @@
   // wrap length: starts at the rod type's length (9 in here); each extra inch is +$10
   // wrap length: included length per wrap (cross wraps 8 in, the rest this rod type's length); longer costs per inch (cross wraps +$20, the rest +$10); shorter is allowed and doesn't lower the price
   function isCrossWrap() { var pr = presetOf(S.wrapId); return !!(pr && pr.k === 'cross'); }
-  function BASE_LEN() { return S.wrapId === 'abalone' ? 9 : 8; }   // every wrap starts at 8 in; abalone at 9 in (and only goes shorter)
+  function BASE_LEN() { var pr = presetOf(S.wrapId); return pr && pr.p === 'dragon' ? 8 : 9; }   // diamond, chevron and cross wraps start at 9 in included, dragon scales at 8 in; abalone 9 in (and only goes shorter)
   function LEN_RATE() { return 15; }   // +$15 each added inch
   function MAX_LEN() { return S.wrapId === 'abalone' ? 9 : BASE_LEN() + 12; }
   var MIN_LEN = 3, lenBox;   // lenBox: the wrap length box (in the designer, or beside the abalone colors)
@@ -1110,9 +1110,9 @@
     if (WS && !restore) { cap.unit = 'in'; cap.len = (+wrapLen()).toFixed(2); cap.dB = (+WS.dB).toFixed(1); cap.dT = (+WS.dT).toFixed(1); cap.dM = ((+WS.dB + +WS.dT) / 2).toFixed(1); }
     if (!restore && dzKind === 'cross') { noCustom(w); cap.reps = null; }   // repetitions: auto, to fill the wrap
     if (!restore && REC && REC.stripes) { var hx0 = threadHex(w);   // the wrap's own design goes in first, so nothing else ever shows
-      cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.ends = []; } if (REC.tb) cap.trims = tbOf(REC.tb, hx0); if (REC.dragon && cap.dragon) { cap.dragon.metal = hx0(REC.dragon.metal); cap.dragon.line = hx0(REC.dragon.line); if (REC.dragon.over) cap.dragon.over = Object.assign({}, cap.dragon.over, REC.dragon.over); } if (REC.sax) cap.axes = REC.sax; var ri0 = recInner(REC, hx0); if (ri0) cap.inner = ri0; else if (cap.inner) cap.inner.on = false; if (REC.chevTo) cap.chevTo = REC.chevTo; if (REC.angle || REC.dragon) cap.angle = REC.angle || '45'; }
-    if (!restore && pr.p !== 'trim' && cap.trims && !(REC && REC.tb)) { cap.trims.mm = 20; cap.trims.bands = []; cap.trims.ends = []; }
-    else if (!restore && !prev && dzKind === 'taper') { cap.stripes = JSON.parse(JSON.stringify(START.stripes)); if (cap.trims) { cap.trims.c = START.trim; cap.trims.bands = []; cap.trims.ends = []; } }
+      cap.stripes = REC.stripes.map(function (x) { return { c: hx0(x[0]), t: x[1] }; }); if (cap.trims) { cap.trims.c = hx0(REC.trim || REC.stripes[0][0]); cap.trims.bands = []; cap.trims.noFill = false; cap.trims.ends = []; } if (REC.tb) cap.trims = tbOf(REC.tb, hx0); if (REC.dragon && cap.dragon) { cap.dragon.metal = hx0(REC.dragon.metal); cap.dragon.line = hx0(REC.dragon.line); if (REC.dragon.over) cap.dragon.over = Object.assign({}, cap.dragon.over, REC.dragon.over); } if (REC.sax) cap.axes = REC.sax; var ri0 = recInner(REC, hx0); if (ri0) cap.inner = ri0; else if (cap.inner) cap.inner.on = false; if (REC.chevTo) cap.chevTo = REC.chevTo; if (REC.angle || REC.dragon) cap.angle = REC.angle || '45'; }
+    if (!restore && pr.p !== 'trim' && cap.trims && !(REC && REC.tb)) { cap.trims.mm = 20; cap.trims.bands = []; cap.trims.noFill = false; cap.trims.ends = []; }
+    else if (!restore && !prev && dzKind === 'taper') { cap.stripes = JSON.parse(JSON.stringify(START.stripes)); if (cap.trims) { cap.trims.c = START.trim; cap.trims.bands = []; cap.trims.noFill = false; cap.trims.ends = []; } }
     if (!restore) snap(w, cap);
     var same = !restore && !switched && !first && REC && pr.k === 'taper' && cap.pattern === pr.p && +cap.axes === +pr.a && pr.p !== 'dragon';   // same wrap, another example: nothing else to set up
     if (same) { cap.nOverride = null; cap.chevTo = (REC && REC.chevTo) || null; if (cap.inner && !REC.inner) cap.inner.on = false; }
@@ -1141,14 +1141,14 @@
       if (REC && REC.stripes) {   // this wrap's own recipe (the design in its photo)
         var hx = threadHex(w), R = REC;
         c2.stripes = R.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; });
-        if (c2.trims) { c2.trims.c = hx(R.trim || R.stripes[0][0]); c2.trims.bands = []; c2.trims.ends = []; }
+        if (c2.trims) { c2.trims.c = hx(R.trim || R.stripes[0][0]); c2.trims.bands = []; c2.trims.noFill = false; c2.trims.ends = []; }
         if (R.tb) c2.trims = tbOf(R.tb, hx);
         if (R.dragon && c2.dragon) { c2.dragon.metal = hx(R.dragon.metal); c2.dragon.line = hx(R.dragon.line); if (R.dragon.over) c2.dragon.over = Object.assign({}, c2.dragon.over, R.dragon.over); }
         var ri = recInner(R, hx); if (ri) c2.inner = ri; else if (c2.inner) c2.inner.on = false;
         if (R.chevTo) c2.chevTo = R.chevTo;   // which way the chevrons point
         if (R.angle || R.dragon) c2.angle = R.angle || '45';   // an example's thread angle (dragon scale examples go back to 45 unless set)
-      } else if (dzKind === 'cross' || switched || first) { (c2.stripes || []).forEach(function (x, i) { x.c = cols[i % cols.length]; }); if (c2.trims) { c2.trims.c = cols[0]; c2.trims.bands = []; c2.trims.ends = []; } }
-      if (pr.p !== 'trim' && c2.trims && !(R && R.tb)) { c2.trims.mm = 20; c2.trims.bands = []; c2.trims.ends = []; }   // the Trim Band's wide band doesn't carry over
+      } else if (dzKind === 'cross' || switched || first) { (c2.stripes || []).forEach(function (x, i) { x.c = cols[i % cols.length]; }); if (c2.trims) { c2.trims.c = cols[0]; c2.trims.bands = []; c2.trims.noFill = false; c2.trims.ends = []; } }
+      if (pr.p !== 'trim' && c2.trims && !(R && R.tb)) { c2.trims.mm = 20; c2.trims.bands = []; c2.trims.noFill = false; c2.trims.ends = []; }   // the Trim Band's wide band doesn't carry over
       if (pr.k === 'taper' && pr.p !== 'trim') { c2.pattern = pr.p; c2.axes = pr.a; if (pr.p === 'dragon' && c2.dragon) { c2.dragon.over = Object.assign({}, c2.dragon.over, (R && R.dragon && R.dragon.over) || {}, { on: !!pr.over }); } }   // each wrap starts on its own pattern and axis count (a hidden axis button can miss the press)
       if (pr.p === 'dragon' && S.dragonAx && !pr.over) { c2.axes = S.dragonAx; if (S.dragonAx === 32) c2.angle = '45'; }
       if (R && R.sax) c2.axes = R.sax;   // the scales' own axis lines under a wrap over them   // the dragon scale axes they picked stay

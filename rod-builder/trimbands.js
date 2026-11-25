@@ -26,7 +26,7 @@
     // the same counts in mm, each band at its own thread's width
     const dHalfMM=b.length?BW(b[0],tw)[0]/2+b.slice(1).reduce((a,x,j)=>a+BW(x,tw,b[j].c||base,(b[j+2]&&b[j+2].c)||base)[0],0):0;
     const endsMM=e.reduce((a,x,j)=>a+BW(x,tw,(e[j-1]&&e[j-1].c)||base,(e[j+1]&&e[j+1].c)||base)[0],0), ftw=tw*TF(base);
-    const fill=Math.max(0,Math.round(((T.mm||20)/2-dHalfMM-endsMM)/ftw));
+    const fill=T.noFill?0:Math.max(0,Math.round(((T.mm||20)/2-dHalfMM-endsMM)/ftw));   /* sfswNoFill */
     return {dHalf,fill,ends,half:dHalf+fill+ends,dHalfMM,endsMM,fillMM:fill*ftw,halfMM:dHalfMM+fill*ftw+endsMM};
   }
   const width=(T,tw)=>has(T)?2*counts(T,tw).halfMM:0;
@@ -82,7 +82,7 @@
     host.innerHTML=!has(T)?`<div class="stripes"><button type="button" class="addbtn" data-k="on">+ Add trim bands</button></div>`
       :`<div class="tbrow"><span class="tblab">Width at each end</span>
           <span class="stripe" style="padding:2px"><button type="button" data-mm="-1" aria-label="Narrower">\u2212</button><input type="number" id="tbmm" class="sfswInch" min="0.25" max="9" step="0.25" value="${(Math.max(1,Math.round((T.mm||20)/6.35))/4).toFixed(2)}" aria-label="Trim band width in inches" style="width:5.5em;text-align:center"><small class="slab">in</small><button type="button" data-mm="1" aria-label="Wider">+</button></span>
-          <span class="tblab sfswMainTrim">Main Trim Color</span><input type="color" id="tbbase" value="${T.c||BLUE}" aria-label="Trim band color">
+          <span class="tblab sfswMainTrim">Main Trim Color</span><label class="sfswNF"><input type="checkbox" id="tbnofill"${T.noFill?'':' checked'}> On</label><input type="color" id="tbbase" value="${T.c||BLUE}" aria-label="Trim band color">
           <button type="button" class="addbtn" data-k="off" style="margin-left:auto">No trim bands</button></div>
         <div class="tbrow"><span id="tbsum" class="tblab"></span></div>
         <div class="tbrow" style="margin-top:10px"><div class="seg" id="tbmode" role="group" aria-label="Design the center or the ends">
@@ -101,7 +101,7 @@
     const mmIn=g('tbmm'); if(mmIn){ const qOf=()=>Math.max(1,Math.round((T.mm||20)/6.35)), setMM=v=>{ const q=Math.min(36,Math.max(1,Math.round(v*4))); T.mm=q*6.35; mmIn.value=(q/4).toFixed(2); ch(); };
       mmIn.addEventListener('change',e=>setMM(parseFloat(e.target.value)||0.75));
       host.querySelectorAll('[data-mm]').forEach(x=>x.onclick=()=>setMM(qOf()/4 + (+x.dataset.mm)*0.25)); }
-    const bc=g('tbbase'); if(bc) bc.addEventListener('input',e=>{ T.c=e.target.value; ch(); });
+    const bc=g('tbbase'); if(bc) bc.addEventListener('input',e=>{ T.c=e.target.value; ch(); }); const nf=g('tbnofill'); if(nf) nf.onchange=e=>{ T.noFill=!e.target.checked; ch(); };
     (mode==='center'?[['b',T.bands||[]]]:[['e',T.ends||[]]]).forEach(([key,arr])=>arr.forEach((b,i)=>{   // only the list on screen
       if(b.fade){ g('tb'+key+'f'+i).onchange=e=>{ b.t=+e.target.value; ch(); }; return; }
       g('tb'+key+'c'+i).addEventListener('input',e=>{ b.c=e.target.value; ch(); });
@@ -158,7 +158,7 @@
     :b.saw?{c:String(b.c||'#f0ede5'),t:1,saw:SAW.some(s=>s[0]===b.saw)&&(!center||/^(mid|ends)$/.test(b.saw))?b.saw:'mid',c2:String(b.c2||'#1a1a1a')}:{c:String(b.c||'#f0ede5'),t:Math.max(1,+b.t||1)};
   function clean(o){ if(!o||typeof o!=='object'||Array.isArray(o)) return {on:false,mm:20,c:BLUE,bands:[],ends:[]};
     const bands=(Array.isArray(o.bands)?o.bands:[]).filter(b=>b&&typeof b==='object'); while(bands[0]&&bands[0].fade) bands.shift();
-    return { on:o.on!==false, mm:Math.min(228.6,Math.max(2,+o.mm||20)), c:/^#[0-9a-f]{6}$/i.test(o.c||'')?o.c:BLUE, bands:bands.map((b,i)=>cb(b,i===0)),
+    return { on:o.on!==false, noFill:!!o.noFill, mm:Math.min(228.6,Math.max(2,+o.mm||20)), c:/^#[0-9a-f]{6}$/i.test(o.c||'')?o.c:BLUE, bands:bands.map((b,i)=>cb(b,i===0)),
       ends:(Array.isArray(o.ends)?o.ends:[]).filter(b=>b&&typeof b==='object').map(b=>cb(b,false)) }; }
   window.WLTrim={has,width,at,ui,steps,clean,refresh,counts,blank:()=>({on:true,mm:20,c:BLUE,bands:[],ends:[]})};   // new designs start with a plain blue trim band
 })();
