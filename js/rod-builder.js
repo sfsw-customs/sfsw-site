@@ -1014,10 +1014,29 @@
   // the Trim Band wrap: its band length in quarter inches; 2 in included, +$10 each extra inch ($2.50 a quarter inch)
   function tbLenQ() { var d = S.customDesign, t = d && d.setup && d.setup.trims; return Math.max(1, Math.round(((t && +t.mm) || 50.8) / 6.35)); }
   // the Trim Band wrap, counted per side (each one is mirrored on the other side): 2 saw blades and 4 fades included, +$5 each extra
-  function tbParts() { var d = S.customDesign, t = d && d.setup && d.setup.trims, o = { saw: 0, fade: 0 }; if (!t) return o;
-    (t.bands || []).concat(t.ends || []).forEach(function (b) { if (b.saw) o.saw++; else if (b.fade) o.fade++; });
+  var TB_SAW = 2, TB_FADE = 4, TB_EACH = 5;
+  function tbCount(t) { var o = { saw: 0, fade: 0 }; if (!t) return o; var b = t.bands || [], e = t.ends || [];
+    b.concat(e).forEach(function (x) { if (x.saw) o.saw++; else if (x.fade) o.fade++; });
+    if (t.noFill && b.length > 1 && e.length && b[b.length - 1].fade && e[e.length - 1].fade) o.fade--;   // main color off: the center's last fade and the end bands' last fade meet as one fade
     return o; }
-  function tbPartFee() { if (S.wrapId !== 'trim-band' || S.wrapMode === 'random') return 0; var o = tbParts(); return (Math.max(0, o.saw - 2) + Math.max(0, o.fade - 4)) * 5; }
+  function tbParts() { var d = S.customDesign; return tbCount(d && d.setup && d.setup.trims); }
+  function tbFeeOf(o) { return (Math.max(0, o.saw - TB_SAW) + Math.max(0, o.fade - TB_FADE)) * TB_EACH; }
+  function tbPartFee() { if (S.wrapId !== 'trim-band' || S.wrapMode === 'random') return 0; return tbFeeOf(tbParts()); }
+  // in the Trim Band wrap's designer: the add buttons show +$5 once the included ones are used, and a line shows the count and the charge
+  function tbFeeHook(w) { try { if (!w || w.__sfswTbFee) return; var d = w.document; w.__sfswTbFee = true;
+    var paint = function () { var tw = d.getElementById('trimWrap'); if (!tw) return; var on = S.wrapId === 'trim-band' && d.documentElement.classList.contains('sfswtb'), t = null;
+      try { t = w.wlCapture().trims; } catch (e) {} var o = tbCount(t);
+      [['saw', 'saw blade', o.saw >= TB_SAW], ['fade', 'fade', o.fade >= TB_FADE]].forEach(function (k) { var b = tw.querySelector('.addbtn[data-k="' + k[0] + '"]'); if (!b) return;
+        var txt = '+ Add ' + k[1] + (on && k[2] ? '  +$' + TB_EACH : ''); if (b.textContent !== txt) b.textContent = txt; b.classList.toggle('sfswPaid', !!(on && k[2])); });
+      var row = tw.querySelector('.addbtn[data-k="saw"]'); row = row && row.parentNode; if (!row) return; var ln = tw.querySelector('.sfswTbFee');
+      if (!on) { if (ln) ln.remove(); return; }
+      if (!ln) { ln = d.createElement('div'); ln.className = 'sfswTbFee'; row.parentNode.insertBefore(ln, row.nextSibling); }
+      var f = tbFeeOf(o), h = 'Saw blades: <b>' + o.saw + '</b> each side (' + TB_SAW + ' included) · Fades: <b>' + o.fade + '</b> each side (' + TB_FADE + ' included)' + (f ? ' · <b class="sfswTbAdd">+$' + f + '</b>' : ' · <b>no extra charge</b>');
+      if (ln.innerHTML !== h) ln.innerHTML = h; };
+    var st = d.createElement('style'); st.textContent = '.sfswTbFee{font-size:13.5px;margin:8px 0 10px;opacity:.9}.sfswTbFee .sfswTbAdd{color:#e0b13a}.addbtn.sfswPaid{border-color:#c9941a!important;color:#e0b13a!important}'; d.head.appendChild(st);
+    var mo = new w.MutationObserver(function () { clearTimeout(w.__sfswTbT); w.__sfswTbT = setTimeout(paint, 30); });
+    mo.observe(d.body, { childList: true, subtree: true }); d.addEventListener('input', function () { setTimeout(paint, 60); }, true); d.addEventListener('change', function () { setTimeout(paint, 60); }, true);
+    w.__sfswTbPaint = paint; paint(); } catch (e) {} }
   function tbLenFee() { return S.wrapId === 'trim-band' ? Math.max(0, tbLenQ() - 8) * 2.5 : 0; }
   function lenFee() { return CFG.wrap && S.wrapId !== 'trim-band' ? Math.max(0, wrapLen() - BASE_LEN()) * LEN_RATE() : 0; }   // the Trim Band wrap has no length to pick
   function setWrapLen(n) {
@@ -1107,7 +1126,7 @@
     renderModes(); var REC = S.wrapMode === 'example' ? recOf(pr, id) : null;
     var prev = prevCols || designCols(), first = !prev, switched = false;
     switched = !!(lastKind && lastKind !== (restore ? restore.sfsw : pr.k));
-    var w = await loadKind(restore ? restore.sfsw : pr.k); if (!w || n !== applyN) return;
+    var w = await loadKind(restore ? restore.sfsw : pr.k); if (!w || n !== applyN) return; tbFeeHook(w);
     var WS0 = (window.SFSW_BUILDER || {}).wrap, fit = null; if (!WS0) try { if (rod && rod.fit) fit = await rod.fit(); } catch (e) {}   // this rod type sets the wrap's size itself: no need to wait for the 3D rod
     var cap = restore ? JSON.parse(JSON.stringify(restore.setup)) : w.wlCapture();
     if (restore && restore.setup && restore.setup.unit === 'in' && +restore.setup.len) S.wrapLen = +restore.setup.len;
