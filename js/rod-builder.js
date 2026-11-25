@@ -755,12 +755,11 @@
     w.wlApply(mk(T)); clearTimeout(readT); readT = setTimeout(readDesign, 20);
   }
   // Trim band presets (Trim Band wrap's customizer and the Trim Bands tab): Build From Scratch, then Preset 1-5; Preset 1 is the Trim Band example
-  var TRIM_PRESETS = [null,
-    { c: '404 Teal', bands: [['404 Teal', 2], ['464 Blurple', 4], ['404 Teal', 1, 'tip', '464 Blurple'], ['404 Teal', 3], ['404 Teal', 1, 'tip', '464 Blurple'], ['464 Blurple', 2], ['', 3, 'fade']], noFill: true,
-        ends: [['404 Teal', 4], ['', 3, 'fade'], ['434 Maui Surf', 4], ['', 3, 'fade'], ['428 Summer Sky', 4], ['', 3, 'fade'], ['449 Wildberry', 4], ['', 3, 'fade'], ['455 Cobalt', 4], ['', 3, 'fade'], ['464 Blurple', 4], ['', 3, 'fade'], ['455 Cobalt', 4], ['', 3, 'fade'], ['449 Wildberry', 4], ['', 3, 'fade'], ['428 Summer Sky', 4], ['', 3, 'fade'], ['434 Maui Surf', 4], ['', 3, 'fade'], ['404 Teal', 4], ['', 3, 'fade']] },   // Preset 2: teal to blurple fade (= Trim Band example 2)
-    { c: '862 Twilight Black', bands: [['9860 Metallic Silver', 3], ['862 Twilight Black', 2], ['9860 Metallic Silver', 1, 'mid', '862 Twilight Black'], ['841 Iron Ore', 3]], ends: [['9860 Metallic Silver', 5]] },
+  var TRIM_PRESETS = [null];   // Preset 1-3 = the Trim Band examples 1-3 (Preset 1 is filled in where it's used), then Presets 4-5
+  (function () { var R = (PRESET['Trim Band'] || {}).recs || []; [1, 2].forEach(function (i) { if (R[i] && R[i].tb) TRIM_PRESETS.push(R[i].tb); }); })();
+  TRIM_PRESETS.push(
     { c: '862 Twilight Black', bands: [['9520 Metallic Green', 4], ['807 White', 2], ['513 Guacamole', 3], ['', 3, 'fade']], ends: [['9520 Metallic Green', 4]] },
-    { c: '484 Deep Sea', bands: [['807 White', 2], ['484 Deep Sea', 3], ['807 White', 1, 'mid', '484 Deep Sea'], ['9860 Metallic Silver', 2]], ends: [['807 White', 3]] }];
+    { c: '484 Deep Sea', bands: [['807 White', 2], ['484 Deep Sea', 3], ['807 White', 1, 'mid', '484 Deep Sea'], ['9860 Metallic Silver', 2]], ends: [['807 White', 3]] });
   function trimPresetBox(dd, fw, after) {
     var tw = dd.getElementById('trimWrap'); if (!tw || dd.getElementById('sfswTrimPreset')) return;
     var box = dd.createElement('div'); box.className = 'sfswTP'; box.style.cssText = 'margin:4px 0 12px';
