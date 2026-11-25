@@ -1010,6 +1010,12 @@
   function wrapLen() { return Math.min(MAX_LEN(), Math.max(MIN_LEN, +S.wrapLen || BASE_LEN())); }
   // the Trim Band wrap: its band length in quarter inches; 2 in included, +$10 each extra inch ($2.50 a quarter inch)
   function tbLenQ() { var d = S.customDesign, t = d && d.setup && d.setup.trims; return Math.max(1, Math.round(((t && +t.mm) || 50.8) / 6.35)); }
+  // the Trim Band wrap: 4 saw blades and 8 fades included (both sides counted); +$5 each extra
+  function tbParts() { var d = S.customDesign, t = d && d.setup && d.setup.trims, o = { saw: 0, fade: 0 }; if (!t) return o;
+    (t.bands || []).forEach(function (b, i) { var n = i === 0 ? 1 : 2; if (b.saw) o.saw += n; else if (b.fade) o.fade += n; });   // the center sits once; the rest go on both sides
+    (t.ends || []).forEach(function (b) { if (b.saw) o.saw += 2; else if (b.fade) o.fade += 2; });   // end bands: at each edge
+    return o; }
+  function tbPartFee() { if (S.wrapId !== 'trim-band' || S.wrapMode === 'random') return 0; var o = tbParts(); return (Math.max(0, o.saw - 4) + Math.max(0, o.fade - 8)) * 5; }
   function tbLenFee() { return S.wrapId === 'trim-band' ? Math.max(0, tbLenQ() - 8) * 2.5 : 0; }
   function lenFee() { return CFG.wrap && S.wrapId !== 'trim-band' ? Math.max(0, wrapLen() - BASE_LEN()) * LEN_RATE() : 0; }   // the Trim Band wrap has no length to pick
   function setWrapLen(n) {
@@ -1274,10 +1280,11 @@
   var INNER_FEE = 50;
   function innerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && ((c.inner && c.inner.on && (c.inner.stripes || []).length) || (d.sfsw === 'cross' && c.between && c.between.on))); }
   function fillerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && c.arms === 'cover' && (c.pattern === 'diamond' || d.sfsw === 'cross')); }
-  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? FILL_FEE : 0) + (innerOn() ? INNER_FEE : 0) + dragonFee() + tbLenFee(); };   // (the wrap length rides along here)
+  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? FILL_FEE : 0) + (innerOn() ? INNER_FEE : 0) + dragonFee() + tbLenFee() + tbPartFee(); };   // (the wrap length rides along here)
   var _order = window.buildOrderItem;
   if (typeof _order === 'function') window.buildOrderItem = function () {
     var it = _order.apply(this, arguments), d = designOn();
+    if (it.lines && S.wrapId === 'trim-band' && S.wrapMode !== 'random') { var tp = tbParts(); it.lines.push({ label: 'Saw Blades / Fades', value: tp.saw + ' / ' + tp.fade + (tbPartFee() ? '  +$' + tbPartFee() : '') }); }
     if (it.lines && S.wrapId === 'trim-band') it.lines.push({ label: 'Trim Band Length', value: (tbLenQ() / 4) + ' in' + (tbLenFee() ? '  +$' + tbLenFee().toFixed(2).replace(/\.00$/, '') : '') });
     if (CFG.wrap && it.lines && S.wrapId !== 'trim-band' && wrapLen() !== BASE_LEN()) it.lines.push({ label: 'Wrap Length', value: wrapLen() + ' in' + (lenFee() ? '  +$' + lenFee() : ' (shorter than standard)') });
     if (dragonFee() && it.lines) it.lines.push({ label: 'Dragon Scale', value: designOn().setup.axes + ' axis  +$' + dragonFee() });
