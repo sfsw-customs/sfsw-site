@@ -650,12 +650,13 @@
     var out = [], seen = {}, add = function (c, t) { c = String(c || '').toLowerCase(); if (!/^#[0-9a-f]{6}$/.test(c)) return; if (seen[c]) { if (t) seen[c].threads = (seen[c].threads || 0) + t; return; } seen[c] = { hex: c, threads: t || null }; out.push(seen[c]); };
     var dragon = kind === 'taper' && cap.pattern === 'dragon', over = dragon && cap.dragon && cap.dragon.over && cap.dragon.over.on;
     if (dragon) { add(cap.dragon && cap.dragon.metal); add(cap.dragon && cap.dragon.line); }
-    if (!dragon || over) (cap.stripes || []).forEach(function (x) { add(x.c, +x.t || 0); });
+    var tb = kind === 'taper' && cap.pattern === 'trim';   // the Trim Band wrap: only its trim band's colors (the wrap under it never shows)
+    if (!tb && (!dragon || over)) (cap.stripes || []).forEach(function (x) { add(x.c, +x.t || 0); });
     if (cap.center && cap.center.on) add(cap.center.c);
     if (cap.inner && cap.inner.on) (cap.inner.stripes || []).forEach(function (x) { add(x.c); });
     if (cap.inner && cap.inner.on && cap.inner.fillOn && cap.inner.pattern !== 'chevron') (cap.inner.fill || []).forEach(function (x) { add(x.c); });   // filler colors count too
     if (cap.arms === 'cover') add(cap.fillC);
-    var T = cap.trims; if (T && T.on !== false) { add(T.c); (T.bands || []).forEach(function (x) { add(x.c); }); (T.ends || []).forEach(function (x) { add(x.c); }); }
+    var T = cap.trims; if (T && T.on !== false) { if (!T.noFill) add(T.c); (T.bands || []).concat(T.ends || []).forEach(function (x) { add(x.c); if (x.saw) add(x.c2); }); }   // main trim color only when it's on; a saw blade's second color counts
     return out;
   }
   function wrapIdFor(cap, kind) {
@@ -898,8 +899,9 @@
     row.insertAdjacentHTML('afterend', '<small id="sfswFillNote" style="font-size:13px;color:var(--muted)">fills the open space inside the diamonds with one thread color</small>'); }
   // the color bubbles: one per different color in the design; past the included ones each shows its +$10 in gold
   function bubFill(dd, bub) { var d = designOn(), cs = (d && d.colors) || [], inc = 4 + innerFree(), ex = Math.max(0, cs.length - inc), nm = function (c) { return String(c.name || '').replace(/^\d+[A-Z]?\s+/, ''); };
-    var h = cs.length ? '<div class="sfswBubH">Your colors <span>' + cs.length + ' · ' + Math.min(cs.length, inc) + ' included</span>' + (ex ? ' <b>+$' + ex * 10 + '</b>' : '') + '</div><div class="sfswBubs">'
-      + cs.map(function (c, i) { var x = i >= inc; return '<span class="sfswB' + (x ? ' x' : '') + '" title="' + nm(c) + '"><i style="background:' + c.hex + '"></i>' + (x ? '<em>+$10</em>' : '') + '</span>'; }).join('') + '</div>' : '';
+    var fe = cs.map(function (c, i) { return (i >= inc ? 10 : 0) + (c.uv || c.twist ? 10 : 0); }), tot = fe.reduce(function (a, b) { return a + b; }, 0);   // past the included: +$10; Ultra-UV / Metallic Twist: +$10 more
+    var h = cs.length ? '<div class="sfswBubH">Your colors <span>' + cs.length + ' · ' + Math.min(cs.length, inc) + ' included</span>' + (tot ? ' <b>+$' + tot + '</b>' : '') + '</div><div class="sfswBubs">'
+      + cs.map(function (c, i) { var f = fe[i]; return '<span class="sfswB' + (f ? ' x' : '') + '" title="' + nm(c) + '"><i style="background:' + c.hex + '"></i>' + (f ? '<em>+$' + f + '</em>' : '') + '</span>'; }).join('') + '</div>' : '';
     if (bub.innerHTML !== h) bub.innerHTML = h;
     if (!dd.getElementById('sfswBubCss')) { var css = dd.createElement('style'); css.id = 'sfswBubCss'; css.textContent = '#sfswBub,.sfswBubT{margin:4px 0 12px}.sfswBubH{font-size:13px;color:var(--muted);margin-bottom:6px}.sfswBubH b{color:#e0b13a;margin-left:4px}.sfswBubs{display:flex;flex-wrap:wrap;gap:8px}.sfswB{display:inline-flex;flex-direction:column;align-items:center;gap:3px}.sfswB i{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.25);display:block}.sfswB.x i{border-color:#e0b13a;box-shadow:0 0 0 2px rgba(224,177,58,.35)}.sfswB em{font:700 11px var(--body);font-style:normal;color:#e0b13a}'; dd.head.appendChild(css); } }
   // between the thread colors and Color filler: what the extra colors add (4 different colors included, +$10 each after)
@@ -1301,7 +1303,10 @@
     if (d) {   // the summary's colors line: the real threads from the design
       var names = d.colors.map(function (c) { return c.name; }), fee = (call('supportExtraFee') || 0) + metFee();
       [].forEach.call(document.querySelectorAll('#summary .summary-line'), function (l) { var a = l.querySelector('.sl-label'), v = l.querySelector('.sl-val');
-        if (a && v && a.textContent === 'Colors') v.textContent = names.join(' / ') + (fee ? '  +$' + fee : ''); });
+        if (a && v && a.textContent === 'Colors') { var ex = call('extraSupportCount') || 0, uvs = d.colors.filter(function (c) { return c.uv; }).length, tws = d.colors.filter(function (c) { return c.twist; }).length, why = [];
+          if (ex) why.push('+$' + ex * 10 + ' for ' + ex + ' extra color' + (ex > 1 ? 's' : '') + ' (4 included)'); if (uvs) why.push('+$' + uvs * 10 + ' for ' + uvs + ' Ultra-UV metallic' + (uvs > 1 ? 's' : '')); if (tws) why.push('+$' + tws * 10 + ' for ' + tws + ' Metallic Twist' + (tws > 1 ? 's' : ''));
+          v.textContent = names.join(' / ') + (fee ? '  +$' + fee : '');   /* the charges, spelled out under the colors */
+          if (why.length) { var sm = document.createElement('small'); sm.style.cssText = 'display:block;margin-top:4px;color:#e0b13a;font-weight:600'; sm.textContent = why.join(' · '); v.appendChild(sm); } } });
       var cc = $('chosen-wrap-color'); if (cc) cc.textContent = names.join(' / ');
       var cw = $('chosen-rod-wrap'), wn = wrapById(S.wrapId); if (cw && wn) cw.textContent = wn.name;
     }
