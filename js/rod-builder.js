@@ -1039,7 +1039,10 @@
   // in the Trim Band wrap's designer: the add buttons show +$5 once the included ones are used, and a line shows the count and the charge
   function tbFeeHook(w) { try { if (!w || w.__sfswTbFee) return; var d = w.document; w.__sfswTbFee = true;
     var paint = function () { var tw = d.getElementById('trimWrap'); if (!tw) return; var on = S.wrapId === 'trim-band' && d.documentElement.classList.contains('sfswtb'), t = null;
-      try { t = w.wlCapture().trims; } catch (e) {} var o = tbCount(t);
+      var cp = null; try { cp = w.wlCapture(); t = cp.trims; } catch (e) {} var o = tbCount(t);
+      // the Trim Length follows the design: once the threads reach the next quarter inch past the length set, it goes up to it (and is charged)
+      if (on && t && w.WLTrim) try { var need = Math.floor(w.WLTrim.width(t, +cp.tsize || 0.21) / 6.35 + 0.02),   /* a quarter inch counts once the band reaches it (2.02 in stays 2 in; 2.25 in is 2.25) */ q = Math.max(1, Math.round((t.mm || 20) / 6.35)), tl = d.getElementById('tlmm');
+        if (need > q && tl && need <= 36) { tl.value = (need / 4).toFixed(2); tl.dispatchEvent(new w.Event('change')); return; } } catch (e) {}
       [['saw', 'saw blade', o.saw >= TB_SAW], ['fade', 'fade', o.fade >= TB_FADE]].forEach(function (k) { var b = tw.querySelector('.addbtn[data-k="' + k[0] + '"]'); if (!b) return;
         var txt = '+ Add ' + k[1] + (on && k[2] ? '  +$' + TB_EACH : ''); if (b.textContent !== txt) b.textContent = txt; b.classList.toggle('sfswPaid', !!(on && k[2])); });
       var row = tw.querySelector('.addbtn[data-k="saw"]'); row = row && row.parentNode; if (!row) return; var ln = tw.querySelector('.sfswTbFee');
