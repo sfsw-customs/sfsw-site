@@ -6,7 +6,9 @@
 try{ const fe=window.frameElement; if(fe&&fe.id==='f-guide'&&parent.document.getElementById('rtype')) document.documentElement.classList.add('inrod'); }catch(e){}
 /* the flat drawing is only a fallback for the 3D view: keep it hidden while the 3D view loads so the old picture never flashes */
 document.documentElement.classList.add('wait3d'); setTimeout(()=>document.documentElement.classList.remove('wait3d'),6000);</script>
-<style>.wait3d #cv,.wait3d #rodcv{visibility:hidden}</style>
+<style>.wait3d #cv,.wait3d #rodcv{visibility:hidden}.sfswCpTop{display:flex;align-items:center;justify-content:space-between;margin:-2px 0 8px;font:600 13px var(--body);color:var(--muted)}.sfswCpX{background:none;border:1px solid var(--line);color:var(--fg);border-radius:8px;width:34px;height:34px;font-size:20px;line-height:1;cursor:pointer}
+@media (max-width:640px){html:not(#_a) .cpop{left:0!important;right:0!important;width:100%!important;max-width:none!important;box-sizing:border-box;border-radius:12px}html:not(#_a) .cpop .sw{grid-template-columns:repeat(8,1fr)!important;gap:7px!important}}
+</style>
 <style>
 .inrod .f:has(> #gtype),.inrod #modelBox,.inrod .f:has(> #frame),.inrod label.f:has(> #blankC),.inrod #rodBox,.inrod #egLbl,.inrod .wlsave,.inrod #tsBox,.inrod .wrap > header{display:none!important}
 .inrod section.gw1:not(#sizePanel){display:none!important}
@@ -819,7 +821,7 @@ applySize(); drawLists(); run();
     const cur=(inp.value||'').toLowerCase();
     // the blank and the guide frame aren't thread: they keep these colors whatever thread brand is picked
     const GR=/^(blankC|frameC)$/.test(inp.id)?BASE_GROUPS:COLOR_GROUPS, CL=GR.flatMap(g=>g[1]);
-    pop.innerHTML=`<input type="search" class="csearch" placeholder="Search colors, e.g. navy, metallic gold" aria-label="Search colors" autocomplete="off" spellcheck="false">
+    pop.innerHTML=`<div class="sfswCpTop"><span>Thread colors</span><button type="button" class="sfswCpX" aria-label="Close colors">×</button></div><input type="search" class="csearch" placeholder="Search colors, e.g. navy, metallic gold" aria-label="Search colors" autocomplete="off" spellcheck="false">
       <div class="clist"></div>
       <button type="button" class="more">Color chart…</button>
       <div class="chart" hidden>
@@ -838,7 +840,8 @@ applySize(); drawLists(); run();
     const w=300, r0=btn.getBoundingClientRect();
     pop.style.left=Math.max(8,Math.min(window.scrollX+r0.left, window.scrollX+document.documentElement.clientWidth-Math.min(w,document.documentElement.clientWidth-24)-8))+'px';
     pop.style.top=(window.scrollY+r0.bottom+6)+'px';
-    const pick=c=>{ inp.value=c; inp.dispatchEvent(new Event('input',{bubbles:true})); remember(c); close(); };
+    const all0=[...document.querySelectorAll('input[type=color]')], ix0=all0.indexOf(inp), tgt=()=>inp.isConnected?inp:(document.querySelectorAll('input[type=color]')[ix0]||inp);   /* sfswCpKeep */
+    const pick=c=>{ const t=tgt(); t.value=c; t.dispatchEvent(new Event('input',{bubbles:true})); remember(c); pop&&pop.querySelectorAll('.sw button[data-c]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.c===c))); };
     // color chart: shade/brightness square plus a hue slider
     const cv=pop.querySelector('.svc'), hr=pop.querySelector('.huer'), hx=pop.querySelector('.hexin'), pv=pop.querySelector('.prev');
     let [H,S,V]=/^#[0-9a-f]{6}$/.test(cur)?hex2hsv(cur):[0,1,1];
@@ -859,6 +862,7 @@ applySize(); drawLists(); run();
     hx.addEventListener('input',()=>{ let v=hx.value.trim().replace(/^#/,''); if(/^[0-9a-f]{6}$/i.test(v)){ [H,S,V]=hex2hsv('#'+v.toLowerCase()); hr.value=Math.round(H); paint(); } });
     pop.addEventListener('click',e=>{
       const b=e.target.closest('button'); if(!b) return;
+      if(b.classList.contains('sfswCpX')){ close(); return; }
       if(b.classList.contains('more')){ b.hidden=true; pop.querySelector('.chart').hidden=false; paint(); return; }
       if(b.classList.contains('hexok')){ applyHex(); return; }
       if(b.dataset.c) pick(b.dataset.c);
@@ -881,7 +885,7 @@ applySize(); drawLists(); run();
   };
   const scan=()=>document.querySelectorAll('input[type=color]').forEach(enhance);
   new MutationObserver(scan).observe(document.body,{childList:true,subtree:true}); scan();
-  document.addEventListener('click',e=>{ if(pop && !pop.contains(e.target)) close(); });
+  document.addEventListener('click',e=>{ if(pop && !pop.contains(e.target)) close(); }); window.__sfswCpClose=()=>close(); window.__sfswCpOpen=()=>!!pop; window.addEventListener('blur',()=>{ if(pop) close(); });   /* a tap on the page or the 3D rod */
   document.addEventListener('keydown',e=>{ if(e.key==='Escape') close(); });
   window.addEventListener('resize',close);
   try{ run(); }catch(e){}   // redraw so metallic threads show from the start

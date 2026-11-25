@@ -89,6 +89,7 @@
     '.rb-rs i{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}.rb-rs small{display:block;font:600 9.5px var(--font-cond);letter-spacing:.12em;text-transform:uppercase;color:var(--c-muted)}',
     '.rb-rs.on{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.25)}.rb-rs b{margin-left:4px;color:var(--c-muted);font-weight:400;padding:0 2px}.rb-rs b:hover{color:#fff}',
     '.rb-rs.add{padding:8px 14px;border-style:dashed;color:var(--c-muted)}.rb-rs.add small{display:inline;color:var(--c-gold)}.rb-rs-tip{font-size:12px;color:var(--c-muted);margin-left:auto}',
+    '@media (max-width:640px){.cfg-section:has(#sfsw-designer),.cfg-section:has(#sfsw-trims){overflow:visible!important}#sfsw-designer,#sfsw-trims{width:100vw!important;max-width:100vw!important;margin-left:calc(50% - 50vw)!important;margin-right:calc(50% - 50vw)!important;border-radius:0!important}}' +
     '.rb-len.rb-len-bc{margin:0 0 12px}' +
     '.rb-exs .rb-len.rb-len-ab{display:inline-flex;margin:0 0 0 auto!important;padding:4px 10px;gap:8px}.rb-len-ab .rb-len-l{flex:0 1 auto;font-size:13px}.rb-len-ab .rb-len-fee{display:none}' +
     '.rb-len{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-len-l{flex:1;font-size:14px}.rb-len-l small{display:block;color:var(--c-muted);font-size:12px}.rb-len button{width:32px;height:32px;border-radius:50%;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);color:var(--c-text);font-size:18px;cursor:pointer}.rb-len button:disabled{opacity:.35;cursor:default}.rb-len b{min-width:52px;text-align:center;font-weight:600}.rb-len-fee{min-width:64px;text-align:right;color:var(--c-gold);font:600 13px var(--font-cond)}',
@@ -901,6 +902,13 @@
       var total = window.SFSW_designColors ? SFSW_designColors() : null, extra = total == null ? 0 : Math.max(0, total - 4);
       n.innerHTML = extra ? '<b style="color:#d4a73c">+$' + extra * 10 + '</b> for ' + extra + ' extra color' + (extra > 1 ? 's' : '') + ' <span>(' + total + ' different colors · 4 included · +$10 each extra)</span>' : '';
       n.style.display = extra ? '' : 'none';
+      // above the thread colors: a bubble for each different color in the design; past the included ones each shows its +$10 in gold
+      var st = dd.getElementById('stripes'), box = st && st.closest('.f'), bub = dd.getElementById('sfswBub'), d = designOn();
+      if (box) { if (!bub) { bub = dd.createElement('div'); bub.id = 'sfswBub'; box.parentNode.insertBefore(bub, box); }
+        var cs = (d && d.colors) || [], inc = 4 + innerFree(), ex = Math.max(0, cs.length - inc), nm = function (c) { return String(c.name || '').replace(/^\d+[A-Z]?\s+/, ''); };
+        bub.innerHTML = cs.length ? '<div class="sfswBubH">Your colors <span>' + cs.length + ' · ' + Math.min(cs.length, inc) + ' included</span>' + (ex ? ' <b>+$' + ex * 10 + '</b>' : '') + '</div><div class="sfswBubs">'
+          + cs.map(function (c, i) { var x = i >= inc; return '<span class="sfswB' + (x ? ' x' : '') + '" title="' + nm(c) + '"><i style="background:' + c.hex + '"></i>' + (x ? '<em>+$10</em>' : '') + '</span>'; }).join('') + '</div>' : '';
+        if (!dd.getElementById('sfswBubCss')) { var css = dd.createElement('style'); css.id = 'sfswBubCss'; css.textContent = '#sfswBub{margin:4px 0 12px}.sfswBubH{font-size:13px;color:var(--muted);margin-bottom:6px}.sfswBubH b{color:#e0b13a;margin-left:4px}.sfswBubs{display:flex;flex-wrap:wrap;gap:8px}.sfswB{display:inline-flex;flex-direction:column;align-items:center;gap:3px}.sfswB i{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.25);display:block}.sfswB.x i{border-color:#e0b13a;box-shadow:0 0 0 2px rgba(224,177,58,.35)}.sfswB em{font:700 11px var(--body);font-style:normal;color:#e0b13a}'; dd.head.appendChild(css); } }
     } catch (e) {}
   }
   function tgPaint(inp, btn) { btn.setAttribute('aria-pressed', String(inp.checked)); btn.style.background = inp.checked ? 'var(--ink)' : 'none'; btn.style.color = inp.checked ? '#fff' : 'var(--muted)'; }
