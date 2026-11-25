@@ -859,8 +859,13 @@ function render(){
 window.WL_unrolled=function(W,H){ const r=window.__wlRod; if(!r) return null;
   const MKW=W|0, MK=new Uint8Array((W|0)*(H|0)); let MKn=0;   // SFSW: which pixels are metallic thread (the 3D rod makes those real metal)
   const MSET=new Set([...(window.SFSW_METALLIC||[])].map(h=>{ h=String(h).replace('#',''); return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16)).join(','); }));
-  const MC=new Map(), isM=c=>{ let v=MC.get(c); if(v===undefined){ v=MSET.has(c.join(',')); MC.set(c,v); } return v; };   // looked up once per color, not per pixel
-  const TWS=(px,py,c,fr,k,t,u,vv,stp)=>{ const col=TWS0(px,py,c,fr,k,t,u,vv,stp); if(!c||!isM(c)) return col;
+  const hx2=c=>'#'+c.map(v=>(v|0).toString(16).padStart(2,'0')).join('');
+  const MC=new Map(), isM=c=>{ let v=MC.get(c); if(v===undefined){ v=MSET.has(c.join(','))?((window.WL_TWIST&&WL_TWIST.has&&WL_TWIST.has(hx2(c)))?2:1):0; MC.set(c,v); } return v; };   // 1 metallic, 2 Metallic Twist (looked up once per color, not per pixel)
+  const TWS=(px,py,c,fr,k,t,u,vv,stp)=>{ const col=TWS0(px,py,c,fr,k,t,u,vv,stp), mm=c?isM(c):0; if(!mm) return col;
+    if(mm===2){   // Metallic Twist: the sparkle look it had before (not the 3D metal)
+      const hh=Math.sin(px*12.9898+py*78.233)*43758.5453, g=hh-Math.floor(hh), ridge=Math.sin(Math.PI*Math.min(1,Math.max(0,fr))), lum=(c[0]+c[1]+c[2])/765;
+      const k2=(0.34+0.78*ridge)*(0.8+0.4*g), glint=Math.pow(ridge,8)*0.5+(g>0.955?0.75:0), tint=lum>0.6?0.6:0.95;
+      return [0,1,2].map(i=>Math.max(0,Math.min(255,c[i]*tint*k2*(i===2?1.06:1)+(c[i]*0.45+255*0.55)*glint))); }
     MK[(py|0)*MKW+(px|0)]=1; MKn++;
     // smooth, saturated metal: each thread a rounded strand (darker at its edges), no glitter; the shine comes from the 3D light on it
     const ridge=Math.sin(Math.PI*Math.min(1,Math.max(0,fr))), k2=0.55+0.5*Math.pow(ridge,0.7), hi=Math.pow(ridge,6)*0.18, lum=(c[0]+c[1]+c[2])/765, sat=lum>0.6?0.92:1.08;
