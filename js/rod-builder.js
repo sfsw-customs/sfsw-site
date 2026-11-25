@@ -621,7 +621,7 @@
       [].forEach.call(w.document.querySelectorAll('label,span,div'), function (x) { if (x.id !== 'thrSize' && !x.children.length && x.textContent.trim() === 'Thread size') x.style.display = 'none'; });   // a label left behind by the thread size row
       var ts = w.document.getElementById('thrSize'); if (ts) { ts.style.display = 'none';   // no thread size choice: we pick it
         for (var up = ts.parentElement, k = 0; up && k < 3; up = up.parentElement, k++) if (up.textContent.replace(ts.textContent, '').trim() === 'Thread size') { up.style.display = 'none'; break; } }
-      [].forEach.call(w.document.querySelectorAll('#sizeRow,#sizeNote'), function (x) { x.style.display = 'none'; });
+      /* the cross wraps' Pattern Size slider stays (Brett wants it) */
       ['input', 'change', 'click', 'keyup'].forEach(function (t) { w.document.addEventListener(t, function (e) {
         if (t !== 'change' && e.target && e.target.tagName === 'SELECT') return; clearTimeout(readT); readT = setTimeout(readDesign, 350); }, true); });
       return w; });
@@ -1020,8 +1020,8 @@
   // wrap length: starts at the rod type's length (9 in here); each extra inch is +$10
   // wrap length: included length per wrap (cross wraps 8 in, the rest this rod type's length); longer costs per inch (cross wraps +$20, the rest +$10); shorter is allowed and doesn't lower the price
   function isCrossWrap() { var pr = presetOf(S.wrapId); return !!(pr && pr.k === 'cross'); }
-  function BASE_LEN() { var pr = presetOf(S.wrapId); return pr && pr.p === 'dragon' ? 8 : 9; }   // diamond, chevron and cross wraps start at 9 in included, dragon scales at 8 in; abalone 9 in (and only goes shorter)
-  function LEN_RATE() { return 15; }   // +$15 each added inch
+  function BASE_LEN() { return isCrossWrap() ? 8 : 9; }   // diamond, chevron and dragon scale start at 9 in included, cross wraps at 8 in; abalone 9 in (and only goes shorter)
+  function LEN_RATE() { return isCrossWrap() ? 20 : 15; }   // +$15 each added inch (cross wraps +$20)
   function MAX_LEN() { return S.wrapId === 'abalone' ? 9 : BASE_LEN() + 12; }
   var MIN_LEN = 3, lenBox;   // lenBox: the wrap length box (in the designer, or beside the abalone colors)
   function wrapLen() { return Math.min(MAX_LEN(), Math.max(MIN_LEN, +S.wrapLen || BASE_LEN())); }
