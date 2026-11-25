@@ -481,10 +481,12 @@
       { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], tb: { mm: 50.8, c: '862 Twilight Black',
         bands: [['9100 Metallic Yellow Gold', 4], ['862 Twilight Black', 2], ['807 White', 1, 'mid', '862 Twilight Black'], ['807 White', 2], ['', 3, 'fade'], ['862 Twilight Black', 6], ['9100 Metallic Yellow Gold', 4], ['9100 Metallic Yellow Gold', 1, 'mid', '862 Twilight Black']],
         ends: [['9100 Metallic Yellow Gold', 6]] } },
-      { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], tb: { mm: 50.8, c: '862 Twilight Black',   // example 2: goldenrod, black and white
+      { trim: '404 Teal', stripes: [['404 Teal', 1]], tb: Object.assign({ mm: 50.8 }, { c: '404 Teal', bands: [['404 Teal', 2], ['464 Blurple', 4], ['404 Teal', 1, 'tip', '464 Blurple'], ['404 Teal', 3], ['464 Blurple', 1, 'tip', '404 Teal']],
+        ends: [['404 Teal', 4], ['', 3, 'fade'], ['434 Maui Surf', 4], ['', 3, 'fade'], ['428 Summer Sky', 4], ['', 3, 'fade'], ['449 Wildberry', 4], ['', 3, 'fade'], ['455 Cobalt', 4], ['', 3, 'fade'], ['464 Blurple', 4], ['', 3, 'fade'], ['455 Cobalt', 4], ['', 3, 'fade'], ['449 Wildberry', 4], ['', 3, 'fade'], ['428 Summer Sky', 4], ['', 3, 'fade'], ['434 Maui Surf', 4], ['', 3, 'fade'], ['404 Teal', 4], ['', 3, 'fade']] }) },   // example 2: teal to blurple fade
+      { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], tb: { mm: 50.8, c: '862 Twilight Black',   // example 3: goldenrod, black and white
         bands: [['9120 Metallic Goldenrod', 2], ['9120 Metallic Goldenrod', 1, 'ends', '862 Twilight Black'], ['862 Twilight Black', 2], ['9120 Metallic Goldenrod', 3], ['', 4, 'fade'], ['807 White', 2]],
         ends: [['862 Twilight Black', 1, 'mid', '9120 Metallic Goldenrod'], ['9120 Metallic Goldenrod', 3], ['862 Twilight Black', 1, 'mid', '9120 Metallic Goldenrod'], ['862 Twilight Black', 7], ['9120 Metallic Goldenrod', 3], ['862 Twilight Black', 7], ['862 Twilight Black', 1, 'mid', '9120 Metallic Goldenrod'], ['9120 Metallic Goldenrod', 3], ['807 White', 1, 'mid', '9120 Metallic Goldenrod']] } },
-      { trim: '404 Teal', stripes: [['404 Teal', 1]], tb: { mm: 50.8, c: '404 Teal',   // example 3: teal and neon pink
+      { trim: '404 Teal', stripes: [['404 Teal', 1]], tb: { mm: 50.8, c: '404 Teal',   // example 4: teal and neon pink
         bands: [['361 Neon Pink', 2], ['862 Twilight Black', 2], ['361 Neon Pink', 1, 'mid', '862 Twilight Black'], ['361 Neon Pink', 3], ['404 Teal', 1, 'mid', '361 Neon Pink'], ['404 Teal', 4]],
         ends: [['361 Neon Pink', 3], ['', 4, 'fade'], ['404 Teal', 7], ['404 Teal', 1, 'mid', '361 Neon Pink'], ['361 Neon Pink', 3], ['862 Twilight Black', 2], ['361 Neon Pink', 2], ['862 Twilight Black', 2], ['361 Neon Pink', 3], ['404 Teal', 1, 'mid', '361 Neon Pink'], ['404 Teal', 7], ['', 4, 'fade'], ['361 Neon Pink', 3]] } } ] },
     'Diamond — 2 Axis': { k: 'taper', p: 'diamond', a: 2, recs: [   // one design per photo, in photo order; the first stripe is the center
@@ -757,7 +759,8 @@
   }
   // Trim band presets (Trim Band wrap's customizer and the Trim Bands tab): Build From Scratch, then Preset 1-5; Preset 1 is the Trim Band example
   var TRIM_PRESETS = [null,
-    { c: '479 Gulfstream', bands: [['807 White', 3], ['9130 Metallic Gold', 2], ['479 Gulfstream', 4], ['807 White', 2]], ends: [['807 White', 4]] },
+    { c: '404 Teal', bands: [['404 Teal', 2], ['464 Blurple', 4], ['404 Teal', 1, 'tip', '464 Blurple'], ['404 Teal', 3], ['464 Blurple', 1, 'tip', '404 Teal']],
+        ends: [['404 Teal', 4], ['', 3, 'fade'], ['434 Maui Surf', 4], ['', 3, 'fade'], ['428 Summer Sky', 4], ['', 3, 'fade'], ['449 Wildberry', 4], ['', 3, 'fade'], ['455 Cobalt', 4], ['', 3, 'fade'], ['464 Blurple', 4], ['', 3, 'fade'], ['455 Cobalt', 4], ['', 3, 'fade'], ['449 Wildberry', 4], ['', 3, 'fade'], ['428 Summer Sky', 4], ['', 3, 'fade'], ['434 Maui Surf', 4], ['', 3, 'fade'], ['404 Teal', 4], ['', 3, 'fade']] },   // Preset 2: teal to blurple fade (= Trim Band example 2)
     { c: '862 Twilight Black', bands: [['9860 Metallic Silver', 3], ['862 Twilight Black', 2], ['9860 Metallic Silver', 1, 'mid', '862 Twilight Black'], ['841 Iron Ore', 3]], ends: [['9860 Metallic Silver', 5]] },
     { c: '862 Twilight Black', bands: [['9520 Metallic Green', 4], ['807 White', 2], ['513 Guacamole', 3], ['', 3, 'fade']], ends: [['9520 Metallic Green', 4]] },
     { c: '484 Deep Sea', bands: [['807 White', 2], ['484 Deep Sea', 3], ['807 White', 1, 'mid', '484 Deep Sea'], ['9860 Metallic Silver', 2]], ends: [['807 White', 3]] }];
