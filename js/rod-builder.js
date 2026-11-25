@@ -896,6 +896,12 @@
   }
   function fillNote(dd) { var ab = dd.getElementById('armsBtn'); if (!ab || dd.getElementById('sfswFillNote')) return; var row = ab.closest('.seg'); if (!row) return;
     row.insertAdjacentHTML('afterend', '<small id="sfswFillNote" style="font-size:13px;color:var(--muted)">fills the open space inside the diamonds with one thread color</small>'); }
+  // the color bubbles: one per different color in the design; past the included ones each shows its +$10 in gold
+  function bubFill(dd, bub) { var d = designOn(), cs = (d && d.colors) || [], inc = 4 + innerFree(), ex = Math.max(0, cs.length - inc), nm = function (c) { return String(c.name || '').replace(/^\d+[A-Z]?\s+/, ''); };
+    var h = cs.length ? '<div class="sfswBubH">Your colors <span>' + cs.length + ' · ' + Math.min(cs.length, inc) + ' included</span>' + (ex ? ' <b>+$' + ex * 10 + '</b>' : '') + '</div><div class="sfswBubs">'
+      + cs.map(function (c, i) { var x = i >= inc; return '<span class="sfswB' + (x ? ' x' : '') + '" title="' + nm(c) + '"><i style="background:' + c.hex + '"></i>' + (x ? '<em>+$10</em>' : '') + '</span>'; }).join('') + '</div>' : '';
+    if (bub.innerHTML !== h) bub.innerHTML = h;
+    if (!dd.getElementById('sfswBubCss')) { var css = dd.createElement('style'); css.id = 'sfswBubCss'; css.textContent = '#sfswBub,.sfswBubT{margin:4px 0 12px}.sfswBubH{font-size:13px;color:var(--muted);margin-bottom:6px}.sfswBubH b{color:#e0b13a;margin-left:4px}.sfswBubs{display:flex;flex-wrap:wrap;gap:8px}.sfswB{display:inline-flex;flex-direction:column;align-items:center;gap:3px}.sfswB i{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.25);display:block}.sfswB.x i{border-color:#e0b13a;box-shadow:0 0 0 2px rgba(224,177,58,.35)}.sfswB em{font:700 11px var(--body);font-style:normal;color:#e0b13a}'; dd.head.appendChild(css); } }
   // between the thread colors and Color filler: what the extra colors add (4 different colors included, +$10 each after)
   function extraNote() {
     try { var dd = dz.contentDocument, ob = dd.getElementById('openBox'); if (!ob) return; var n = dd.getElementById('sfswExtra');
@@ -904,12 +910,9 @@
       n.innerHTML = extra ? '<b style="color:#d4a73c">+$' + extra * 10 + '</b> for ' + extra + ' extra color' + (extra > 1 ? 's' : '') + ' <span>(' + total + ' different colors · 4 included · +$10 each extra)</span>' : '';
       n.style.display = extra ? '' : 'none';
       // above the thread colors: a bubble for each different color in the design; past the included ones each shows its +$10 in gold
-      var st = dd.getElementById('stripes'), box = st && st.closest('.f'), bub = dd.getElementById('sfswBub'), d = designOn();
-      if (box) { if (!bub) { bub = dd.createElement('div'); bub.id = 'sfswBub'; box.parentNode.insertBefore(bub, box); }
-        var cs = (d && d.colors) || [], inc = 4 + innerFree(), ex = Math.max(0, cs.length - inc), nm = function (c) { return String(c.name || '').replace(/^\d+[A-Z]?\s+/, ''); };
-        bub.innerHTML = cs.length ? '<div class="sfswBubH">Your colors <span>' + cs.length + ' · ' + Math.min(cs.length, inc) + ' included</span>' + (ex ? ' <b>+$' + ex * 10 + '</b>' : '') + '</div><div class="sfswBubs">'
-          + cs.map(function (c, i) { var x = i >= inc; return '<span class="sfswB' + (x ? ' x' : '') + '" title="' + nm(c) + '"><i style="background:' + c.hex + '"></i>' + (x ? '<em>+$10</em>' : '') + '</span>'; }).join('') + '</div>' : '';
-        if (!dd.getElementById('sfswBubCss')) { var css = dd.createElement('style'); css.id = 'sfswBubCss'; css.textContent = '#sfswBub{margin:4px 0 12px}.sfswBubH{font-size:13px;color:var(--muted);margin-bottom:6px}.sfswBubH b{color:#e0b13a;margin-left:4px}.sfswBubs{display:flex;flex-wrap:wrap;gap:8px}.sfswB{display:inline-flex;flex-direction:column;align-items:center;gap:3px}.sfswB i{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.25);display:block}.sfswB.x i{border-color:#e0b13a;box-shadow:0 0 0 2px rgba(224,177,58,.35)}.sfswB em{font:700 11px var(--body);font-style:normal;color:#e0b13a}'; dd.head.appendChild(css); } }
+      var st = dd.getElementById('stripes'), box = st && st.closest('.f'), bub = dd.getElementById('sfswBub');
+      if (box) { if (!bub) { bub = dd.createElement('div'); bub.id = 'sfswBub'; box.parentNode.insertBefore(bub, box); } bubFill(dd, bub); }
+      if (window.__sfswTbPaintNow) window.__sfswTbPaintNow();
     } catch (e) {}
   }
   function tgPaint(inp, btn) { btn.setAttribute('aria-pressed', String(inp.checked)); btn.style.background = inp.checked ? 'var(--ink)' : 'none'; btn.style.color = inp.checked ? '#fff' : 'var(--muted)'; }
@@ -1041,11 +1044,12 @@
       if (!on) { if (ln) ln.remove(); return; }
       if (!ln) { ln = d.createElement('div'); ln.className = 'sfswTbFee'; row.parentNode.insertBefore(ln, row.nextSibling); }
       var f = tbFeeOf(o), h = 'Saw blades: <b>' + o.saw + '</b> each side (' + TB_SAW + ' included) · Fades: <b>' + o.fade + '</b> each side (' + TB_FADE + ' included)' + (f ? ' · <b class="sfswTbAdd">+$' + f + '</b>' : ' · <b>no extra charge</b>');
-      if (ln.innerHTML !== h) ln.innerHTML = h; };
+      if (ln.innerHTML !== h) ln.innerHTML = h;
+      var bt = tw.querySelector('.sfswBubT'); if (!bt) { bt = d.createElement('div'); bt.className = 'sfswBubT'; ln.parentNode.insertBefore(bt, ln.nextSibling); } bubFill(d, bt); };
     var st = d.createElement('style'); st.textContent = '.sfswTbFee{font-size:13.5px;margin:8px 0 10px;opacity:.9}.sfswTbFee .sfswTbAdd{color:#e0b13a}.addbtn.sfswPaid{border-color:#c9941a!important;color:#e0b13a!important}'; d.head.appendChild(st);
     var mo = new w.MutationObserver(function () { clearTimeout(w.__sfswTbT); w.__sfswTbT = setTimeout(paint, 30); });
     mo.observe(d.body, { childList: true, subtree: true }); d.addEventListener('input', function () { setTimeout(paint, 60); }, true); d.addEventListener('change', function () { setTimeout(paint, 60); }, true);
-    w.__sfswTbPaint = paint; paint(); } catch (e) {} }
+    w.__sfswTbPaint = paint; window.__sfswTbPaintNow = function () { try { if (dz && dz.contentWindow === w) paint(); } catch (e) {} }; paint(); } catch (e) {} }
   function tbLenFee() { return S.wrapId === 'trim-band' ? Math.max(0, tbLenQ() - 8) * 2.5 : 0; }
   function lenFee() { return CFG.wrap && S.wrapId !== 'trim-band' ? Math.max(0, wrapLen() - BASE_LEN()) * LEN_RATE() : 0; }   // the Trim Band wrap has no length to pick
   function setWrapLen(n) {
