@@ -89,6 +89,7 @@
     '.rb-rs i{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}.rb-rs small{display:block;font:600 9.5px var(--font-cond);letter-spacing:.12em;text-transform:uppercase;color:var(--c-muted)}',
     '.rb-rs.on{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.25)}.rb-rs b{margin-left:4px;color:var(--c-muted);font-weight:400;padding:0 2px}.rb-rs b:hover{color:#fff}',
     '.rb-rs.add{padding:8px 14px;border-style:dashed;color:var(--c-muted)}.rb-rs.add small{display:inline;color:var(--c-gold)}.rb-rs-tip{font-size:12px;color:var(--c-muted);margin-left:auto}',
+    '.rb-len.rb-len-bc{margin:0 0 12px}' +
     '.rb-exs .rb-len.rb-len-ab{display:inline-flex;margin:0 0 0 auto!important;padding:4px 10px;gap:8px}.rb-len-ab .rb-len-l{flex:0 1 auto;font-size:13px}.rb-len-ab .rb-len-fee{display:none}' +
     '.rb-len{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-len-l{flex:1;font-size:14px}.rb-len-l small{display:block;color:var(--c-muted);font-size:12px}.rb-len button{width:32px;height:32px;border-radius:50%;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);color:var(--c-text);font-size:18px;cursor:pointer}.rb-len button:disabled{opacity:.35;cursor:default}.rb-len b{min-width:52px;text-align:center;font-weight:600}.rb-len-fee{min-width:64px;text-align:right;color:var(--c-gold);font:600 13px var(--font-cond)}',
     '.rb-tb-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:12px}.rb-tb-w{flex:0 1 360px}.rb-tb-now{font-size:14px;margin:4px 0}.rb-tb-note{color:var(--c-muted);font-size:14px}',
@@ -959,6 +960,9 @@
     if (!modeEl) return; var id = S.wrapId, pr = presetOf(id), w = wrapNamed(id), ph = wrapPhotos(w), recs = (pr && pr.recs) || [], m = S.wrapMode;
     modeEl.style.display = pr ? '' : 'none';
     exButtons();
+    if (lenBox && dzBox && !lenBox.closest('.rb-exs')) {   // Builder's Choice has no designer: the wrap length sits above its color slots
+      if (m === 'random' && rndBar) { if (lenBox.nextSibling !== rndBar) rndBar.parentNode.insertBefore(lenBox, rndBar); lenBox.classList.add('rb-len-bc'); renderLen(); }
+      else if (lenBox.parentNode !== dzBox) { lenBox.classList.remove('rb-len-bc'); dzBox.insertBefore(lenBox, dzBox.firstChild); } }
     [].forEach.call(modeEl.querySelectorAll('.rb-mode'), function (b) { b.classList.toggle('selected', b.dataset.m === m); });
     if (dzBox) dzBox.classList.toggle('rb-dz-off', m !== 'build');
     if (colorSec) colorSec.style.display = 'none'; if (rndPal) rndPal.style.display = m === 'random' ? '' : 'none'; if (rndBar) rndBar.style.display = m === 'random' ? '' : 'none'; modeEl.classList.toggle('rnd', m === 'random'); updTop();
