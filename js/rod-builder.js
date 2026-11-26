@@ -572,7 +572,8 @@
       { pat: 'Snowflake', cs: [['807 White', 1], ['807 White', 3], ['9460 Metallic Deep Blue', 3], ['807 White', 3], ['9870 Metallic Gunmetal', 3], ['9460 Metallic Deep Blue', 3], ['807 White', 3], ['9870 Metallic Gunmetal', 3]],
         between: { kind: 'diamond', order: 'after', cs: [['9300 Metallic Red', 8], ['862 Black', 31]] } },
       { pat: 'Flamingo', size: 100, cs: [['9520 Metallic Green', 0], ['9600 Metallic Purple', 0], ['9600 Metallic Purple', 0], ['9600 Metallic Purple', 0],
-        ['9520 Metallic Green', 3, 't'], ['9600 Metallic Purple', 3, 't'], ['9520 Metallic Green', 4, 't'], ['9600 Metallic Purple', 2, 't'], ['9520 Metallic Green', 5, 't'], ['9600 Metallic Purple', 1, 't'], ['9520 Metallic Green', 6, 't']] } ] }, '4 Axis Cross Wrap': { k: 'cross', a: 4, other: true }
+        ['9520 Metallic Green', 3, 't'], ['9600 Metallic Purple', 3, 't'], ['9520 Metallic Green', 4, 't'], ['9600 Metallic Purple', 2, 't'], ['9520 Metallic Green', 5, 't'], ['9600 Metallic Purple', 1, 't'], ['9520 Metallic Green', 6, 't']] },
+      {} ] }, '4 Axis Cross Wrap': { k: 'cross', a: 4, other: true }
   };
   var WRAPS = val('ROD_WRAPS') || [];
   var wrapById = function (id) { return WRAPS.find(function (w) { return w.id === id; }); };
