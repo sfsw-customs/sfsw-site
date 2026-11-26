@@ -1964,12 +1964,16 @@ const sfswBoot = (async () => {
   let want = null, busy = false;
   const firstFit = { main: null, split: null };
   async function setWrap(k, spec) {
-    const key = JSON.stringify(spec); if (last[k] === key) return false; last[k] = key;
+    const key = JSON.stringify(spec) + (k === 'split' && L.split ? '|' + L.split.map(v => v.toFixed(2)).join(',') : ''); if (last[k] === key) return false; last[k] = key;
     if (spec.full) {   // a design from the SFSW Wrap Designer, exactly as the customer made it (regular or cross wrap)
       if (window.__sfswAb) window.__sfswAb[k] = null;   // no sheet / shell over a designer wrap
       src[k] = spec.kind === 'cross' ? 'cross' : 'taper'; if (src[k] === 'cross') await crossFrame(k);
       const w = await whenReady(fk(k), w => w.WL_unrolled && w.__wlRod); w.__wlFitted = true;
-      try { w.wlApply(clone(spec.full)); } catch (e) { console.warn('design', k, e); }
+      const full = clone(spec.full);
+      if (k === 'split' && L.split) {   // SFSW: the same wrap on the split, sized to the gap between the rear grips and its blank there
+        const gap = Math.max(0.5, Math.floor((L.split[1] - L.split[0] - 0.25) * 4) / 4), a = (L.split[0] + L.split[1]) / 2 - gap / 2;
+        full.unit = 'in'; full.len = gap.toFixed(2); full.dB = (2 * blankR(a) * IN).toFixed(1); full.dM = (2 * blankR(a + gap / 2) * IN).toFixed(1); full.dT = (2 * blankR(a + gap) * IN).toFixed(1); }
+      try { w.wlApply(full); } catch (e) { console.warn('design', k, e); }
       try { if (w.WL_runNow) w.WL_runNow(); } catch (e) {} await wait(20); await readWrap(k); return true;
     }
     if (src[k] !== 'taper') src[k] = 'taper';

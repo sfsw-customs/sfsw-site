@@ -85,6 +85,7 @@
     '.rb-wphoto.rb-wph-full{height:150px;background-size:contain;background-color:#07090c}',
     '.rb-top .rb-wphoto{display:none}.rb-top.rb-wtop .rb-wphoto{display:block}',
     '.rb-rbar{display:none;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 2px;padding:8px;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-rnd-slot .rb-rbar{display:flex;margin:0 0 10px}.rb-load{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#0d1117;transition:opacity .4s}.rb-load-out{opacity:0;pointer-events:none}.rb-load-in{display:flex;flex-direction:column;align-items:center;gap:10px;color:#e6e8eb;font-family:var(--font-body,inherit);text-align:center}.rb-load-in b{font-size:20px;letter-spacing:.02em}.rb-load-in span{font-size:14px;color:#8a94a3}.rb-load-sp{width:44px;height:44px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:var(--c-gold,#d4a73c);animation:rbspin .8s linear infinite;margin-bottom:6px}@keyframes rbspin{to{transform:rotate(360deg)}}html.rb-loading{overflow:hidden}.rb-fbr{flex-basis:100%;height:2px}.rb-fax{display:flex;flex:0 0 auto;gap:0;margin:0;border:1px solid var(--c-border);border-radius:8px;overflow:hidden}.rb-exs .rb-fax button{background:none;border:0;border-right:1px solid var(--c-border);border-radius:0;color:var(--c-muted);padding:8px 14px;font:600 14px var(--font-body,inherit);cursor:pointer}.rb-exs .rb-fax button:last-child{border-right:0}.rb-exs .rb-fax button.on{background:var(--c-gold);color:#111}.rb-fax small{font-size:12px;opacity:.85}.rb-rg-sz.rb-rg-sz2{margin-left:24px;display:flex;align-items:center;gap:10px}.rb-len.rb-len-off{filter:blur(2px);opacity:.45;pointer-events:none;user-select:none}',
+    '.rb-loc{margin:4px 0 16px;display:flex;flex-direction:column;gap:10px}.rb-loc-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}.rb-loc-l{font:700 12px var(--font-cond);letter-spacing:.14em;text-transform:uppercase;color:var(--c-gold);min-width:120px}.rb-seg{display:flex;border:1px solid var(--c-border);border-radius:8px;overflow:hidden}.rb-seg button{background:none;border:0;border-right:1px solid var(--c-border);color:var(--c-muted);padding:9px 18px;font:600 15px var(--font-body,inherit);cursor:pointer}.rb-seg button:last-child{border-right:0}.rb-seg button.on{background:var(--c-gold);color:#111}.rb-seg small{font-size:12px;color:#e0b13a}.rb-seg button.on small{color:#111}.rb-loc-n{color:var(--c-muted);font-size:13px}html.rb-loc-split .rb-len{display:none}',
     '.rb-rs{display:flex;align-items:center;gap:8px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:999px;padding:4px 10px 4px 4px;color:var(--c-text);font-size:13px;cursor:pointer;text-align:left}',
     '.rb-rs i{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}.rb-rs small{display:block;font:600 9.5px var(--font-cond);letter-spacing:.12em;text-transform:uppercase;color:var(--c-muted)}',
     '.rb-rs.on{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.25)}.rb-rs b{margin-left:4px;color:var(--c-muted);font-weight:400;padding:0 2px}.rb-rs b:hover{color:#fff}',
@@ -284,6 +285,30 @@
   col.insertBefore(panels, col.firstChild); col.insertBefore(top, panels);
   layout.classList.add('rb-on'); document.documentElement.classList.add('rb-page');
 
+  // ── Wrap location: Main (above the fore grip), Split (between the rear grips) or Both (the same wrap again, or a different one) ──
+  function wrapLoc() { return call('isSplitGrip') ? (S.wrapLoc || 'main') : 'main'; }
+  var locBar = (function () {
+    var ws = STEPS.find(function (x) { return x.view === 'wrap' && /^Wrap$/.test(x.tab || x.title); }); if (!ws) return null;
+    var b = el('div', 'rb-loc', '<div class="rb-loc-row"><span class="rb-loc-l">Wrap location</span><div class="rb-seg" data-g="loc"><button type="button" data-v="main">Main</button><button type="button" data-v="split">Split</button><button type="button" data-v="both">Both</button></div><small class="rb-loc-n"></small></div>' +
+      '<div class="rb-loc-row rb-loc-both"><span class="rb-loc-l">Split wrap</span><div class="rb-seg" data-g="same"><button type="button" data-v="same">Same as main <small class="rb-loc-p"></small></button><button type="button" data-v="diff">Different wrap</button></div></div>');
+    var sub = ws.panel.querySelector('.rb-step-sub'); sub.parentNode.insertBefore(b, sub.nextSibling);
+    b.addEventListener('click', function (e) { var x = e.target.closest('button[data-v]'); if (!x) return; var g = x.parentNode.dataset.g;
+      if (g === 'loc') { S.wrapLoc = x.dataset.v; view(S.wrapLoc === 'split' ? 'handle' : 'wrap'); }
+      else { S.splitSame = x.dataset.v === 'same'; S.splitWrapId = null; }   // a different wrap starts with none picked
+      if (!(S.wrapLoc === 'both' && S.splitSame === false)) S.splitWrapId = null;
+      if (S.wrapLoc === 'both' && S.splitSame === false) setTimeout(function () { var sw = $('split-wrap-cfg-section'); if (sw) sw.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 80);
+      updateAll(); });
+    return b; })();
+  function locSync() { if (!locBar) return; var on = !!call('isSplitGrip'), lc = wrapLoc(), same = S.splitSame !== false;
+    locBar.style.display = on ? '' : 'none';
+    [].forEach.call(locBar.querySelectorAll('[data-g="loc"] button'), function (x) { x.classList.toggle('on', x.dataset.v === lc); });
+    [].forEach.call(locBar.querySelectorAll('[data-g="same"] button'), function (x) { x.classList.toggle('on', (x.dataset.v === 'same') === same); });
+    locBar.querySelector('.rb-loc-both').style.display = lc === 'both' ? '' : 'none';
+    locBar.querySelector('.rb-loc-n').textContent = lc === 'split' ? 'between the rear grips · sized to fit the split' : lc === 'both' ? 'above the fore grip and on the split' : 'above the fore grip';
+    if (lc === 'both' && same && S.wrapId) S.splitWrapId = S.wrapId;   // the same wrap again: priced as that wrap's split wrap
+    var opt = (val('SPLIT_WRAP_OPTIONS') || []).find(function (o) { return o.id === S.wrapId; }), pr = locBar.querySelector('.rb-loc-p'); if (pr) pr.textContent = opt && opt.price ? '+$' + opt.price : '';
+    var sw = $('split-wrap-cfg-section'); if (sw && on) sw.style.display = lc === 'both' && !same ? '' : 'none';
+    document.documentElement.classList.toggle('rb-loc-split', lc === 'split'); }
   var cur = 0, reached = 0;
   // the site menu only counts when it really stays pinned to the top of the window while the page scrolls
   function navH() { var n = document.querySelector('.nav'); if (!n) return 0; var pos = getComputedStyle(n).position;
@@ -451,6 +476,9 @@
     lastMain = p.main;
     var sw = call('isSplitGrip') ? call('getSplitWrap') : null;
     p.splitOn = !!sw; if (sw) p.split = sw.id === 'abalone' ? abSpec(S.splitAbaloneColorIdx) : wrapSpec(sw.id, main, sup, null, notes, 'split wrap');
+    var loc = wrapLoc();   // Main / Split / Both: the same wrap on the split copies the main design
+    if (loc === 'split' || (loc === 'both' && S.splitSame !== false)) { p.splitOn = true; p.split = JSON.parse(JSON.stringify(p.main)); }
+    if (loc === 'split') p.mainOn = false;
     p.gw = S.guideWrapUserSelected ? guideWrapSpec(S.guideWrapId, main, sup, notes)
       : { under: false, underC: '#1a1a1a', footC: '#1a1a1a', bands: [], trims: [{ c: '#dabd66', t: 3 }] };   // black foot wraps with gold trim bands (9130 Metallic Gold) until a guide wrap is picked (wrap examples don't change them)
     return { p: p, notes: notes };
@@ -479,7 +507,9 @@
       if (!foam && S.heatShrinkId) { S.heatShrinkId = null; call('renderAccessories'); }
     } catch (e) {}
     try { rgPrice(); } catch (e) {}
+    try { locSync(); } catch (e) {}
     var r = _update.apply(this, arguments);
+    try { locSync(); } catch (e) {}
     try {
       if (splitChosen && !S.splitWrapId) splitChosen.textContent = 'Optional · tap to add';
       designerAfterUpdate();
@@ -1107,7 +1137,7 @@
     var paint = function () { var f = sizeFeeOf(sp.value); tag.textContent = f ? '+$' + f : 'Included'; };
     sp.addEventListener('input', paint); sp.addEventListener('change', paint); w.__sfswSzPaint = paint; paint(); } catch (e) {} }
   function tbLenFee() { return S.wrapId === 'trim-band' ? Math.max(0, tbLenQ() - 8) * 2.5 : 0; }
-  function lenFee() { return CFG.wrap && S.wrapId !== 'trim-band' ? Math.max(0, wrapLen() - BASE_LEN()) * LEN_RATE() : 0; }   // the Trim Band wrap has no length to pick
+  function lenFee() { return CFG.wrap && S.wrapId !== 'trim-band' && wrapLoc() !== 'split' ? Math.max(0, wrapLen() - BASE_LEN()) * LEN_RATE() : 0; }   // the Trim Band wrap has no length to pick
   function setWrapLen(n) {
     S.wrapLen = Math.max(MIN_LEN, Math.min(MAX_LEN(), n)); renderLen();
     var w = dw(); if (w && w.wlCapture && S.wrapMode !== 'random') { try { var c = w.wlCapture(); c.unit = 'in'; c.len = wrapLen().toFixed(2); w.wlApply(c); } catch (e) {} clearTimeout(readT); readT = setTimeout(readDesign, 300); }
@@ -1408,6 +1438,8 @@
   if (typeof _order === 'function') window.buildOrderItem = function () {
     var it = _order.apply(this, arguments), d = designOn();
     if (it.lines && bcDragon() && S.wrapMode === 'random') { var scW = (val('WRAP_COLORS') || [])[bcScaleIdx()]; if (scW) it.lines.push({ label: 'Dragon Scales (Builder\u2019s Choice)', value: scW.name + (bcScaleFee() ? '  +$' + bcScaleFee() : '') }); }
+    if (it.lines && call('isSplitGrip')) { var lc = wrapLoc(); it.lines.push({ label: 'Wrap Location', value: lc === 'split' ? 'Split (between the rear grips)' : lc === 'both' ? 'Both (above the fore grip and on the split)' : 'Main (above the fore grip)' });
+      if (lc === 'both' && S.splitSame !== false) it.lines.forEach(function (l) { if (l.label === 'Split Wrap') l.value = l.value.replace(/^([^+]*?)(\s*\+\$|$)/, '$1 (same as the main wrap)$2'); }); }
     if (it.lines && crossTrimFee()) it.lines.push({ label: 'Cross Wrap Trims', value: crossTrimThreads() + ' thread' + (crossTrimThreads() === 1 ? '' : 's') + '  +$' + crossTrimFee() });
     if (it.lines && crossSizeFee()) it.lines.push({ label: 'Cross Wrap Pattern Size', value: (+S.customDesign.setup.sizePct || 0) + '%  +$' + crossSizeFee() });
     if (it.lines && S.wrapId === 'trim-band' && S.wrapMode !== 'random') { var tp = tbParts(); it.lines.push({ label: 'Saw Blades / Fades', value: tp.saw + ' / ' + tp.fade + ' each side' + (tbPartFee() ? '  +$' + tbPartFee() : '') }); }
