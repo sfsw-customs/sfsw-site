@@ -801,7 +801,7 @@
   }
   function trimPresetSync(dd, fw) {   // show Preset 1 for the Trim Band example, Build From Scratch for plain trims
     try { var sel = dd.getElementById('sfswTrimPreset'); if (!sel) return; var t0 = fw.wlCapture().trims || {};
-      sel.value = S.wrapId === 'trim-band' ? String(Math.min(recPick['trim-band'] || 0, 2))   // Trim Band Example 1-3 = Preset 1-3
+      sel.value = S.wrapId === 'trim-band' ? (S.wrapMode === 'build' ? (sel.value === 'scratch' ? '0' : sel.value) : String(Math.min(recPick['trim-band'] || 0, 2)))   // Trim Band Example 1-3 = Preset 1-3; the customizer starts on Preset 1
         : S.wrapId === 'trim-band' || (t0.bands || []).length || (t0.ends || []).length ? (sel.value === 'scratch' ? '0' : sel.value) : 'scratch'; } catch (e) {}
   }
   function presetClear(c) {   // a new preset starts clean: Underwrap and the pattern between go off
@@ -897,7 +897,7 @@
   function tgSkin(dd) {
     var ref = dd.getElementById('armsBtn'); if (!ref) return; var cs = dd.defaultView.getComputedStyle(ref), seg = dd.defaultView.getComputedStyle(ref.parentNode);
     ['underOn', 'innerOn', 'innerFillOn', 'btOn'].forEach(function (id) {
-      if (id === 'innerOn' || id === 'btOn') { var iI = dd.getElementById(id), sm = iI && iI.closest('label.chk') && iI.closest('label.chk').querySelector('small'); if (sm && !/\+\$/.test(sm.textContent)) sm.textContent = (id === 'btOn' ? '+$50/$100 · diamond or chevron +$50, cross wrap +$100' : '+$50') + ' · ' + sm.textContent.replace(/^\(|\)$/g, '') + (id === 'innerOn' ? ' · up to 2 new colors included' : ''); }
+      if (id === 'innerOn' || id === 'btOn') { var iI = dd.getElementById(id), sm = iI && iI.closest('label.chk') && iI.closest('label.chk').querySelector('small'); if (sm && !/\+\$/.test(sm.textContent)) sm.textContent = '+$50' + ' · ' + sm.textContent.replace(/^\(|\)$/g, '') + (id === 'innerOn' ? ' · up to 2 new colors included' : ''); }
       var inp = dd.getElementById(id), lab = inp && inp.closest('label.chk'); if (!lab) return;
       var btn = lab.querySelector('.sfswTgB');
       if (!btn) {
@@ -1103,7 +1103,7 @@
     sp.step = '5'; sp.value = String(Math.round((+sp.value || 0) / 5) * 5);   // 5% at a time
     var tag = d.createElement('b'); tag.id = 'sfswSizeFee'; tag.style.cssText = 'margin-left:10px;color:#e0b13a;font-weight:700;min-width:4ch'; out.parentNode.insertBefore(tag, out.nextSibling);
     var note = d.getElementById('sizeNote'); if (note) note.insertAdjacentHTML('beforeend', ' <span style="color:#e0b13a;font-weight:600">· +$5 each 10%</span>');
-    var tst = d.createElement('style'); tst.textContent = '#addTrim::after{content:" \\00B7  +$1 per thread";color:#e0b13a;font-weight:600}'; d.head.appendChild(tst);   // added trims: +$1 a thread
+    var tst = d.createElement('style'); tst.textContent = '#addTrim::after{content:" \\00B7  +$1 per thread";color:#e0b13a;font-weight:600}#btKind [data-v="pattern"]::after{content:" +$50";color:#e0b13a;font-weight:600}'; d.head.appendChild(tst);   // added trims: +$1 a thread
     var paint = function () { var f = sizeFeeOf(sp.value); tag.textContent = f ? '+$' + f : 'Included'; };
     sp.addEventListener('input', paint); sp.addEventListener('change', paint); w.__sfswSzPaint = paint; paint(); } catch (e) {} }
   function tbLenFee() { return S.wrapId === 'trim-band' ? Math.max(0, tbLenQ() - 8) * 2.5 : 0; }
@@ -1171,17 +1171,17 @@
   }
   // Customize starts from a plain 3-color wrap of the picked style, with the threads set so the diamonds
   // take up as much of the wrap as the open space between them
-  function genericDesign() { var pr = presetOf(S.wrapId); if (!pr || pr.k !== 'taper' || !/diamond|chevron/.test(pr.p)) return; presetFill(); var L = presetsFor(), k = S.wrapId === 'chev-4' ? Math.min(recPick[S.wrapId] || 0, L.length - 1) : 0; presetPick(k); return presetApply(L[k], true); }   // the customizer opens on Preset 1 (on Chevron 4 Axis, whose presets are its examples: the preset of the example picked)
+  function genericDesign() { var pr = presetOf(S.wrapId); if (!pr || pr.k !== 'taper' || !/diamond|chevron/.test(pr.p)) return; presetFill(); var L = presetsFor(), k = 0; presetPick(k); return presetApply(L[k], true); }   // the customizer opens on Preset 1 (on Chevron 4 Axis, whose presets are its examples: the preset of the example picked)
 
   // the pattern between brings up to 2 new colors free; colors it shares with the main wrap are free anyway
   function innerFree() { var d = designOn(), c = d && d.setup; if (!c || !c.inner || !c.inner.on || S.wrapMode !== 'build') return 0;
     var lc = function (x) { return String(x || '').toLowerCase(); }, main = {}; (c.stripes || []).forEach(function (x) { main[lc(x.c)] = 1; }); if (c.center && c.center.on) main[lc(c.center.c)] = 1;
     var nw = {}; (c.inner.stripes || []).forEach(function (x) { if (!main[lc(x.c)]) nw[lc(x.c)] = 1; }); return Math.min(2, Object.keys(nw).length); }
-  window.SFSW_designColors = function () { var d = designOn(); return d && d.colors ? d.colors.length - innerFree() : null; };
+  window.SFSW_designColors = function () { if (exView()) return 1; var d = designOn(); return d && d.colors ? d.colors.length - innerFree() : null; };
   function setMode(m, quiet) {
     var was = S.wrapMode; S.wrapMode = m; try { syncSkips(); } catch (e) {} try { if (dz && dz.contentWindow) crossPresetHook(dz.contentWindow); } catch (e) {}
-    if (m === 'build' && was === 'example' && S.wrapId === 'cross-2') setTimeout(function () { try { var cw = dz.contentWindow, ps = cw.document.getElementById('pat'), k = recPick['cross-2'] || 0; crossPresetHook(cw); if (ps && [].some.call(ps.options, function (o) { return o.value === '__sfswP' + k; })) { ps.value = '__sfswP' + k; ps.dispatchEvent(new Event('change', { bubbles: true })); } } catch (e) {} }, 400);   // Customize from Example N opens Preset N   // Builder's Choice hides the Trim Bands step
-    if (m === 'build' && was !== 'build') { lastPreset = null; presetFill(); genericDesign(); if (S.wrapId === 'trim-band') try { var tps = dz.contentDocument.getElementById('sfswTrimPreset'); if (tps) tps.value = String(Math.min(recPick['trim-band'] || 0, 2)); } catch (e) {}   /* Trim Band Example 1-3 = Preset 1-3 */ if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
+    if (m === 'build' && was === 'example' && S.wrapId === 'cross-2') setTimeout(function () { try { var cw = dz.contentWindow, ps = cw.document.getElementById('pat'), k = 0; crossPresetHook(cw); if (ps && [].some.call(ps.options, function (o) { return o.value === '__sfswP' + k; })) { ps.value = '__sfswP' + k; ps.dispatchEvent(new Event('change', { bubbles: true })); } } catch (e) {} }, 400);   // the customizer starts on Preset 1   // Builder's Choice hides the Trim Bands step
+    if (m === 'build' && was !== 'build') { lastPreset = null; presetFill(); genericDesign(); if (S.wrapId === 'trim-band') try { var tps = dz.contentDocument.getElementById('sfswTrimPreset'); if (tps) { tps.value = '0'; tps.dispatchEvent(new Event('change')); } } catch (e) {}   /* every customizer starts on Preset 1 */ if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
     if (m === 'random' && was !== 'random') { S.supportIdxs = (S.supportIdxs || []).slice(0, 3); call('renderSupportingRows'); }   // Builder's Choice starts at main + 3 supporting
     renderModes(); updTop(); if (quiet) return;
     if (was === 'random' && m !== 'random') { clearTimeout(readT); readT = setTimeout(readDesign, 50); }
@@ -1290,7 +1290,8 @@
   // wrap families: one row in the list ("Diamond Wrap"), with the axis count picked inside it; the row stays put while the axis changes
   var FAMILIES = [{ name: 'Diamond Wrap', ids: ['diam-2', 'diam-4', 'closed-4', 'axis-16'], ax: [2, 4, 8, 16] },
                   { name: 'Chevron Wrap', ids: ['chev-2', 'chev-4', 'chev-8', 'chev-16'], ax: [2, 4, 8, 16] },
-                  { name: 'Dragon Scale', ids: ['dragon', '2axis-dragon'], labels: ['Scales Only', '2 Axis Wrap Over'] }];   // the wrap over the scales is a switch in the Dragon Scale row
+                  { name: 'Dragon Scale', ids: ['dragon', '2axis-dragon'], labels: ['Scales Only', '2 Axis Wrap Over'] },
+                  { name: 'Cross Wrap', ids: ['cross-2', 'cross-4'], ax: [2, 4] }];   // the wrap over the scales is a switch in the Dragon Scale row
   function famOf(id) { for (var i = 0; i < FAMILIES.length; i++) if (FAMILIES[i].ids.indexOf(id) >= 0) return FAMILIES[i]; return null; }
   function rowId(id) { var f = famOf(id); return f ? f.ids[0] : id; }   // the list row a wrap shows in
   function dressFamilies() {
@@ -1401,7 +1402,8 @@
   function innerFee() { if (!isCrossWrap()) return INNER_FEE; var d = designOn(), b = d && d.setup && d.setup.between; return b && b.kind === 'pattern' ? 100 : 50; }   // a cross wrap's pattern between: +$50 diamond or chevron, +$100 another cross wrap
   function fillFee() { return isCrossWrap() && innerOn() ? 0 : FILL_FEE; }   // on a cross wrap with a pattern between, Color filler is included
   function fillerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && c.arms === 'cover' && (c.pattern === 'diamond' || d.sfsw === 'cross')); }
-  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? fillFee() : 0) + (innerOn() ? innerFee() : 0) + dragonFee() + tbLenFee() + tbPartFee() + crossSizeFee() + crossTrimFee() + bcScaleFee(); };   // (the wrap length rides along here)
+  function exView() { return S.wrapMode === 'example' && S.wrapId !== 'abalone' && !!presetOf(S.wrapId); }   // an example is for ideas: only the wrap's own price shows
+  window.calcUVMetallicFee = function () { if (exView()) return 0; return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? fillFee() : 0) + (innerOn() ? innerFee() : 0) + dragonFee() + tbLenFee() + tbPartFee() + crossSizeFee() + crossTrimFee() + bcScaleFee(); };   // (the wrap length rides along here)
   var _order = window.buildOrderItem;
   if (typeof _order === 'function') window.buildOrderItem = function () {
     var it = _order.apply(this, arguments), d = designOn();
