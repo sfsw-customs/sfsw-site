@@ -102,7 +102,7 @@
       mmIn.addEventListener('change',e=>setMM(parseFloat(e.target.value)||0.75));
       host.querySelectorAll('[data-mm]').forEach(x=>x.onclick=()=>setMM(qOf()/4 + (+x.dataset.mm)*0.25)); }
     const bc=g('tbbase'); if(bc) bc.addEventListener('input',e=>{ T.c=e.target.value; ch(); }); const nf=g('tbnofill'); if(nf) nf.onchange=e=>{ T.noFill=!e.target.checked; ch(); };
-    (mode==='center'?[['b',T.bands||[]]]:[['e',T.ends||[]]]).forEach(([key,arr])=>arr.forEach((b,i)=>{   // only the list on screen
+    (mode==='center'?[['b',T.bands||[]]]:[['e',T.ends||[]]]).forEach(([key,arr])=>arr.forEach((b,i)=>{ if(!g('tb'+key+(b.fade?'f':'c')+i)) return;   /* sfswTbGuard */   // only the list on screen
       if(b.fade){ g('tb'+key+'f'+i).onchange=e=>{ b.t=+e.target.value; ch(); }; return; }
       g('tb'+key+'c'+i).addEventListener('input',e=>{ b.c=e.target.value; ch(); });
       if(b.saw){ b.t=1; g('tb'+key+'s'+i).addEventListener('input',e=>{ b.c2=e.target.value; ch(); }); g('tb'+key+'d'+i).onchange=e=>{ b.saw=e.target.value; ch(); }; return; }

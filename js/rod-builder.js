@@ -98,7 +98,7 @@
     '.rb-tb-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:12px}.rb-tb-w{flex:0 1 360px}.rb-tb-now{font-size:14px;margin:4px 0}.rb-tb-note{color:var(--c-muted);font-size:14px}',
     '.rb-wflow{display:flex!important;flex-direction:column;gap:6px}.rb-wflat{display:contents!important}.rb-wflow>.rb-modes{margin:2px 0 8px}',
     '.rb-rnd-note{display:none;font-size:13px;color:var(--c-muted)}.rb-modes.rnd .rb-rnd-note{display:block}.rb-exs button.rb-exm{border-style:dashed}.rb-exs button.rb-exm.on{border-style:solid}','.rb-rpal{margin-top:4px}.rb-rp-h{font:600 11px var(--font-cond);letter-spacing:.14em;text-transform:uppercase;color:var(--c-muted);margin:10px 0 6px}',
-    '.rb-rp{display:flex;flex-wrap:wrap;gap:6px}.rb-rp button{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.18);cursor:pointer;padding:0}.rb-rp button.on{box-shadow:0 0 0 2px var(--c-dark),0 0 0 4px var(--c-gold)}','.rb-wphoto{height:84px;margin:8px 0 2px;border-radius:var(--radius);border:1px solid var(--c-border);background:#0d0f12 center/cover no-repeat;cursor:zoom-in}',
+    '.rb-rp{display:flex;flex-wrap:wrap;gap:9px}.rb-rp button{width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.18);cursor:pointer;padding:0}.rb-rp button.on{box-shadow:0 0 0 2px var(--c-dark),0 0 0 4px var(--c-gold)}','.rb-wphoto{height:84px;margin:8px 0 2px;border-radius:var(--radius);border:1px solid var(--c-border);background:#0d0f12 center/cover no-repeat;cursor:zoom-in}',
     '.rb-exs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;cursor:default}.rb-exs button{background:var(--c-dark3);border:1px solid var(--c-border);border-radius:999px;padding:4px 12px;color:var(--c-text);font-size:12.5px;cursor:pointer}.rb-exs button.on{border-color:var(--c-gold);color:var(--c-gold)}',
     '.rb-modes{margin-top:14px;display:flex;flex-direction:column;gap:8px}.rb-ex-h{font:600 11px var(--font-cond);letter-spacing:.16em;text-transform:uppercase;color:var(--c-muted);margin:4px 0 8px}',
     '.rb-ex-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px}.rb-ex-none{color:var(--c-muted);font-size:13px;padding:6px 0}',
@@ -221,7 +221,7 @@
       parts: [secOf('sec-seat')] },
     { title: 'Wrap', sub: 'Pick any wrap style you want, customize your own, choose from our presets, or let us come up with the design.', view: 'wrap',
       parts: [secOf('sec-wrap-color'), secOf('sec-rod-wraps'), secOf('sec-split-wrap')] },
-    { skip: function () { return S.wrapId === 'trim-band'; }, title: 'Trim Bands', sub: 'The bands at both ends of the wrap that hold the thread down.', view: 'trim', parts: [tbBox()] },
+    { skip: function () { return S.wrapId === 'trim-band' || S.wrapMode === 'random'; }, title: 'Trim Bands', sub: 'The bands at both ends of the wrap that hold the thread down.', view: 'trim', parts: [tbBox()] },
     { title: 'Guides', sub: 'Frame, ring material and frame color.', view: 'guides',
       parts: [secOf('sec-guides')] },
     { title: 'Guide <em>Wraps</em>', tab: 'Guide Wraps', sub: 'How each guide is wrapped onto the blank.', view: 'guides',
@@ -294,7 +294,7 @@
   function skipOn(k) { return !!(STEPS[k] && STEPS[k].skip && STEPS[k].skip()); }
   function stepBy(i, d) { var k = i + d; while (k > 0 && k < STEPS.length - 1 && skipOn(k)) k += d; return k; }
   function syncSkips() {   // hidden steps (Trim Bands with the Trim Band wrap): no tab, and Next / Back step over them
-    STEPS.forEach(function (s, k) { if (s.tabEl) s.tabEl.style.display = skipOn(k) ? 'none' : '';
+    var num = 0; STEPS.forEach(function (s, k) { if (s.tabEl) { s.tabEl.style.display = skipOn(k) ? 'none' : ''; var nb = s.tabEl.querySelector('.rb-n'); if (nb && !skipOn(k)) nb.textContent = ++num; }   // the tabs count up without gaps
       if (s.nextEl) { var nx = STEPS[stepBy(k, 1)]; s.nextEl.innerHTML = 'Next: ' + (nx.tab || nx.title) + ' →'; } });
     if (skipOn(cur)) go(stepBy(cur, 1));
   }
@@ -445,6 +445,7 @@
     else if (!rnd && wrapLen() === BASE_LEN() && LOOK[(wrapNamed(S.wrapId) || {}).name]) p.main = { full: Object.assign({}, LOOK[wrapNamed(S.wrapId).name], { unit: 'in', len: wrapLen().toFixed(2) }), kind: 'taper' };   // until the designer is up: the wrap's own design
     else p.main = wrapSpec(S.wrapId, main, sup, rnd ? null : S.customDesign, notes, 'rod wrap');
     if (p.main && !p.main.full && CFG.wrap) p.main.len = wrapLen();
+    if (rnd && p.main && !p.main.full && S.wrapId !== 'abalone') p.main.trims = Object.assign({}, p.main.trims || {}, { on: false });   // Builder's Choice: no trim bands shown
     if (rnd && p.main && !p.main.full && S.wrapId !== 'abalone') p.main.veil = { colors: [main].concat(sup).filter(Boolean), name: ((wrapNamed(S.wrapId) || {}).name || '').replace(/\s*\u2014\s*/g, ' - ') };   // Builder's Choice: a sheet over the wrap with their colors
     lastMain = p.main;
     var sw = call('isSplitGrip') ? call('getSplitWrap') : null;
@@ -1155,7 +1156,7 @@
     var nw = {}; (c.inner.stripes || []).forEach(function (x) { if (!main[lc(x.c)]) nw[lc(x.c)] = 1; }); return Math.min(2, Object.keys(nw).length); }
   window.SFSW_designColors = function () { var d = designOn(); return d && d.colors ? d.colors.length - innerFree() : null; };
   function setMode(m, quiet) {
-    var was = S.wrapMode; S.wrapMode = m;
+    var was = S.wrapMode; S.wrapMode = m; try { syncSkips(); } catch (e) {}   // Builder's Choice hides the Trim Bands step
     if (m === 'build' && was !== 'build') { lastPreset = null; presetFill(); genericDesign(); if (S.wrapId === 'trim-band') try { var tps = dz.contentDocument.getElementById('sfswTrimPreset'); if (tps) tps.value = String(Math.min(recPick['trim-band'] || 0, 2)); } catch (e) {}   /* Trim Band Example 1-3 = Preset 1-3 */ if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
     if (m === 'random' && was !== 'random') { S.supportIdxs = (S.supportIdxs || []).slice(0, 3); call('renderSupportingRows'); }   // Builder's Choice starts at main + 3 supporting
     renderModes(); updTop(); if (quiet) return;
@@ -1318,7 +1319,7 @@
   var dzNow = dzBox && dzBox.querySelector('.rb-dz-now');
   // the page's own swatches: every Pro-Wrap metallic (included) and every Fuji metallic (Ultra-UV, +$10)
   (function () { var W = val('WRAP_COLORS'); if (!W || W.__sfsw) return; W.__sfsw = 1;
-    var PM = [["9860 Metallic Silver","#bfbfbf"], ["9870 Metallic Gunmetal","#716d71"], ["9160 Metallic Pale Gold","#e3d096"], ["9130 Metallic Gold","#d4b460"], ["9100 Metallic Yellow Gold","#d6be39"], ["9120 Metallic Goldenrod","#e4bd2f"], ["9440 Metallic Turquoise","#1e7d8e"], ["9410 Metallic Aqua","#2599c0"], ["9470 Metallic Bluefin","#193f87"], ["9460 Metallic Deep Blue","#2936ae"], ["9510 Metallic Lime","#8cbb65"], ["9520 Metallic Green","#1da34d"], ["9530 Metallic Forest Green","#1d5252"], ["9620 Metallic Mauve","#c47786"], ["9610 Metallic Fuchsia","#ae1f65"], ["9600 Metallic Purple","#b32cab"], ["9630 Metallic Lavender","#a663a9"], ["9710 Metallic Copper","#bb5522"], ["9720 Metallic Red Copper","#b6431a"], ["9300 Metallic Red","#a62927"], ["9880 Metallic Pearl","#e5d5cd"]], FM = [["901 Metallic Gold","#efbf5c"],["902 Metallic Pale Gold","#b49453"],["903 Metallic Silver","#bfbcb5"],["904 Metallic Green","#006232"],["905 Metallic Copper","#fbbf92"],["906 Metallic Purple","#6848c2"],["907 Metallic Black","#1c1c1c"],["908 Metallic Ice Blue","#0f8fbd"],["909 Metallic Red","#b40f1e"],["910 Metallic Aqua","#33b8aa"],["911 Metallic True Gold","#caaa40"],["912 Metallic Royal Blue","#0c35a3"],["913 Metallic Pewter","#231919"],["914 Metallic Lime Green","#9dca65"]];
+    var PM = [["9860 Metallic Silver","#bfbfbf"], ["9870 Metallic Gunmetal","#716d71"], ["9160 Metallic Pale Gold","#e3d096"], ["9130 Metallic Gold","#d4b460"], ["9100 Metallic Yellow Gold","#d6be39"], ["9120 Metallic Goldenrod","#e4bd2f"], ["9440 Metallic Turquoise","#1e7d8e"], ["9410 Metallic Aqua","#2599c0"], ["9470 Metallic Bluefin","#193f87"], ["9460 Metallic Deep Blue","#2936ae"], ["9510 Metallic Lime","#8cbb65"], ["9520 Metallic Green","#1da34d"], ["9530 Metallic Forest Green","#1d5252"], ["9620 Metallic Mauve","#c47786"], ["9610 Metallic Fuchsia","#ae1f65"], ["9600 Metallic Purple","#b32cab"], ["9630 Metallic Lavender","#a663a9"], ["9710 Metallic Copper","#bb5522"], ["9720 Metallic Red Copper","#b6431a"], ["9300 Metallic Red","#a62927"], ["9880 Metallic Pearl","#e5d5cd"]], FM = [["903 Metallic Silver","#bfbcb5"],["902 Metallic Pale Gold","#b49453"],["911 Metallic True Gold","#caaa40"],["901 Metallic Gold","#efbf5c"],["910 Metallic Aqua","#33b8aa"],["908 Metallic Ice Blue","#0f8fbd"],["912 Metallic Royal Blue","#0c35a3"],["914 Metallic Lime Green","#9dca65"],["904 Metallic Green","#006232"],["906 Metallic Purple","#6848c2"],["905 Metallic Copper","#fbbf92"],["909 Metallic Red","#b40f1e"]];
     for (var i = W.length - 1; i >= 0; i--) if (W[i].group === 'metallic' || W[i].group === 'uv-metallic') W.splice(i, 1);
     PM.forEach(function (x) { W.push({ name: x[0], hex: x[1], group: 'metallic', metallic: true }); });
     FM.forEach(function (x) { W.push({ name: x[0], hex: x[1], group: 'uv-metallic', metallic: true, adder: 10 }); });
