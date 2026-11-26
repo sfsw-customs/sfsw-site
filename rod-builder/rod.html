@@ -791,7 +791,7 @@ async function build() {
   if (!L.wrap) L.wrap = [x + 0.6, x + 4.6];
   // split wrap: centered in the gap between the rear grips, never longer than the gap (an eighth of an inch clear at each end)
   L.splitNote = '';
-  if (!GRIP && st.style === 'split' && st.splitOn && L.split && unrolled.split) { const gap = L.split[1] - L.split[0] - 0.25, sl0 = unrolled.split.lengthMM / IN, sl = Math.max(0.1, Math.min(sl0, gap)), mid = (L.split[0] + L.split[1]) / 2;
+  if (!GRIP && st.style === 'split' && st.splitOn && L.split && unrolled.split) { const gap = L.split[1] - L.split[0] - 0.04, sl0 = unrolled.split.lengthMM / IN, sl = Math.max(0.1, Math.min(sl0, gap)), mid = (L.split[0] + L.split[1]) / 2;
     if (sl0 > gap + 0.01) L.splitNote = `Shortened to fit the ${gap.toFixed(2)} in gap between the grips. Set the length in the designer to ${gap.toFixed(2)} in or less.`;
     if (window.__sfswSplitPair) { const sp = Math.min(sl0, gap / 2 - 0.05); putWrap('split', L.split[0] + 0.02, sp); putWrap('split', L.split[1] - 0.02 - sp, sp); } else putWrap('split', mid - sl / 2, sl); }
   // guides and their wraps from the Guide Wrap Designer
@@ -1971,7 +1971,7 @@ const sfswBoot = (async () => {
       const w = await whenReady(fk(k), w => w.WL_unrolled && w.__wlRod); w.__wlFitted = true;
       const full = clone(spec.full);
       if (k === 'split' && L.split) {   // SFSW: the same wrap on the split, sized to the gap between the rear grips and its blank there
-        const gap = Math.max(0.5, Math.floor((L.split[1] - L.split[0] - 0.25) * 4) / 4), a = (L.split[0] + L.split[1]) / 2 - gap / 2;
+        const gap = Math.max(0.5, Math.floor((L.split[1] - L.split[0] - 0.04) * 100) / 100), a = (L.split[0] + L.split[1]) / 2 - gap / 2;   // grip to grip
         full.unit = 'in'; full.len = gap.toFixed(2); full.dB = (2 * blankR(a) * IN).toFixed(1); full.dM = (2 * blankR(a + gap / 2) * IN).toFixed(1); full.dT = (2 * blankR(a + gap) * IN).toFixed(1); }
       try { w.wlApply(full); } catch (e) { console.warn('design', k, e); }
       try { if (w.WL_runNow) w.WL_runNow(); } catch (e) {} await wait(20); await readWrap(k); return true;
