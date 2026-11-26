@@ -1105,7 +1105,7 @@
     updateAll();
   }
   function renderLen() { var b = lenBox; if (!b) return; var f = lenFee(), ab = S.wrapId === 'abalone';
-    b.querySelector('b').textContent = wrapLen() + ' in'; b.querySelector('.rb-len-fee').textContent = f ? '+$' + f : 'Included'; b.querySelector('[data-d="-1"]').disabled = wrapLen() <= MIN_LEN; var lab = b.querySelector('.rb-len-l small'); if (lab) lab.textContent = ab ? '9 in max · shorter is fine (same price)' : BASE_LEN() + ' in included · +$' + LEN_RATE() + ' each added inch · shorter is fine (same price)';
+    b.querySelector('b').textContent = wrapLen() + ' in'; b.querySelector('.rb-len-fee').textContent = f ? '+$' + f : 'Included'; b.querySelector('[data-d="-1"]').disabled = wrapLen() <= MIN_LEN; var lab = b.querySelector('.rb-len-l small'); if (lab) lab.textContent = ab ? '9 in max' : BASE_LEN() + ' in included · +$' + LEN_RATE() + ' each added inch';
     var off = S.wrapId === 'trim-band'; b.classList.toggle('rb-len-off', off); b.title = off ? 'Wrap length is set for the Trim Band wrap. Pick another wrap to change it.' : '';
     [].forEach.call(b.querySelectorAll('button'), function (x) { if (off) x.disabled = true; else if (x.dataset.d === '1') x.disabled = wrapLen() >= MAX_LEN(); }); }
   // Trim bands: on/off, width and thread color, written straight into the wrap design
