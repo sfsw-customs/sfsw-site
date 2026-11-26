@@ -568,7 +568,10 @@
         stripes: [['Light Blue', 6], ['850 Storm Cloud', 5], ['807 White', 1], ['9470 Metallic Bluefin', 5], ['Light Blue', 5], ['850 Storm Cloud', 4], ['807 White', 1], ['9470 Metallic Bluefin', 5], ['807 White', 1]] },
       { trim: '9120 Metallic Goldenrod', sax: 8, angle: '45', dragon: { metal: '9120 Metallic Goldenrod', line: '862 Black', over: { on: true, pattern: 'diamond', axes: 2, angle: 45 } },
         stripes: [['807 White', 10], ['9120 Metallic Goldenrod', 3], ['862 Black', 5], ['9120 Metallic Goldenrod', 3], ['807 White', 5], ['9120 Metallic Goldenrod', 3], ['862 Black', 4]] } ] },
-    'Snowflake Wrap': { k: 'cross', pat: 'Snowflake', a: 2 }, '2 Axis Cross Wrap': { k: 'cross', a: 2, other: true, recs: [{}, { pat: 'Snowflake' }, {}] }, '4 Axis Cross Wrap': { k: 'cross', a: 4, other: true }
+    'Snowflake Wrap': { k: 'cross', pat: 'Snowflake', a: 2 }, '2 Axis Cross Wrap': { k: 'cross', a: 2, other: true, recs: [   // Example 1: Flamingo at 100% in metallic green and purple, with its trims
+      { pat: 'Flamingo', size: 100, cs: [['9520 Metallic Green', 0], ['9600 Metallic Purple', 0], ['9600 Metallic Purple', 0], ['9600 Metallic Purple', 0],
+        ['9520 Metallic Green', 3, 't'], ['9600 Metallic Purple', 3, 't'], ['9520 Metallic Green', 4, 't'], ['9600 Metallic Purple', 2, 't'], ['9520 Metallic Green', 5, 't'], ['9600 Metallic Purple', 1, 't'], ['9520 Metallic Green', 6, 't']] },
+      { pat: 'Snowflake' }] }, '4 Axis Cross Wrap': { k: 'cross', a: 4, other: true }
   };
   var WRAPS = val('ROD_WRAPS') || [];
   var wrapById = function (id) { return WRAPS.find(function (w) { return w.id === id; }); };
@@ -1223,7 +1226,12 @@
       if (n !== applyN) return;
       var cols = prev || START.stripes.map(function (x) { return x.c; });
       var c2 = w.wlCapture();
-      if (REC && REC.stripes) {   // this wrap's own recipe (the design in its photo)
+      if (REC && REC.cs && dzKind === 'cross') {   // a cross wrap example: its pattern colors, trims and size
+        var hxc = threadHex(w);
+        c2.stripes = REC.cs.map(function (x) { var o = { c: hxc(x[0]), t: x[1] }; if (x[2]) o.d = x[2]; return o; });
+        if (REC.size != null) c2.sizePct = String(REC.size);
+        if (c2.trims) { c2.trims.c = c2.stripes[0].c; c2.trims.bands = []; c2.trims.noFill = false; c2.trims.ends = []; }
+      } else if (REC && REC.stripes) {   // this wrap's own recipe (the design in its photo)
         var hx = threadHex(w), R = REC;
         c2.stripes = R.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; });
         if (c2.trims) { c2.trims.c = hx(R.trim || R.stripes[0][0]); c2.trims.bands = []; c2.trims.noFill = false; c2.trims.ends = []; }
