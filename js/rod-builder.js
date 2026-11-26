@@ -88,6 +88,7 @@
     '.rb-rs{display:flex;align-items:center;gap:8px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:999px;padding:4px 10px 4px 4px;color:var(--c-text);font-size:13px;cursor:pointer;text-align:left}',
     '.rb-rs i{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}.rb-rs small{display:block;font:600 9.5px var(--font-cond);letter-spacing:.12em;text-transform:uppercase;color:var(--c-muted)}',
     '.rb-rs.on{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.25)}.rb-rs b{margin-left:4px;color:var(--c-muted);font-weight:400;padding:0 2px}.rb-rs b:hover{color:#fff}',
+    '.rb-rgrp{flex-basis:100%;padding:8px 10px 10px;border:1px solid var(--c-border);border-radius:var(--radius);background:rgba(255,255,255,.02)}.rb-rgrp+.rb-rgrp{margin-top:2px}.rb-rgh{font:700 12px var(--font-cond);letter-spacing:.12em;text-transform:uppercase;color:var(--c-gold);margin:0 0 8px}.rb-rgh small{font:500 11px var(--font-body,inherit);letter-spacing:0;text-transform:none;color:var(--c-muted);margin-left:6px}.rb-rgs{display:flex;flex-wrap:wrap;align-items:center;gap:8px}',
     '.rb-rs.add{padding:8px 14px;border-style:dashed;color:var(--c-muted)}.rb-rs.add small{display:inline;color:var(--c-gold)}.rb-rs-tip{font-size:12px;color:var(--c-muted);margin-left:auto}',
     '@media (max-width:640px){.cfg-section:has(#sfsw-designer),.cfg-section:has(#sfsw-trims){overflow:visible!important}#sfsw-designer,#sfsw-trims{width:100vw!important;max-width:100vw!important;margin-left:calc(50% - 50vw)!important;margin-right:calc(50% - 50vw)!important;border-radius:0!important}}' +
     '.rb-exs.rb-exmode::after{content:"Examples are for ideas. Tap Customize or Builder\\2019s Choice to order.";flex-basis:100%;display:block;font-size:12.5px;color:#e0b13a;margin-top:6px}' +
@@ -1025,9 +1026,13 @@
     var slot = function (k, i, label) { var c = W[i] || {}, on = rndSlot === k;   /* (k: 'scale', 'main' or a supporting index) */
       return '<button type="button" class="rb-rs' + (on ? ' on' : '') + '" data-k="' + k + '"><i style="background:' + (c.hex || '#333') + '"></i><span><small>' + label + '</small>' + (shown(c.name) || '—') + '</span>' +
         (k !== 'main' && k !== 'scale' ? '<b data-x="' + k + '" title="Remove">×</b>' : '') + '</button>'; };
-    rndBar.innerHTML = (bcDragon() ? slot('scale', bcScaleIdx(), 'Scales · metallic') : '') + slot('main', S.mainIdx, bcDragon() ? 'Wrap over · main' : 'Main') + sup.map(function (i, k) { return slot(k, i, 'Supporting ' + (k + 1) + (k >= inc ? ' · +$' + fee : '')); }).join('') +
-      '<button type="button" class="rb-rs add">+ Add supporting color' + (sup.length >= inc ? ' <small>+$' + fee + '</small>' : '') + '</button>' +
-      '<span class="rb-rs-tip">Tap a slot, then tap a color below</span>';
+    var wrapSlots = slot('main', S.mainIdx, 'Main') + sup.map(function (i, k) { return slot(k, i, 'Supporting ' + (k + 1) + (k >= inc ? ' · +$' + fee : '')); }).join('') +
+      '<button type="button" class="rb-rs add">+ Add supporting color' + (sup.length >= inc ? ' <small>+$' + fee + '</small>' : '') + '</button>';
+    rndBar.innerHTML = bcDragon()
+      ? '<div class="rb-rgrp"><div class="rb-rgh">1 · Dragon Scales <small>metallic · included · Ultra-UV +$10</small></div><div class="rb-rgs">' + slot('scale', bcScaleIdx(), 'Scale color') + '</div></div>' +
+        '<div class="rb-rgrp"><div class="rb-rgh">2 · Wrap Over <small>4 colors included · +$' + fee + ' each extra</small></div><div class="rb-rgs">' + wrapSlots + '</div></div>' +
+        '<span class="rb-rs-tip">Tap a slot, then tap a color below</span>'
+      : wrapSlots + '<span class="rb-rs-tip">Tap a slot, then tap a color below</span>';   /* 2 Axis Wrap Over: the scales' metallic in its own box above the wrap-over colors */
     [].forEach.call(rndBar.querySelectorAll('.rb-rs'), function (b) { b.onclick = function (e) {
       var x = e.target.closest('[data-x]'); if (x) { sup.splice(+x.dataset.x, 1); rndSlot = 'main'; call('renderSupportingRows'); updateAll(); return; }
       if (b.classList.contains('add')) { sup.push(S.mainIdx === 1 ? 0 : 1); rndSlot = sup.length - 1; call('renderSupportingRows'); updateAll(); return; }
