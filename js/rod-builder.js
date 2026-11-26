@@ -85,7 +85,7 @@
     '.rb-wphoto.rb-wph-full{height:150px;background-size:contain;background-color:#07090c}',
     '.rb-top .rb-wphoto{display:none}.rb-top.rb-wtop .rb-wphoto{display:block}',
     '.rb-rbar{display:none;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 2px;padding:8px;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-rnd-slot .rb-rbar{display:flex;margin:0 0 10px}.rb-load{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#0d1117;transition:opacity .4s}.rb-load-out{opacity:0;pointer-events:none}.rb-load-in{display:flex;flex-direction:column;align-items:center;gap:10px;color:#e6e8eb;font-family:var(--font-body,inherit);text-align:center}.rb-load-in b{font-size:20px;letter-spacing:.02em}.rb-load-in span{font-size:14px;color:#8a94a3}.rb-load-sp{width:44px;height:44px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:var(--c-gold,#d4a73c);animation:rbspin .8s linear infinite;margin-bottom:6px}@keyframes rbspin{to{transform:rotate(360deg)}}html.rb-loading{overflow:hidden}.rb-fbr{flex-basis:100%;height:2px}.rb-fax{display:flex;flex:0 0 auto;gap:0;margin:0;border:1px solid var(--c-border);border-radius:8px;overflow:hidden}.rb-exs .rb-fax button{background:none;border:0;border-right:1px solid var(--c-border);border-radius:0;color:var(--c-muted);padding:8px 14px;font:600 14px var(--font-body,inherit);cursor:pointer}.rb-exs .rb-fax button:last-child{border-right:0}.rb-exs .rb-fax button.on{background:var(--c-gold);color:#111}.rb-fax small{font-size:12px;opacity:.85}.rb-rg-sz.rb-rg-sz2{margin-left:24px;display:flex;align-items:center;gap:10px}.rb-len.rb-len-off{filter:blur(2px);opacity:.45;pointer-events:none;user-select:none}',
-    '.rb-loc{margin:4px 0 16px;display:flex;flex-direction:column;gap:10px}.rb-loc-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}.rb-loc-l{font:700 12px var(--font-cond);letter-spacing:.14em;text-transform:uppercase;color:var(--c-gold);min-width:120px}.rb-seg{display:flex;border:1px solid var(--c-border);border-radius:8px;overflow:hidden}.rb-seg button{background:none;border:0;border-right:1px solid var(--c-border);color:var(--c-muted);padding:9px 18px;font:600 15px var(--font-body,inherit);cursor:pointer}.rb-seg button:last-child{border-right:0}.rb-seg button.on{background:var(--c-gold);color:#111}.rb-seg small{font-size:12px;color:#e0b13a}.rb-seg button.on small{color:#111}.rb-loc-n{color:var(--c-muted);font-size:13px}html.rb-loc-split .rb-len{display:none}',
+    '.rb-gs{margin:14px 0 4px}.rb-loc{margin:4px 0 16px;display:flex;flex-direction:column;gap:10px}.rb-loc-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}.rb-loc-l{font:700 12px var(--font-cond);letter-spacing:.14em;text-transform:uppercase;color:var(--c-gold);min-width:120px}.rb-seg{display:flex;border:1px solid var(--c-border);border-radius:8px;overflow:hidden}.rb-seg button{background:none;border:0;border-right:1px solid var(--c-border);color:var(--c-muted);padding:9px 18px;font:600 15px var(--font-body,inherit);cursor:pointer}.rb-seg button:last-child{border-right:0}.rb-seg button.on{background:var(--c-gold);color:#111}.rb-seg small{font-size:12px;color:#e0b13a}.rb-seg button.on small{color:#111}.rb-loc-n{color:var(--c-muted);font-size:13px}html.rb-loc-split .rb-len{display:none}',
     '.rb-rs{display:flex;align-items:center;gap:8px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:999px;padding:4px 10px 4px 4px;color:var(--c-text);font-size:13px;cursor:pointer;text-align:left}',
     '.rb-rs i{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}.rb-rs small{display:block;font:600 9.5px var(--font-cond);letter-spacing:.12em;text-transform:uppercase;color:var(--c-muted)}',
     '.rb-rs.on{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.25)}.rb-rs b{margin-left:4px;color:var(--c-muted);font-weight:400;padding:0 2px}.rb-rs b:hover{color:#fff}',
@@ -315,6 +315,21 @@
     var opt = (val('SPLIT_WRAP_OPTIONS') || []).find(function (o) { return o.id === S.wrapId; }), pr = locBar.querySelector('.rb-loc-p'); if (pr) pr.textContent = opt && opt.price > 50 ? '+$' + (opt.price - 50) : '';   // Both is +$50; a pricier wrap type adds its own upcharge here
     var sw = $('split-wrap-cfg-section'); if (sw && on) sw.style.display = lc === 'both' && !same ? '' : 'none';
     document.documentElement.classList.toggle('rb-loc-split', lc === 'split'); }
+  // ── grip lengths on the Split cork and Split foam grips: split pieces 2 or 2.5 in (included); fore grip 2.5 in (included), 3.5 in +$5 or 5 in +$10 ──
+  var GS_FORE = [[2.5, 0], [3.5, 5], [5, 10]];
+  function gsOn() { var g = call('getGrip') || {}; return g.id === 'cork-split' || g.id === 'eva-split'; }
+  function gsSplit() { return S.gSplit === 2.5 ? 2.5 : 2; }
+  function gsFore() { return S.gFore === 3.5 || S.gFore === 5 ? S.gFore : 2.5; }
+  function gsFee() { if (!gsOn()) return 0; var f = GS_FORE.find(function (x) { return x[0] === gsFore(); }); return f ? f[1] : 0; }
+  var gsBox = (function () { var sec = $('sec-grip'); if (!sec) return null;
+    var b = el('div', 'rb-loc rb-gs', '<div class="rb-loc-row"><span class="rb-loc-l">Split pieces</span><div class="rb-seg" data-g="split"><button type="button" data-v="2">2 in</button><button type="button" data-v="2.5">2.5 in</button></div><small class="rb-loc-n">butt and rear pieces · included</small></div>' +
+      '<div class="rb-loc-row"><span class="rb-loc-l">Fore grip</span><div class="rb-seg" data-g="fore">' + GS_FORE.map(function (x) { return '<button type="button" data-v="' + x[0] + '">' + x[0] + ' in' + (x[1] ? ' <small>+$' + x[1] + '</small>' : '') + '</button>'; }).join('') + '</div><small class="rb-loc-n">2.5 in included</small></div>');
+    sec.appendChild(b);
+    b.addEventListener('click', function (e) { var x = e.target.closest('button[data-v]'); if (!x) return; if (x.parentNode.dataset.g === 'split') S.gSplit = +x.dataset.v; else S.gFore = +x.dataset.v; view('handle'); updateAll(); });
+    return b; })();
+  function gsSync() { if (!gsBox) return; gsBox.style.display = gsOn() ? '' : 'none';
+    [].forEach.call(gsBox.querySelectorAll('[data-g="split"] button'), function (x) { x.classList.toggle('on', +x.dataset.v === gsSplit()); });
+    [].forEach.call(gsBox.querySelectorAll('[data-g="fore"] button'), function (x) { x.classList.toggle('on', +x.dataset.v === gsFore()); }); }
   var cur = 0, reached = 0;
   // the site menu only counts when it really stays pinned to the top of the window while the page scrolls
   function navH() { var n = document.querySelector('.nav'); if (!n) return 0; var pos = getComputedStyle(n).position;
@@ -432,6 +447,7 @@
     var m = /(\d+)\s*'\s*(\d+)?/.exec(v.length || ''), len = m ? +m[1] * 12 + (+m[2] || 0) : 84;
     var p = { type: CFG.type, len: len, mat: grip.mat === 'eva' ? 'eva' : 'cork', style: grip.style === 'full' ? 'full' : 'split', eva: 'black', shrink: 'none' };
     if (CFG.handle) ['seatAt', 'gButt', 'gRear', 'gFore', 'gripSpan'].forEach(function (k) { if (CFG.handle[k] != null) p[k] = CFG.handle[k]; });
+    if (gsOn()) { p.gButt = p.gRear = gsSplit(); p.gFore = gsFore(); }   // the split pieces and fore grip lengths they picked
     if (CFG.wrap && CFG.wrap.dB) p.wrapD = +CFG.wrap.dB;   // the blank is this thick where the wrap starts
     var EV = val('EVA_COLORS');
     if (call('isCustomEvaGrip') && EV && EV[S.evaColorIdx]) p.eva = EV[S.evaColorIdx].id;
@@ -514,7 +530,7 @@
       if (!foam && S.heatShrinkId) { S.heatShrinkId = null; call('renderAccessories'); }
     } catch (e) {}
     try { rgPrice(); } catch (e) {}
-    try { locSync(); } catch (e) {}
+    try { locSync(); gsSync(); } catch (e) {}
     var r = _update.apply(this, arguments);
     try { locSync(); } catch (e) {}
     try {
@@ -1440,13 +1456,14 @@
   function fillFee() { return isCrossWrap() && innerOn() ? 0 : FILL_FEE; }   // on a cross wrap with a pattern between, Color filler is included
   function fillerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && c.arms === 'cover' && (c.pattern === 'diamond' || d.sfsw === 'cross')); }
   function exView() { return S.wrapMode === 'example' && S.wrapId !== 'abalone' && !!presetOf(S.wrapId); }   // an example is for ideas: only the wrap's own price shows
-  window.calcUVMetallicFee = function () { if (exView()) return pairFee(); return pairFee() + metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? fillFee() : 0) + (innerOn() ? innerFee() : 0) + dragonFee() + tbLenFee() + tbPartFee() + crossSizeFee() + crossTrimFee() + bcScaleFee(); };   // (the wrap length rides along here)
+  window.calcUVMetallicFee = function () { if (exView()) return pairFee() + gsFee(); return pairFee() + gsFee() + metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? fillFee() : 0) + (innerOn() ? innerFee() : 0) + dragonFee() + tbLenFee() + tbPartFee() + crossSizeFee() + crossTrimFee() + bcScaleFee(); };   // (the wrap length rides along here)
   var _order = window.buildOrderItem;
   if (typeof _order === 'function') window.buildOrderItem = function () {
     var it = _order.apply(this, arguments), d = designOn();
     if (it.lines && bcDragon() && S.wrapMode === 'random') { var scW = (val('WRAP_COLORS') || [])[bcScaleIdx()]; if (scW) it.lines.push({ label: 'Dragon Scales (Builder\u2019s Choice)', value: scW.name + (bcScaleFee() ? '  +$' + bcScaleFee() : '') }); }
     if (it.lines && call('isSplitGrip')) { var lc = wrapLoc(); it.lines.push({ label: 'Wrap Location', value: lc === 'split' ? 'Split (between the rear grips)' : lc === 'both' ? 'Both (above the fore grip and on the split)' : 'Main (above the fore grip)' });
       if (lc === 'both' && S.splitSame !== false) it.lines.forEach(function (l) { if (l.label === 'Split Wrap') l.value = l.value.replace(/^([^+]*?)(\s*\+\$|$)/, '$1 (same as the main wrap)$2'); }); }
+    if (it.lines && gsOn()) it.lines.push({ label: 'Grip Lengths', value: 'Split pieces ' + gsSplit() + ' in · fore grip ' + gsFore() + ' in' + (gsFee() ? '  +$' + gsFee() : '') });
     if (it.lines && splitTB()) it.lines.push({ label: 'Trim Band on Split', value: S.splitPair ? 'One on each side of the grips  +$25' : 'One in the center' });
     if (it.lines && crossTrimFee()) it.lines.push({ label: 'Cross Wrap Trims', value: crossTrimThreads() + ' thread' + (crossTrimThreads() === 1 ? '' : 's') + '  +$' + crossTrimFee() });
     if (it.lines && crossSizeFee()) it.lines.push({ label: 'Cross Wrap Pattern Size', value: (+S.customDesign.setup.sizePct || 0) + '%  +$' + crossSizeFee() });
