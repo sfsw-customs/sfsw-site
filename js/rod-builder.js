@@ -286,14 +286,18 @@
   layout.classList.add('rb-on'); document.documentElement.classList.add('rb-page');
 
   // ── Wrap location: Main (above the fore grip), Split (between the rear grips) or Both (the same wrap again, or a different one) ──
+  function splitTB() { var lc = wrapLoc(); return S.wrapId === 'trim-band' && (lc === 'split' || (lc === 'both' && S.splitSame !== false)); }   // the Trim Band on the split
+  function pairFee() { return splitTB() && S.splitPair ? 25 : 0; }   // one against each grip: +$25
   function wrapLoc() { return call('isSplitGrip') ? (S.wrapLoc || 'main') : 'main'; }
   var locBar = (function () {
     var ws = STEPS.find(function (x) { return x.view === 'wrap' && /^Wrap$/.test(x.tab || x.title); }); if (!ws) return null;
-    var b = el('div', 'rb-loc', '<div class="rb-loc-row"><span class="rb-loc-l">Wrap location</span><div class="rb-seg" data-g="loc"><button type="button" data-v="main">Main</button><button type="button" data-v="split">Split</button><button type="button" data-v="both">Both</button></div><small class="rb-loc-n"></small></div>' +
-      '<div class="rb-loc-row rb-loc-both"><span class="rb-loc-l">Split wrap</span><div class="rb-seg" data-g="same"><button type="button" data-v="same">Same as main <small class="rb-loc-p"></small></button><button type="button" data-v="diff">Different wrap</button></div></div>');
+    var b = el('div', 'rb-loc', '<div class="rb-loc-row"><span class="rb-loc-l">Wrap location</span><div class="rb-seg" data-g="loc"><button type="button" data-v="main">Main</button><button type="button" data-v="split">Split</button><button type="button" data-v="both">Both <small>+$50</small></button></div><small class="rb-loc-n"></small></div>' +
+      '<div class="rb-loc-row rb-loc-both"><span class="rb-loc-l">Split wrap</span><div class="rb-seg" data-g="same"><button type="button" data-v="same">Same as main <small class="rb-loc-p"></small></button><button type="button" data-v="diff">Different wrap</button></div></div>' +
+      '<div class="rb-loc-row rb-loc-pair"><span class="rb-loc-l">Trim band on split</span><div class="rb-seg" data-g="pair"><button type="button" data-v="center">1 in the center</button><button type="button" data-v="sides">1 on each side <small>+$25</small></button></div></div>');
     var sub = ws.panel.querySelector('.rb-step-sub'); sub.parentNode.insertBefore(b, sub.nextSibling);
     b.addEventListener('click', function (e) { var x = e.target.closest('button[data-v]'); if (!x) return; var g = x.parentNode.dataset.g;
       if (g === 'loc') { S.wrapLoc = x.dataset.v; view(S.wrapLoc === 'split' ? 'handle' : 'wrap'); }
+      else if (g === 'pair') S.splitPair = x.dataset.v === 'sides';
       else { S.splitSame = x.dataset.v === 'same'; S.splitWrapId = null; }   // a different wrap starts with none picked
       if (!(S.wrapLoc === 'both' && S.splitSame === false)) S.splitWrapId = null;
       if (S.wrapLoc === 'both' && S.splitSame === false) setTimeout(function () { var sw = $('split-wrap-cfg-section'); if (sw) sw.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 80);
@@ -304,9 +308,11 @@
     [].forEach.call(locBar.querySelectorAll('[data-g="loc"] button'), function (x) { x.classList.toggle('on', x.dataset.v === lc); });
     [].forEach.call(locBar.querySelectorAll('[data-g="same"] button'), function (x) { x.classList.toggle('on', (x.dataset.v === 'same') === same); });
     locBar.querySelector('.rb-loc-both').style.display = lc === 'both' ? '' : 'none';
+    locBar.querySelector('.rb-loc-pair').style.display = splitTB() ? '' : 'none';
+    [].forEach.call(locBar.querySelectorAll('[data-g="pair"] button'), function (x) { x.classList.toggle('on', (x.dataset.v === 'sides') === !!S.splitPair); });
     locBar.querySelector('.rb-loc-n').textContent = lc === 'split' ? 'between the rear grips · sized to fit the split' : lc === 'both' ? 'above the fore grip and on the split' : 'above the fore grip';
     if (lc === 'both' && same && S.wrapId) S.splitWrapId = S.wrapId;   // the same wrap again: priced as that wrap's split wrap
-    var opt = (val('SPLIT_WRAP_OPTIONS') || []).find(function (o) { return o.id === S.wrapId; }), pr = locBar.querySelector('.rb-loc-p'); if (pr) pr.textContent = opt && opt.price ? '+$' + opt.price : '';
+    var opt = (val('SPLIT_WRAP_OPTIONS') || []).find(function (o) { return o.id === S.wrapId; }), pr = locBar.querySelector('.rb-loc-p'); if (pr) pr.textContent = opt && opt.price > 50 ? '+$' + (opt.price - 50) : '';   // Both is +$50; a pricier wrap type adds its own upcharge here
     var sw = $('split-wrap-cfg-section'); if (sw && on) sw.style.display = lc === 'both' && !same ? '' : 'none';
     document.documentElement.classList.toggle('rb-loc-split', lc === 'split'); }
   var cur = 0, reached = 0;
@@ -479,6 +485,7 @@
     var loc = wrapLoc();   // Main / Split / Both: the same wrap on the split copies the main design
     if (loc === 'split' || (loc === 'both' && S.splitSame !== false)) { p.splitOn = true; p.split = JSON.parse(JSON.stringify(p.main)); }
     if (loc === 'split') p.mainOn = false;
+    p.splitPair = !!(p.splitOn && splitTB() && S.splitPair);
     p.gw = S.guideWrapUserSelected ? guideWrapSpec(S.guideWrapId, main, sup, notes)
       : { under: false, underC: '#1a1a1a', footC: '#1a1a1a', bands: [], trims: [{ c: '#dabd66', t: 3 }] };   // black foot wraps with gold trim bands (9130 Metallic Gold) until a guide wrap is picked (wrap examples don't change them)
     return { p: p, notes: notes };
@@ -1433,13 +1440,14 @@
   function fillFee() { return isCrossWrap() && innerOn() ? 0 : FILL_FEE; }   // on a cross wrap with a pattern between, Color filler is included
   function fillerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && c.arms === 'cover' && (c.pattern === 'diamond' || d.sfsw === 'cross')); }
   function exView() { return S.wrapMode === 'example' && S.wrapId !== 'abalone' && !!presetOf(S.wrapId); }   // an example is for ideas: only the wrap's own price shows
-  window.calcUVMetallicFee = function () { if (exView()) return 0; return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? fillFee() : 0) + (innerOn() ? innerFee() : 0) + dragonFee() + tbLenFee() + tbPartFee() + crossSizeFee() + crossTrimFee() + bcScaleFee(); };   // (the wrap length rides along here)
+  window.calcUVMetallicFee = function () { if (exView()) return pairFee(); return pairFee() + metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? fillFee() : 0) + (innerOn() ? innerFee() : 0) + dragonFee() + tbLenFee() + tbPartFee() + crossSizeFee() + crossTrimFee() + bcScaleFee(); };   // (the wrap length rides along here)
   var _order = window.buildOrderItem;
   if (typeof _order === 'function') window.buildOrderItem = function () {
     var it = _order.apply(this, arguments), d = designOn();
     if (it.lines && bcDragon() && S.wrapMode === 'random') { var scW = (val('WRAP_COLORS') || [])[bcScaleIdx()]; if (scW) it.lines.push({ label: 'Dragon Scales (Builder\u2019s Choice)', value: scW.name + (bcScaleFee() ? '  +$' + bcScaleFee() : '') }); }
     if (it.lines && call('isSplitGrip')) { var lc = wrapLoc(); it.lines.push({ label: 'Wrap Location', value: lc === 'split' ? 'Split (between the rear grips)' : lc === 'both' ? 'Both (above the fore grip and on the split)' : 'Main (above the fore grip)' });
       if (lc === 'both' && S.splitSame !== false) it.lines.forEach(function (l) { if (l.label === 'Split Wrap') l.value = l.value.replace(/^([^+]*?)(\s*\+\$|$)/, '$1 (same as the main wrap)$2'); }); }
+    if (it.lines && splitTB()) it.lines.push({ label: 'Trim Band on Split', value: S.splitPair ? 'One on each side of the grips  +$25' : 'One in the center' });
     if (it.lines && crossTrimFee()) it.lines.push({ label: 'Cross Wrap Trims', value: crossTrimThreads() + ' thread' + (crossTrimThreads() === 1 ? '' : 's') + '  +$' + crossTrimFee() });
     if (it.lines && crossSizeFee()) it.lines.push({ label: 'Cross Wrap Pattern Size', value: (+S.customDesign.setup.sizePct || 0) + '%  +$' + crossSizeFee() });
     if (it.lines && S.wrapId === 'trim-band' && S.wrapMode !== 'random') { var tp = tbParts(); it.lines.push({ label: 'Saw Blades / Fades', value: tp.saw + ' / ' + tp.fade + ' each side' + (tbPartFee() ? '  +$' + tbPartFee() : '') }); }
