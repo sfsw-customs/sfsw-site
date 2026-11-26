@@ -568,10 +568,11 @@
         stripes: [['Light Blue', 6], ['850 Storm Cloud', 5], ['807 White', 1], ['9470 Metallic Bluefin', 5], ['Light Blue', 5], ['850 Storm Cloud', 4], ['807 White', 1], ['9470 Metallic Bluefin', 5], ['807 White', 1]] },
       { trim: '9120 Metallic Goldenrod', sax: 8, angle: '45', dragon: { metal: '9120 Metallic Goldenrod', line: '862 Black', over: { on: true, pattern: 'diamond', axes: 2, angle: 45 } },
         stripes: [['807 White', 10], ['9120 Metallic Goldenrod', 3], ['862 Black', 5], ['9120 Metallic Goldenrod', 3], ['807 White', 5], ['9120 Metallic Goldenrod', 3], ['862 Black', 4]] } ] },
-    'Snowflake Wrap': { k: 'cross', pat: 'Snowflake', a: 2 }, '2 Axis Cross Wrap': { k: 'cross', a: 2, other: true, recs: [   // Example 1: Flamingo at 100% in metallic green and purple, with its trims
+    'Snowflake Wrap': { k: 'cross', pat: 'Snowflake', a: 2 }, '2 Axis Cross Wrap': { k: 'cross', a: 2, other: true, recs: [   // Example 1: Snowflake with a diamond pattern between; Example 2: Flamingo at 100%
+      { pat: 'Snowflake', cs: [['807 White', 1], ['807 White', 3], ['9460 Metallic Deep Blue', 3], ['807 White', 3], ['9870 Metallic Gunmetal', 3], ['9460 Metallic Deep Blue', 3], ['807 White', 3], ['9870 Metallic Gunmetal', 3]],
+        between: { kind: 'diamond', order: 'after', cs: [['9300 Metallic Red', 8], ['862 Black', 31]] } },
       { pat: 'Flamingo', size: 100, cs: [['9520 Metallic Green', 0], ['9600 Metallic Purple', 0], ['9600 Metallic Purple', 0], ['9600 Metallic Purple', 0],
-        ['9520 Metallic Green', 3, 't'], ['9600 Metallic Purple', 3, 't'], ['9520 Metallic Green', 4, 't'], ['9600 Metallic Purple', 2, 't'], ['9520 Metallic Green', 5, 't'], ['9600 Metallic Purple', 1, 't'], ['9520 Metallic Green', 6, 't']] },
-      { pat: 'Snowflake' }] }, '4 Axis Cross Wrap': { k: 'cross', a: 4, other: true }
+        ['9520 Metallic Green', 3, 't'], ['9600 Metallic Purple', 3, 't'], ['9520 Metallic Green', 4, 't'], ['9600 Metallic Purple', 2, 't'], ['9520 Metallic Green', 5, 't'], ['9600 Metallic Purple', 1, 't'], ['9520 Metallic Green', 6, 't']] } ] }, '4 Axis Cross Wrap': { k: 'cross', a: 4, other: true }
   };
   var WRAPS = val('ROD_WRAPS') || [];
   var wrapById = function (id) { return WRAPS.find(function (w) { return w.id === id; }); };
@@ -1230,6 +1231,9 @@
         var hxc = threadHex(w);
         c2.stripes = REC.cs.map(function (x) { var o = { c: hxc(x[0]), t: x[1] }; if (x[2]) o.d = x[2]; return o; });
         if (REC.size != null) c2.sizePct = String(REC.size);
+        if (REC.between && c2.between) c2.between = Object.assign({}, c2.between, { on: true, auto: false, kind: REC.between.kind, order: REC.between.order || 'after', stripes: REC.between.cs.map(function (x) { return { c: hxc(x[0]), t: x[1] }; }), colors: null });
+        else if (c2.between) c2.between = Object.assign({}, c2.between, { on: false });
+        if (REC.size == null) c2.sizePct = '0';
         if (c2.trims) { c2.trims.c = c2.stripes[0].c; c2.trims.bands = []; c2.trims.noFill = false; c2.trims.ends = []; }
       } else if (REC && REC.stripes) {   // this wrap's own recipe (the design in its photo)
         var hx = threadHex(w), R = REC;
