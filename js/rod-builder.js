@@ -513,7 +513,7 @@
           ['9520 Metallic Green', 2], ['862 Black', 2], ['9520 Metallic Green', 1], ['862 Black', 2], ['9520 Metallic Green', 2], ['807 White', 2],
           ['819 Ghost Grey', 6], ['807 White', 2]] },
       { trim: '862 Black',
-        stripes: [['9100 Metallic Yellow Gold', 1], ['862 Black', 4], ['9100 Metallic Yellow Gold', 3], ['813 Silver Shiner', 6], ['862 Black', 6],
+        stripes: [['9100 Metallic Yellow Gold', 1], ['862 Black', 4], ['9100 Metallic Yellow Gold', 3], ['836 Forged Steel', 6], ['862 Black', 6],
           ['9100 Metallic Yellow Gold', 6], ['819 Ghost Grey', 2], ['862 Black', 2], ['9100 Metallic Yellow Gold', 2]] } ] }, 'Chevron — 2 Axis': { k: 'taper', p: 'chevron', a: 2, recs: [   // example 1 points to the tip, example 2 to the butt
       { trim: '484 Deep Sea', chevTo: 'tip', stripes: [['9860 Metallic Silver', 5], ['484 Deep Sea', 2], ['9860 Metallic Silver', 4], ['484 Deep Sea', 3], ['9860 Metallic Silver', 3], ['479 Gulfstream', 4],
           ['9860 Metallic Silver', 2], ['484 Deep Sea', 5]] },
@@ -974,7 +974,7 @@
     return { on: true, noFill: !!T.noFill, mm: T.mm, c: hx(T.c), bands: T.bands.map(it), ends: (T.ends || []).map(it) }; }
   function threadHex(w) { var m = {}; try { w.WL_THREADS.BRANDS.sfsw.groups.forEach(function (g) { g[1].forEach(function (x) { m[x[0]] = x[1]; }); }); } catch (e) {}
     return function (n) { return m[n] || GONE[n] || '#1e1617'; }; }
-  var GONE = { '740 Copper': '#cb4e22', '813 Silver Shiner': '#dfdcdd' };   // removed colors an example still uses, until Brett picks their replacements
+  var GONE = { '740 Copper': '#cb4e22', '836 Forged Steel': '#dfdcdd' };   // removed colors an example still uses, until Brett picks their replacements
   var recPick = {}, dzHold = 0;   // which photo design each wrap is on
   function recOf(pr, id) { var r = pr && pr.recs ? pr.recs[Math.min(recPick[id] || 0, pr.recs.length - 1)] : null; return r && (r.stripes || r.pat) ? r : null; }   // a photo-only example has no recipe
   function recInner(R, hx) { var I = R && R.inner; if (!I) return null;   // an example's pattern between
