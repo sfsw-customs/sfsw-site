@@ -446,7 +446,7 @@
     else p.main = wrapSpec(S.wrapId, main, sup, rnd ? null : S.customDesign, notes, 'rod wrap');
     if (p.main && !p.main.full && CFG.wrap) p.main.len = wrapLen();
     if (rnd && p.main && !p.main.full && S.wrapId !== 'abalone') p.main.trims = Object.assign({}, p.main.trims || {}, { on: false });   // Builder's Choice: no trim bands shown
-    if (rnd && p.main && !p.main.full && S.wrapId !== 'abalone') p.main.veil = { colors: [main].concat(sup).filter(Boolean), name: ((wrapNamed(S.wrapId) || {}).name || '').replace(/\s*\u2014\s*/g, ' - ') };   // Builder's Choice: a sheet over the wrap with their colors
+    if (rnd && p.main && !p.main.full && S.wrapId !== 'abalone') p.main.veil = { colors: (bcDragon() && (val('WRAP_COLORS') || [])[bcScaleIdx()] ? [(val('WRAP_COLORS') || [])[bcScaleIdx()].hex] : []).concat([main].concat(sup)).filter(Boolean), name: ((wrapNamed(S.wrapId) || {}).name || '').replace(/\s*\u2014\s*/g, ' - ') };   // Builder's Choice: a sheet over the wrap with their colors
     lastMain = p.main;
     var sw = call('isSplitGrip') ? call('getSplitWrap') : null;
     p.splitOn = !!sw; if (sw) p.split = sw.id === 'abalone' ? abSpec(S.splitAbaloneColorIdx) : wrapSpec(sw.id, main, sup, null, notes, 'split wrap');
@@ -1011,30 +1011,38 @@
   function lumOf(h) { h = String(h || '').replace('#', ''); return .299 * parseInt(h.slice(0, 2), 16) + .587 * parseInt(h.slice(2, 4), 16) + .114 * parseInt(h.slice(4, 6), 16); }
   // Random: tap a slot in the floating bar (Main, Supporting 1, 2 …), then tap colors below to fill it
   var rndBar, rndPal, rndSlot = 'main';
+  // Builder's Choice on the 2 Axis Wrap Over Dragon Scales: a metallic for the scales, then the 4 included colors for the wrap over them
+  function bcDragon() { return S.wrapId === '2axis-dragon'; }
+  function bcScaleIdx() { var W = val('WRAP_COLORS') || []; if (!(W[S.bcScale] && W[S.bcScale].metallic)) { var k = -1; W.forEach(function (c, i) { if (k < 0 && c.metallic && c.group !== 'uv-metallic' && /Silver/.test(c.name)) k = i; }); if (k < 0) W.forEach(function (c, i) { if (k < 0 && c.metallic) k = i; }); S.bcScale = k; } return S.bcScale; }
+  function bcScaleFee() { if (!bcDragon() || S.wrapMode !== 'random') return 0; var W = val('WRAP_COLORS') || [], c = W[bcScaleIdx()]; return c && c.group === 'uv-metallic' ? 10 : 0; }
   function renderRandom() {
     var W = val('WRAP_COLORS') || []; if (!rndBar || !W.length) return; var sup = S.supportIdxs || (S.supportIdxs = []), inc = 3, fee = 10;
-    if (rndSlot !== 'main' && !(rndSlot < sup.length)) rndSlot = 'main';
-    var slot = function (k, i, label) { var c = W[i] || {}, on = rndSlot === k;
+    var rn = document.querySelector('.rb-rnd-note'); if (rn) rn.textContent = bcDragon() ? 'Builder\u2019s Choice: Choose a metallic for the dragon scales, then a main and supporting colors for the wrap over them, and we will do a unique design of our choice. The scales\u2019 metallic plus 4 colors for the wrap over included · +$10 each extra color.'
+      : 'Builder\u2019s Choice: Choose a main color and supporting colors, and we will do a unique design of our choice. 1 Main and 3 supporting colors included (4 colors) · +$10 each extra color.';
+    if (bcDragon() && rndBar.__w !== S.wrapId) rndSlot = 'scale';   // the 2 Axis Wrap Over opens on the scales' metallic
+    rndBar.__w = S.wrapId;
+    if (rndSlot === 'scale' ? !bcDragon() : (rndSlot !== 'main' && !(rndSlot < sup.length))) rndSlot = bcDragon() ? 'scale' : 'main';
+    var slot = function (k, i, label) { var c = W[i] || {}, on = rndSlot === k;   /* (k: 'scale', 'main' or a supporting index) */
       return '<button type="button" class="rb-rs' + (on ? ' on' : '') + '" data-k="' + k + '"><i style="background:' + (c.hex || '#333') + '"></i><span><small>' + label + '</small>' + (shown(c.name) || '—') + '</span>' +
-        (k !== 'main' ? '<b data-x="' + k + '" title="Remove">×</b>' : '') + '</button>'; };
-    rndBar.innerHTML = slot('main', S.mainIdx, 'Main') + sup.map(function (i, k) { return slot(k, i, 'Supporting ' + (k + 1) + (k >= inc ? ' · +$' + fee : '')); }).join('') +
+        (k !== 'main' && k !== 'scale' ? '<b data-x="' + k + '" title="Remove">×</b>' : '') + '</button>'; };
+    rndBar.innerHTML = (bcDragon() ? slot('scale', bcScaleIdx(), 'Scales · metallic') : '') + slot('main', S.mainIdx, bcDragon() ? 'Wrap over · main' : 'Main') + sup.map(function (i, k) { return slot(k, i, 'Supporting ' + (k + 1) + (k >= inc ? ' · +$' + fee : '')); }).join('') +
       '<button type="button" class="rb-rs add">+ Add supporting color' + (sup.length >= inc ? ' <small>+$' + fee + '</small>' : '') + '</button>' +
       '<span class="rb-rs-tip">Tap a slot, then tap a color below</span>';
     [].forEach.call(rndBar.querySelectorAll('.rb-rs'), function (b) { b.onclick = function (e) {
       var x = e.target.closest('[data-x]'); if (x) { sup.splice(+x.dataset.x, 1); rndSlot = 'main'; call('renderSupportingRows'); updateAll(); return; }
       if (b.classList.contains('add')) { sup.push(S.mainIdx === 1 ? 0 : 1); rndSlot = sup.length - 1; call('renderSupportingRows'); updateAll(); return; }
-      rndSlot = b.dataset.k === 'main' ? 'main' : +b.dataset.k; renderRandom(); }; });
-    var cur2 = rndSlot === 'main' ? S.mainIdx : sup[rndSlot], groups = [['', 'Colors'], ['metallic', 'Metallic'], ['uv-metallic', 'Ultra-UV Metallic · +$10']];
+      rndSlot = b.dataset.k === 'main' || b.dataset.k === 'scale' ? b.dataset.k : +b.dataset.k; renderRandom(); }; });
+    var cur2 = rndSlot === 'scale' ? bcScaleIdx() : rndSlot === 'main' ? S.mainIdx : sup[rndSlot], groups = [['', 'Colors'], ['metallic', 'Metallic'], ['uv-metallic', 'Ultra-UV Metallic · +$10']];
     // the thread colors in the designer's own groups and order (Black & White, Greys, Blues ... each lightest to darkest); the metallics after
     var TT = null, dgs = null; try { TT = (dw() || {}).WL_THREADS; dgs = TT && TT.groups([]); } catch (e) { dgs = null; }
     if (dgs && dgs.length) groups = dgs.map(function (g) { var met = /metallic/i.test(g[0]), uv = /ultra-uv/i.test(g[0]);
         return [g[1].map(function (x) { var hx = String(x[1]).toLowerCase(), k = -1;
           W.forEach(function (c, i) { if (k < 0 && !!c.metallic === met && (!met || (c.group === 'uv-metallic') === uv) && String(c.hex).toLowerCase() === hx) k = i; });
           if (k < 0 && !met) { W.push({ name: (TT.fullName ? TT.fullName(x[1]) : x[0]) || x[0], hex: x[1], group: '' }); k = W.length - 1; }   // a designer color the page list lacks
-          return k; }).filter(function (k) { return k >= 0; }), uv ? 'Ultra-UV Metallic · +$10' : met ? 'Metallic' : g[0]]; }).filter(function (g) { return g[0].length; });   // (Builder's Choice has no metallic twist)
+          return k; }).filter(function (k) { return k >= 0; }), uv ? 'Ultra-UV Metallic · +$10' : met ? 'Metallic' : g[0]]; }).filter(function (g) { return g[0].length && (rndSlot !== 'scale' || /Metallic/.test(g[1])); });   // the scales: metallics only   // (Builder's Choice has no metallic twist)
     rndPal.innerHTML = groups.map(function (g) { var items = Array.isArray(g[0]) ? g[0].map(function (i) { return [W[i], i]; }) : W.map(function (c, i) { return [c, i]; }).filter(function (x) { return (x[0].group || '') === g[0]; }).sort(function (a, b) { return lumOf(b[0].hex) - lumOf(a[0].hex); }); if (!items.length) return '';   /* lightest to darkest */
       return '<div class="rb-rp-h">' + g[1] + '</div><div class="rb-rp">' + items.map(function (x) { return '<button type="button" class="' + (x[1] === cur2 ? 'on' : '') + '" data-i="' + x[1] + '" title="' + shown(x[0].name) + '" style="background:' + x[0].hex + '"></button>'; }).join('') + '</div>'; }).join('');
-    [].forEach.call(rndPal.querySelectorAll('.rb-rp button'), function (b) { b.onclick = function () { var i = +b.dataset.i; if (rndSlot === 'main') S.mainIdx = i; else sup[rndSlot] = i; call('renderSupportingRows'); updateAll(); }; });
+    [].forEach.call(rndPal.querySelectorAll('.rb-rp button'), function (b) { b.onclick = function () { var i = +b.dataset.i; if (rndSlot === 'scale') { S.bcScale = i; renderRandom(); updateAll(); return; } if (rndSlot === 'main') S.mainIdx = i; else sup[rndSlot] = i; call('renderSupportingRows'); updateAll(); }; });
   }
   // wrap length: starts at the rod type's length (9 in here); each extra inch is +$10
   // wrap length: included length per wrap (cross wraps 8 in, the rest this rod type's length); longer costs per inch (cross wraps +$20, the rest +$10); shorter is allowed and doesn't lower the price
@@ -1293,7 +1301,7 @@
           b.onclick = function () { call('pickAbaloneColor', String(k)); setTimeout(exButtons, 30); }; box.appendChild(b); });
         if (lenBox) { lenBox.classList.add('rb-len-ab'); box.appendChild(lenBox); renderLen(); }   // abalone has no designer: its length sits to the right of the shell colors
       }
-      if (pr) [['build', 'Customize'], ['random', 'Builder\u2019s Choice']].forEach(function (x) { var b = el('button', 'rb-exm' + (S.wrapMode === x[0] ? ' on' : ''), x[1]); b.type = 'button';
+      if (pr) [['build', 'Customize'], ['random', 'Builder\u2019s Choice']].filter(function (x) { return !(x[0] === 'random' && id === 'dragon'); }).forEach(function (x) { var b = el('button', 'rb-exm' + (S.wrapMode === x[0] ? ' on' : ''), x[1]); b.type = 'button';
         b.onclick = function () { setMode(S.wrapMode === x[0] ? 'example' : x[0]); exButtons(); }; box.appendChild(b); });
       (card.querySelector('.option-item-body') || card).appendChild(box);
     }
@@ -1352,10 +1360,11 @@
   function innerFee() { return isCrossWrap() ? 100 : INNER_FEE; }   // a cross wrap's pattern between is +$100
   function fillFee() { return isCrossWrap() && innerOn() ? 0 : FILL_FEE; }   // on a cross wrap with a pattern between, Color filler is included
   function fillerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && c.arms === 'cover' && (c.pattern === 'diamond' || d.sfsw === 'cross')); }
-  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? fillFee() : 0) + (innerOn() ? innerFee() : 0) + dragonFee() + tbLenFee() + tbPartFee() + crossSizeFee(); };   // (the wrap length rides along here)
+  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? fillFee() : 0) + (innerOn() ? innerFee() : 0) + dragonFee() + tbLenFee() + tbPartFee() + crossSizeFee() + bcScaleFee(); };   // (the wrap length rides along here)
   var _order = window.buildOrderItem;
   if (typeof _order === 'function') window.buildOrderItem = function () {
     var it = _order.apply(this, arguments), d = designOn();
+    if (it.lines && bcDragon() && S.wrapMode === 'random') { var scW = (val('WRAP_COLORS') || [])[bcScaleIdx()]; if (scW) it.lines.push({ label: 'Dragon Scales (Builder\u2019s Choice)', value: scW.name + (bcScaleFee() ? '  +$' + bcScaleFee() : '') }); }
     if (it.lines && crossSizeFee()) it.lines.push({ label: 'Cross Wrap Pattern Size', value: (+S.customDesign.setup.sizePct || 0) + '%  +$' + crossSizeFee() });
     if (it.lines && S.wrapId === 'trim-band' && S.wrapMode !== 'random') { var tp = tbParts(); it.lines.push({ label: 'Saw Blades / Fades', value: tp.saw + ' / ' + tp.fade + ' each side' + (tbPartFee() ? '  +$' + tbPartFee() : '') }); }
     if (it.lines && S.wrapId === 'trim-band') it.lines.push({ label: 'Trim Band Length', value: (tbLenQ() / 4) + ' in' + (tbLenFee() ? '  +$' + tbLenFee().toFixed(2).replace(/\.00$/, '') : '') });
