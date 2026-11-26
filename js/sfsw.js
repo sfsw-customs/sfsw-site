@@ -155,7 +155,7 @@ function buildSwatches(containerId, colors, selectedIdx, onSelect) {
     if (sel) { nameEl.textContent = sel.name; nameEl.style.display = 'block'; }
     if (hasPhotos && sel) {
       const preview = previewWrap.querySelector('.thread-photo-preview');
-      if (sel.photo) { preview.src = sel.photo; preview.alt = sel.name; previewWrap.style.display = 'flex'; }
+      if (sel.photo && !window.SFSW_NO_PHOTOS) { preview.src = sel.photo; preview.alt = sel.name; previewWrap.style.display = 'flex'; }
       else { previewWrap.style.display = 'none'; }
     }
   }
@@ -178,7 +178,7 @@ function buildSwatches(containerId, colors, selectedIdx, onSelect) {
           const pw = r.querySelector('.thread-photo-preview-wrap');
           const pv = pw && pw.querySelector('.thread-photo-preview');
           if (pw && pv) {
-            if (col.photo) { pv.src = col.photo; pv.alt = col.name; pw.style.display = 'flex'; }
+            if (col.photo && !window.SFSW_NO_PHOTOS) { pv.src = col.photo; pv.alt = col.name; pw.style.display = 'flex'; }
             else { pw.style.display = 'none'; }
           }
         }
