@@ -2005,20 +2005,24 @@ const sfswBoot = (async () => {
     r.abalone = true; c.__sfswShiny = true;
   }
   // SFSW: Builder's Choice — a cloth sheet over the wrap (between the trim bands) with the customer's colors and "Builder's Choice" on it
-  function paintVeil(r, cols, trimMM, wname) {
+  function paintVeil(r, cols, trimMM, wname) {   // Builder's Choice: a plain black sheet with the wrap's name, BUILDER'S CHOICE, and a band around the blank for each color
     const c = r.canvas, x = c.getContext('2d'), W = c.width, H = c.height, L = r.lengthMM || 1;
     const t = Math.round((trimMM || 0) / L * W), x0 = t, x1 = W - t, pxX = W / L, circ = Math.PI * 15, pxY = H / circ;   // px per mm along the rod and around it
+    c.__sfswMet = null; c.__sfswMetTex = null;   // no metal from the design underneath (its outline would show through)
     x.save(); x.beginPath(); x.rect(x0, 0, x1 - x0, H); x.clip();
     x.fillStyle = '#111316'; x.fillRect(x0, 0, x1 - x0, H);   // plain black
-    const mid = (x0 + x1) / 2, fh = 5.2 * pxY, sx = pxX / pxY;   // the words, the same size around and along the rod, with the customer's colors as dots to their right
+    const mid = (x0 + x1) / 2, fh = 5.2 * pxY, sx = pxX / pxY, n = cols.length;
+    const bw = 7 * pxX, bg = 2.2 * pxX, lead = 6 * pxX, BW = n ? lead + n * bw + (n - 1) * bg : 0;   // the bands: 7 mm wide, 2.2 mm apart
+    let bandX = null;
     [H * .5, 0, H].forEach(cy => { x.save(); x.translate(mid, cy); x.scale(sx, -1);   /* the texture runs upside down on the rod */
       x.font = '700 ' + Math.round(fh) + 'px "Barlow Condensed","Oswald","Arial Narrow",Arial,sans-serif'; x.textBaseline = 'middle';
-      const label = 'BUILDER’S CHOICE', nm = (wname || '').toUpperCase(), nw = nm ? x.measureText(nm).width + fh * .7 : 0, tw = x.measureText(label).width, rad = fh * .3, gap = fh * .28, dw = cols.length ? cols.length * 2 * rad + (cols.length - 1) * gap + fh * .55 : 0, left0 = -(nw + tw + dw) / 2, left = left0 + nw;   // wrap name | BUILDER'S CHOICE | color dots
+      const label = 'BUILDER’S CHOICE', nm = (wname || '').toUpperCase(), nw = nm ? x.measureText(nm).width + fh * .7 : 0, tw = x.measureText(label).width, dw = BW / sx, left0 = -(nw + tw + dw) / 2, left = left0 + nw;   // wrap name | BUILDER'S CHOICE | the color bands
       x.textAlign = 'left'; if (nm) { x.fillStyle = '#e6e8eb'; x.fillText(nm, left0, 0); x.fillStyle = 'rgba(255,255,255,.35)'; x.fillRect(left - fh * .38, -fh * .32, Math.max(1, fh * .05), fh * .6); }
       x.fillStyle = '#d4a73c'; x.fillText(label, left, 0);
-      cols.forEach((cc, i) => { const cx = left + tw + fh * .55 + rad + i * (2 * rad + gap); x.beginPath(); x.arc(cx, -fh * .04, rad, 0, Math.PI * 2); x.fillStyle = cc; x.fill();
-        x.lineWidth = Math.max(1, fh * .04); x.strokeStyle = 'rgba(255,255,255,.35)'; x.stroke(); });
+      if (bandX === null) bandX = mid + (left + tw) * sx + lead;
       x.restore(); });
+    cols.forEach((cc, i) => { const bx = bandX + i * (bw + bg); x.fillStyle = cc; x.fillRect(bx, 0, bw, H);   // a ring of the color all the way around
+      x.fillStyle = 'rgba(255,255,255,.18)'; x.fillRect(bx, 0, Math.max(1, pxX * .25), H); x.fillRect(bx + bw - Math.max(1, pxX * .25), 0, Math.max(1, pxX * .25), H); });
     x.restore(); c.__sfswShiny = false;
   }
   async function setGuideWrap(spec) {
