@@ -90,6 +90,8 @@
     '.rb-rs.on{border-color:var(--c-gold);box-shadow:0 0 0 2px rgba(201,148,26,.25)}.rb-rs b{margin-left:4px;color:var(--c-muted);font-weight:400;padding:0 2px}.rb-rs b:hover{color:#fff}',
     '.rb-rs.add{padding:8px 14px;border-style:dashed;color:var(--c-muted)}.rb-rs.add small{display:inline;color:var(--c-gold)}.rb-rs-tip{font-size:12px;color:var(--c-muted);margin-left:auto}',
     '@media (max-width:640px){.cfg-section:has(#sfsw-designer),.cfg-section:has(#sfsw-trims){overflow:visible!important}#sfsw-designer,#sfsw-trims{width:100vw!important;max-width:100vw!important;margin-left:calc(50% - 50vw)!important;margin-right:calc(50% - 50vw)!important;border-radius:0!important}}' +
+    '.rb-exs.rb-exmode::after{content:"Examples are for ideas. Tap Customize or Builder\\2019s Choice to order.";flex-basis:100%;display:block;font-size:12.5px;color:#e0b13a;margin-top:6px}' +
+    '#order-btn.rb-blocked{opacity:.45;cursor:not-allowed}.rb-cart-note{margin:0 0 10px;padding:10px 12px;border:1px solid #c9941a;border-radius:8px;color:#e0b13a;font-size:13.5px;line-height:1.45}.rb-cart-note a{color:#f0c75e;text-decoration:underline}.rb-cart-note.rb-flash{animation:rbFlash .6s 2}@keyframes rbFlash{50%{background:rgba(224,177,58,.18)}}' +
     '.rb-len.rb-len-bc{margin:0 0 12px}' +
     '.rb-exs .rb-len.rb-len-ab{display:inline-flex;margin:0 0 0 auto!important;padding:4px 10px;gap:8px}.rb-len-ab .rb-len-l{flex:0 1 auto;font-size:13px}.rb-len-ab .rb-len-fee{display:none}' +
     '.rb-len{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--c-dark3);border:1px solid var(--c-border);border-radius:var(--radius)}.rb-len-l{flex:1;font-size:14px}.rb-len-l small{display:block;color:var(--c-muted);font-size:12px}.rb-len button{width:32px;height:32px;border-radius:50%;background:var(--c-dark2,#14181d);border:1px solid var(--c-border);color:var(--c-text);font-size:18px;cursor:pointer}.rb-len button:disabled{opacity:.35;cursor:default}.rb-len b{min-width:52px;text-align:center;font-weight:600}.rb-len-fee{min-width:64px;text-align:right;color:var(--c-gold);font:600 13px var(--font-cond)}',
@@ -296,6 +298,19 @@
       if (s.nextEl) { var nx = STEPS[stepBy(k, 1)]; s.nextEl.innerHTML = 'Next: ' + (nx.tab || nx.title) + ' →'; } });
     if (skipOn(cur)) go(stepBy(cur, 1));
   }
+  // the wrap examples are ideas, not something to order: Add to Cart needs Customize or Builder's Choice
+  function wrapReady() { return S.wrapMode === 'build' || S.wrapMode === 'random' || S.wrapId === 'abalone' || !presetOf(S.wrapId); }
+  function cartGate() { var ob = document.getElementById('order-btn'); if (!ob) return; var ok = wrapReady(), n = document.getElementById('rb-cart-note');
+    ob.classList.toggle('rb-blocked', !ok); ob.setAttribute('aria-disabled', String(!ok));
+    [].forEach.call(document.querySelectorAll('#rod-wrap-options .rb-exs'), function (b) { b.classList.toggle('rb-exmode', !ok); });   // a hint under the example buttons
+    if (!ok && !n) { n = el('div', 'rb-cart-note'); n.id = 'rb-cart-note'; ob.parentNode.insertBefore(n, ob); }
+    if (n) { n.style.display = ok ? 'none' : ''; n.innerHTML = 'The wrap examples are for ideas. To order, go to <a href="#" id="rb-cart-go">Wrap</a> and pick <b>Customize</b> (start from the example and make it yours) or <b>Builder\'s Choice</b>.';
+      var g = document.getElementById('rb-cart-go'); if (g) g.onclick = function (e) { e.preventDefault(); toWrapStep(); }; } }
+  function toWrapStep() { for (var k = 0; k < STEPS.length; k++) if (STEPS[k].view === 'wrap' && /Wrap/.test(STEPS[k].tab || STEPS[k].title) && !/Guide/.test(STEPS[k].tab || STEPS[k].title)) { go(k, true); return; } }
+  (function () { var ob = document.getElementById('order-btn'); if (!ob) return;
+    ob.addEventListener('click', function (e) { if (wrapReady()) return; e.preventDefault(); e.stopImmediatePropagation(); cartGate();
+      var n = document.getElementById('rb-cart-note'); if (n) { n.classList.remove('rb-flash'); void n.offsetWidth; n.classList.add('rb-flash'); } }, true);
+    setInterval(cartGate, 800); })();   /* (cheap: keeps the button in step with the wrap mode) */
   function go(i, scroll) {
     cur = Math.max(0, Math.min(STEPS.length - 1, i)); reached = Math.max(reached, cur);
     STEPS.forEach(function (s, k) {
