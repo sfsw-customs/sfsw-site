@@ -573,7 +573,8 @@
         between: { kind: 'diamond', order: 'after', cs: [['9300 Metallic Red', 8], ['862 Black', 31]] } },
       { pat: 'Flamingo', size: 100, cs: [['9520 Metallic Green', 0], ['9600 Metallic Purple', 0], ['9600 Metallic Purple', 0], ['9600 Metallic Purple', 0],
         ['9520 Metallic Green', 3, 't'], ['9600 Metallic Purple', 3, 't'], ['9520 Metallic Green', 4, 't'], ['9600 Metallic Purple', 2, 't'], ['9520 Metallic Green', 5, 't'], ['9600 Metallic Purple', 1, 't'], ['9520 Metallic Green', 6, 't']] },
-      {} ] }, '4 Axis Cross Wrap': { k: 'cross', a: 4, other: true }
+      { pat: 'Flamingo', size: 0, cs: [['404 Teal', 0], ['361 Neon Pink', 0], ['361 Neon Pink', 0], ['862 Black', 0], ['361 Neon Pink', 5, 't'], ['862 Black', 4, 't'], ['807 White', 1, 't']],
+        between: { kind: 'diamond', order: 'after', cs: [['807 White', 2], ['361 Neon Pink', 4], ['404 Teal', 4], ['807 White', 1], ['862 Black', 32]] } } ] }, '4 Axis Cross Wrap': { k: 'cross', a: 4, other: true, recs: [{ pat: 'Green Lantern' }, { pat: 'Bloodline' }, { pat: 'Day of the Dead' }] }   // each in its pattern's own colors
   };
   var WRAPS = val('ROD_WRAPS') || [];
   var wrapById = function (id) { return WRAPS.find(function (w) { return w.id === id; }); };
@@ -896,7 +897,7 @@
   function tgSkin(dd) {
     var ref = dd.getElementById('armsBtn'); if (!ref) return; var cs = dd.defaultView.getComputedStyle(ref), seg = dd.defaultView.getComputedStyle(ref.parentNode);
     ['underOn', 'innerOn', 'innerFillOn', 'btOn'].forEach(function (id) {
-      if (id === 'innerOn' || id === 'btOn') { var iI = dd.getElementById(id), sm = iI && iI.closest('label.chk') && iI.closest('label.chk').querySelector('small'); if (sm && !/\+\$/.test(sm.textContent)) sm.textContent = (id === 'btOn' ? '+$100' : '+$50') + ' · ' + sm.textContent.replace(/^\(|\)$/g, '') + (id === 'innerOn' ? ' · up to 2 new colors included' : ''); }
+      if (id === 'innerOn' || id === 'btOn') { var iI = dd.getElementById(id), sm = iI && iI.closest('label.chk') && iI.closest('label.chk').querySelector('small'); if (sm && !/\+\$/.test(sm.textContent)) sm.textContent = (id === 'btOn' ? '+$50/$100 · diamond or chevron +$50, cross wrap +$100' : '+$50') + ' · ' + sm.textContent.replace(/^\(|\)$/g, '') + (id === 'innerOn' ? ' · up to 2 new colors included' : ''); }
       var inp = dd.getElementById(id), lab = inp && inp.closest('label.chk'); if (!lab) return;
       var btn = lab.querySelector('.sfswTgB');
       if (!btn) {
@@ -907,8 +908,8 @@
         wrap.style.cssText = 'display:inline-flex;border:' + seg.border + ';border-radius:' + seg.borderRadius + ';background:' + seg.backgroundColor + ';overflow:hidden;flex:0 0 auto';
         btn = dd.createElement('span'); btn.className = 'sfswTgB'; btn.textContent = title.trim();
         btn.style.cssText = 'font:' + cs.font + ';padding:' + cs.padding + ';cursor:pointer;white-space:nowrap';
-        var fee = (note && /^\s*\+\$\d+/.exec(note.textContent)) ? /\+\$\d+/.exec(note.textContent)[0] : '';
-        if (fee) { btn.insertAdjacentHTML('beforeend', ' <small style="color:#d4a73c;font-weight:600">' + fee + '</small>'); note.textContent = note.textContent.replace(/^\s*\+\$\d+\s*·\s*/, ''); }
+        var fee = (note && /^\s*\+\$\d+/.exec(note.textContent)) ? /\+\$\d+(\/\$\d+)?/.exec(note.textContent)[0] : '';
+        if (fee) { btn.insertAdjacentHTML('beforeend', ' <small style="color:#d4a73c;font-weight:600">' + fee + '</small>'); note.textContent = note.textContent.replace(/^\s*\+\$\d+(\/\$\d+)?\s*·\s*/, ''); }
         wrap.appendChild(btn); lab.insertBefore(wrap, lab.firstChild);
         lab.style.gap = '12px'; lab.style.position = 'relative'; lab.style.margin = '6px 0';
         if (note) { note.style.fontSize = '13px'; lab.appendChild(note); }
@@ -1093,13 +1094,16 @@
     var mo = new w.MutationObserver(function () { clearTimeout(w.__sfswTbT); w.__sfswTbT = setTimeout(paint, 30); });
     mo.observe(d.body, { childList: true, subtree: true }); d.addEventListener('input', function () { setTimeout(paint, 60); }, true); d.addEventListener('change', function () { setTimeout(paint, 60); }, true);
     w.__sfswTbPaint = paint; window.__sfswTbPaintNow = function () { try { if (dz && dz.contentWindow === w) paint(); } catch (e) {} }; paint(); } catch (e) {} }
-  // the cross wraps' Pattern Size: +$5 each 10% up to 50%, then +$10 each 10% after (100% = +$75)
-  function sizeFeeOf(pct) { var n = Math.floor((+pct || 0) / 10 + 1e-9); return 5 * Math.min(n, 5) + 10 * Math.max(0, n - 5); }
+  // the cross wraps' Pattern Size: +$5 each 10% (100% = +$50)
+  function sizeFeeOf(pct) { var n = Math.floor((+pct || 0) / 10 + 1e-9); return 5 * n; }
+  function crossTrimThreads() { if (!isCrossWrap() || S.wrapMode !== 'build') return 0; var d = S.customDesign, st = (d && d.setup && d.setup.stripes) || []; return st.reduce(function (a, x) { return a + (x && x.d === 't' ? Math.max(0, +x.t || 0) : 0); }, 0); }
+  function crossTrimFee() { return crossTrimThreads();  }   // the cross wrap's added trims: +$1 a thread
   function crossSizeFee() { if (!isCrossWrap() || S.wrapMode !== 'build') return 0; var d = S.customDesign; return sizeFeeOf(d && d.setup && d.setup.sizePct); }
   function crossSizeHook(w) { try { if (!w || w.__sfswSz) return; var d = w.document, sp = d.getElementById('sizePct'), out = d.getElementById('sizeOut'); if (!sp || !out) return; w.__sfswSz = true;
     sp.step = '5'; sp.value = String(Math.round((+sp.value || 0) / 5) * 5);   // 5% at a time
     var tag = d.createElement('b'); tag.id = 'sfswSizeFee'; tag.style.cssText = 'margin-left:10px;color:#e0b13a;font-weight:700;min-width:4ch'; out.parentNode.insertBefore(tag, out.nextSibling);
-    var note = d.getElementById('sizeNote'); if (note) note.insertAdjacentHTML('beforeend', ' <span style="color:#e0b13a;font-weight:600">· +$5 each 10% up to 50%, +$10 each 10% after</span>');
+    var note = d.getElementById('sizeNote'); if (note) note.insertAdjacentHTML('beforeend', ' <span style="color:#e0b13a;font-weight:600">· +$5 each 10%</span>');
+    var tst = d.createElement('style'); tst.textContent = '#addTrim::after{content:" \\00B7  +$1 per thread";color:#e0b13a;font-weight:600}'; d.head.appendChild(tst);   // added trims: +$1 a thread
     var paint = function () { var f = sizeFeeOf(sp.value); tag.textContent = f ? '+$' + f : 'Included'; };
     sp.addEventListener('input', paint); sp.addEventListener('change', paint); w.__sfswSzPaint = paint; paint(); } catch (e) {} }
   function tbLenFee() { return S.wrapId === 'trim-band' ? Math.max(0, tbLenQ() - 8) * 2.5 : 0; }
@@ -1175,13 +1179,37 @@
     var nw = {}; (c.inner.stripes || []).forEach(function (x) { if (!main[lc(x.c)]) nw[lc(x.c)] = 1; }); return Math.min(2, Object.keys(nw).length); }
   window.SFSW_designColors = function () { var d = designOn(); return d && d.colors ? d.colors.length - innerFree() : null; };
   function setMode(m, quiet) {
-    var was = S.wrapMode; S.wrapMode = m; try { syncSkips(); } catch (e) {}   // Builder's Choice hides the Trim Bands step
+    var was = S.wrapMode; S.wrapMode = m; try { syncSkips(); } catch (e) {} try { if (dz && dz.contentWindow) crossPresetHook(dz.contentWindow); } catch (e) {}
+    if (m === 'build' && was === 'example' && S.wrapId === 'cross-2') setTimeout(function () { try { var cw = dz.contentWindow, ps = cw.document.getElementById('pat'), k = recPick['cross-2'] || 0; crossPresetHook(cw); if (ps && [].some.call(ps.options, function (o) { return o.value === '__sfswP' + k; })) { ps.value = '__sfswP' + k; ps.dispatchEvent(new Event('change', { bubbles: true })); } } catch (e) {} }, 400);   // Customize from Example N opens Preset N   // Builder's Choice hides the Trim Bands step
     if (m === 'build' && was !== 'build') { lastPreset = null; presetFill(); genericDesign(); if (S.wrapId === 'trim-band') try { var tps = dz.contentDocument.getElementById('sfswTrimPreset'); if (tps) tps.value = String(Math.min(recPick['trim-band'] || 0, 2)); } catch (e) {}   /* Trim Band Example 1-3 = Preset 1-3 */ if (typeof setMore === 'function') { setMore(); setTimeout(fitDz, 60); } }
     if (m === 'random' && was !== 'random') { S.supportIdxs = (S.supportIdxs || []).slice(0, 3); call('renderSupportingRows'); }   // Builder's Choice starts at main + 3 supporting
     renderModes(); updTop(); if (quiet) return;
     if (was === 'random' && m !== 'random') { clearTimeout(readT); readT = setTimeout(readDesign, 50); }
     updateAll();
   }
+  function crossRec(w, c2, REC) {   // a cross wrap example (or Preset 1-3): its pattern colors, trims, size and pattern between
+    var hxc = threadHex(w);
+    c2.stripes = REC.cs.map(function (x) { var o = { c: hxc(x[0]), t: x[1] }; if (x[2]) o.d = x[2]; return o; });
+    c2.sizePct = String(REC.size || 0);
+    if (c2.trims) { c2.trims.c = c2.stripes[0].c; c2.trims.bands = []; c2.trims.noFill = false; c2.trims.ends = []; }
+    if (REC.between && c2.between) c2.between = Object.assign({}, c2.between, { on: true, auto: false, kind: REC.between.kind, order: REC.between.order || 'after', stripes: REC.between.cs.map(function (x) { return { c: hxc(x[0]), t: x[1] }; }), colors: null });
+    else if (c2.between) c2.between = Object.assign({}, c2.between, { on: false });
+  }
+  // the cross wrap designer: Preset 1-3 (the 2 Axis Cross Wrap examples) at the top of the pattern list, above Aurora
+  function crossPresetHook(w) { try { var d = w.document, sel = d.getElementById('pat'); if (!sel) return;
+    var recs = ((presetOf('cross-2') || {}).recs || []).filter(function (r) { return r && r.cs; }), on = S.wrapId === 'cross-2' && S.wrapMode === 'build';
+    [].slice.call(sel.querySelectorAll('option[data-sfswp]')).forEach(function (o) { o.remove(); });
+    if (on && recs.length) { var at = [].find.call(sel.options, function (o) { return o.value === 'Aurora'; }) || null;
+      recs.forEach(function (r, i) { var o = d.createElement('option'); o.value = '__sfswP' + i; o.textContent = 'Preset ' + (i + 1); o.setAttribute('data-sfswp', ''); sel.insertBefore(o, at); });
+      if (w.__sfswXPi != null && recs[w.__sfswXPi] && recs[w.__sfswXPi].pat === sel.value) sel.value = '__sfswP' + w.__sfswXPi; }   // a preset stays shown as the preset (the pattern list itself doesn't change)
+    else w.__sfswXPi = null;
+    if (w.__sfswXP) return; w.__sfswXP = true;
+    d.addEventListener('change', function (e) { var t = e.target; if (!t || t.id !== 'pat') return; if (!/^__sfswP\d$/.test(t.value)) { w.__sfswXPi = null; return; }
+      e.stopImmediatePropagation(); e.stopPropagation();
+      var R = ((presetOf('cross-2') || {}).recs || []).filter(function (r) { return r && r.cs; })[+t.value.slice(7)]; if (!R) return;
+      var c2 = w.wlCapture(); c2.pat = R.pat; crossRec(w, c2, R);
+      var pi = +t.value.slice(7); w.__sfswXPi = pi; try { w.wlApply(snap(w, c2)); } catch (er) {} t.value = '__sfswP' + pi; if (w.__sfswSzPaint) w.__sfswSzPaint();
+      clearTimeout(readT); readT = setTimeout(readDesign, 120); }, true); } catch (e) {} }
   async function toDesigner(id, restore, prevCols) {
     dzBusy = true; clearTimeout(busyT); busyT = setTimeout(function () { dzBusy = false; }, 6000);   // (safety: never hold the rod for long)
     if (!dz) return; var n = ++applyN; dzHold = Date.now();   // while the designer switches (pattern, then axis lines), a read in between doesn't re-pick the wrap
@@ -1191,7 +1219,7 @@
     renderModes(); var REC = S.wrapMode === 'example' ? recOf(pr, id) : null;
     var prev = prevCols || designCols(), first = !prev, switched = false;
     switched = !!(lastKind && lastKind !== (restore ? restore.sfsw : pr.k));
-    var w = await loadKind(restore ? restore.sfsw : pr.k); if (!w || n !== applyN) return; tbFeeHook(w); crossSizeHook(w); if (w.__sfswSzPaint) setTimeout(w.__sfswSzPaint, 200);
+    var w = await loadKind(restore ? restore.sfsw : pr.k); if (!w || n !== applyN) return; tbFeeHook(w); crossSizeHook(w); crossPresetHook(w); if (w.__sfswSzPaint) setTimeout(w.__sfswSzPaint, 200);
     var WS0 = (window.SFSW_BUILDER || {}).wrap, fit = null; if (!WS0) try { if (rod && rod.fit) fit = await rod.fit(); } catch (e) {}   // this rod type sets the wrap's size itself: no need to wait for the 3D rod
     var cap = restore ? JSON.parse(JSON.stringify(restore.setup)) : w.wlCapture();
     if (restore && restore.setup && restore.setup.unit === 'in' && +restore.setup.len) S.wrapLen = +restore.setup.len;
@@ -1228,14 +1256,7 @@
       if (n !== applyN) return;
       var cols = prev || START.stripes.map(function (x) { return x.c; });
       var c2 = w.wlCapture();
-      if (REC && REC.cs && dzKind === 'cross') {   // a cross wrap example: its pattern colors, trims and size
-        var hxc = threadHex(w);
-        c2.stripes = REC.cs.map(function (x) { var o = { c: hxc(x[0]), t: x[1] }; if (x[2]) o.d = x[2]; return o; });
-        if (REC.size != null) c2.sizePct = String(REC.size);
-        if (REC.between && c2.between) c2.between = Object.assign({}, c2.between, { on: true, auto: false, kind: REC.between.kind, order: REC.between.order || 'after', stripes: REC.between.cs.map(function (x) { return { c: hxc(x[0]), t: x[1] }; }), colors: null });
-        else if (c2.between) c2.between = Object.assign({}, c2.between, { on: false });
-        if (REC.size == null) c2.sizePct = '0';
-        if (c2.trims) { c2.trims.c = c2.stripes[0].c; c2.trims.bands = []; c2.trims.noFill = false; c2.trims.ends = []; }
+      if (REC && REC.cs && dzKind === 'cross') { crossRec(w, c2, REC);
       } else if (REC && REC.stripes) {   // this wrap's own recipe (the design in its photo)
         var hx = threadHex(w), R = REC;
         c2.stripes = R.stripes.map(function (x) { return { c: hx(x[0]), t: x[1] }; });
@@ -1245,6 +1266,7 @@
         var ri = recInner(R, hx); if (ri) c2.inner = ri; else if (c2.inner) c2.inner.on = false;
         if (R.chevTo) c2.chevTo = R.chevTo;   // which way the chevrons point
         if (R.angle || R.dragon) c2.angle = R.angle || '45';   // an example's thread angle (dragon scale examples go back to 45 unless set)
+      } else if (REC && REC.pat && dzKind === 'cross') { c2.sizePct = '0'; if (c2.between) c2.between = Object.assign({}, c2.between, { on: false }); if (c2.trims) { c2.trims.c = (c2.stripes[0] || {}).c || c2.trims.c; c2.trims.bands = []; c2.trims.noFill = false; c2.trims.ends = []; }   // a pattern-only example: the pattern's own colors
       } else if (dzKind === 'cross' || switched || first) { (c2.stripes || []).forEach(function (x, i) { x.c = cols[i % cols.length]; }); if (c2.trims) { c2.trims.c = cols[0]; c2.trims.bands = []; c2.trims.noFill = false; c2.trims.ends = []; } }
       if (pr.p !== 'trim' && c2.trims && !(R && R.tb)) { c2.trims.mm = 20; c2.trims.bands = []; c2.trims.noFill = false; c2.trims.ends = []; }   // the Trim Band's wide band doesn't carry over
       if (pr.k === 'taper' && pr.p !== 'trim') { c2.pattern = pr.p; c2.axes = pr.a; if (pr.p === 'dragon' && c2.dragon) { c2.dragon.over = Object.assign({}, c2.dragon.over, (R && R.dragon && R.dragon.over) || {}, { on: !!pr.over }); } }   // each wrap starts on its own pattern and axis count (a hidden axis button can miss the press)
@@ -1376,20 +1398,21 @@
   var FILL_FEE = 20;
   var INNER_FEE = 50;
   function innerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && ((c.inner && c.inner.on && (c.inner.stripes || []).length) || (d.sfsw === 'cross' && c.between && c.between.on))); }
-  function innerFee() { return isCrossWrap() ? 100 : INNER_FEE; }   // a cross wrap's pattern between is +$100
+  function innerFee() { if (!isCrossWrap()) return INNER_FEE; var d = designOn(), b = d && d.setup && d.setup.between; return b && b.kind === 'pattern' ? 100 : 50; }   // a cross wrap's pattern between: +$50 diamond or chevron, +$100 another cross wrap
   function fillFee() { return isCrossWrap() && innerOn() ? 0 : FILL_FEE; }   // on a cross wrap with a pattern between, Color filler is included
   function fillerOn() { var d = designOn(), c = d && d.setup; return !!(S.wrapMode === 'build' && c && c.arms === 'cover' && (c.pattern === 'diamond' || d.sfsw === 'cross')); }
-  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? fillFee() : 0) + (innerOn() ? innerFee() : 0) + dragonFee() + tbLenFee() + tbPartFee() + crossSizeFee() + bcScaleFee(); };   // (the wrap length rides along here)
+  window.calcUVMetallicFee = function () { return metFee() + lenFee() + (underOn() ? UNDER_FEE : 0) + (fillerOn() ? fillFee() : 0) + (innerOn() ? innerFee() : 0) + dragonFee() + tbLenFee() + tbPartFee() + crossSizeFee() + crossTrimFee() + bcScaleFee(); };   // (the wrap length rides along here)
   var _order = window.buildOrderItem;
   if (typeof _order === 'function') window.buildOrderItem = function () {
     var it = _order.apply(this, arguments), d = designOn();
     if (it.lines && bcDragon() && S.wrapMode === 'random') { var scW = (val('WRAP_COLORS') || [])[bcScaleIdx()]; if (scW) it.lines.push({ label: 'Dragon Scales (Builder\u2019s Choice)', value: scW.name + (bcScaleFee() ? '  +$' + bcScaleFee() : '') }); }
+    if (it.lines && crossTrimFee()) it.lines.push({ label: 'Cross Wrap Trims', value: crossTrimThreads() + ' thread' + (crossTrimThreads() === 1 ? '' : 's') + '  +$' + crossTrimFee() });
     if (it.lines && crossSizeFee()) it.lines.push({ label: 'Cross Wrap Pattern Size', value: (+S.customDesign.setup.sizePct || 0) + '%  +$' + crossSizeFee() });
     if (it.lines && S.wrapId === 'trim-band' && S.wrapMode !== 'random') { var tp = tbParts(); it.lines.push({ label: 'Saw Blades / Fades', value: tp.saw + ' / ' + tp.fade + ' each side' + (tbPartFee() ? '  +$' + tbPartFee() : '') }); }
     if (it.lines && S.wrapId === 'trim-band') it.lines.push({ label: 'Trim Band Length', value: (tbLenQ() / 4) + ' in' + (tbLenFee() ? '  +$' + tbLenFee().toFixed(2).replace(/\.00$/, '') : '') });
     if (CFG.wrap && it.lines && S.wrapId !== 'trim-band' && wrapLen() !== BASE_LEN()) it.lines.push({ label: 'Wrap Length', value: wrapLen() + ' in' + (lenFee() ? '  +$' + lenFee() : ' (shorter than standard)') });
     if (dragonFee() && it.lines) it.lines.push({ label: 'Dragon Scale', value: designOn().setup.axes + ' axis  +$' + dragonFee() });
-    if (innerOn() && it.lines) { var ic = designOn().setup.inner || { pattern: 'cross' }; it.lines.push({ label: 'Pattern Between', value: (ic.pattern === 'cross' ? 'Cross' : ic.pattern === 'chevron' ? 'Chevron' : 'Diamond') + (ic.fillOn && ic.pattern !== 'chevron' ? ' with filler over it' : '') + '  +$' + innerFee() + ' (up to 2 new colors included)' }); }
+    if (innerOn() && it.lines) { var ds0 = designOn().setup, ic = ds0.inner || { pattern: ds0.between && ds0.between.kind === 'pattern' ? 'cross' : (ds0.between && ds0.between.kind) || 'cross' }; it.lines.push({ label: 'Pattern Between', value: (ic.pattern === 'cross' ? 'Cross' : ic.pattern === 'chevron' ? 'Chevron' : 'Diamond') + (ic.fillOn && ic.pattern !== 'chevron' ? ' with filler over it' : '') + '  +$' + innerFee() + ' (up to 2 new colors included)' }); }
     if (fillerOn() && it.lines) { var fn; try { fn = (dw().WL_THREADS.fullName || dw().WL_THREADS.name)(designOn().setup.fillC); } catch (e) {} it.lines.push({ label: 'Color Filler', value: (fn || designOn().setup.fillC || '') + (fillFee() ? '  +$' + fillFee() : '  (included with the pattern between)') }); }
     if (underOn() && it.lines) { var un; try { un = (dw().WL_THREADS.fullName || dw().WL_THREADS.name)(S.under.c); } catch (e) {} it.lines.push({ label: 'Underwrap', value: (un || S.under.c) + '  +$' + UNDER_FEE }); }
     if (!d) return it;
