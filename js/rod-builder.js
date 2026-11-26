@@ -527,7 +527,7 @@
           ['9860 Metallic Silver', 2], ['862 Twilight Black', 4], ['9860 Metallic Silver', 3], ['862 Twilight Black', 3], ['9860 Metallic Silver', 4], ['862 Twilight Black', 2], ['9860 Metallic Silver', 5]] },   // example 3 has a chevron pattern between, against the main pattern, pointing to the butt
       { trim: '862 Twilight Black', chevTo: 'butt', stripes: [['807 White', 3], ['850 Storm Cloud', 1], ['807 White', 2], ['850 Storm Cloud', 2], ['807 White', 1], ['850 Storm Cloud', 3], ['862 Twilight Black', 1], ['850 Storm Cloud', 2],
           ['862 Twilight Black', 2], ['850 Storm Cloud', 1], ['862 Twilight Black', 3], ['325 Fire Red', 8], ['862 Twilight Black', 3]],
-        inner: { pattern: 'chevron', place: 'against', chevTo: 'butt', stripes: [['325 Fire Red', 2], ['807 White', 4], ['325 Fire Red', 2], ['807 White', 4], ['325 Fire Red', 4]] } }] },
+        inner: { pattern: 'chevron', place: 'against', chevTo: 'tip', stripes: [['325 Fire Red', 2], ['807 White', 4], ['325 Fire Red', 2], ['807 White', 4], ['325 Fire Red', 4]] } }] },
     'Chevron — 8 Axis': { k: 'taper', p: 'chevron', a: 8, recs: [   // Brett's three 8 axis examples (all point toward the tip)
       { trim: '9470 Metallic Bluefin', chevTo: 'tip', stripes: [['807 White', 4], ['9470 Metallic Bluefin', 4], ['807 White', 4], ['9470 Metallic Bluefin', 4]] },
       { trim: '9470 Metallic Bluefin', chevTo: 'tip', stripes: [['807 White', 4], ['9300 Metallic Red', 4], ['807 White', 2], ['9470 Metallic Bluefin', 2], ['807 White', 2], ['9470 Metallic Bluefin', 2],
