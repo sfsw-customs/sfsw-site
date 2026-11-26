@@ -1329,7 +1329,7 @@
     if (card) {
       var box = el('div', 'rb-exs'); box.addEventListener('click', function (e) { e.stopPropagation(); });
       var fam = famOf(id); if (fam) { var ax = el('div', 'rb-fax');   // 2 / 4 / 8 / 16 axis: each shows its own examples
-        fam.ids.forEach(function (fid, k) { var fw = wrapById(fid), b = el('button', fid === id ? 'on' : '', (fam.labels ? fam.labels[k] : fam.ax[k] + ' Axis') + (fw && fw.adder ? ' <small>+$' + fw.adder + '</small>' : ''));   /* each axis count's own upcharge */ b.type = 'button';
+        fam.ids.forEach(function (fid, k) { var fw = wrapById(fid), b = el('button', fid === id ? 'on' : '', (fam.labels ? fam.labels[k] : fam.ax[k] + ' Axis') + (function () { var a0 = (wrapById(fam.ids[0]) || {}).adder || 0, a = fw && fw.adder ? fw.adder - a0 : 0; return a > 0 ? ' <small>+$' + a + '</small>' : ''; })());   /* each axis count's own upcharge */ b.type = 'button';
           b.onclick = function () { if (fid !== S.wrapId) window.pickWrap(fid); }; ax.appendChild(b); });
         box.appendChild(ax); box.appendChild(el('div', 'rb-fbr')); }
       if (pr && pr.p === 'dragon' && !pr.over) { var dax = el('div', 'rb-fax'), curA = (designOn() && designOn().setup && +designOn().setup.axes) || S.dragonAx || 8;   // dragon scales: 8 / 16 / 32 axis
