@@ -496,78 +496,78 @@
   var BASE = CFG.engine.replace(/[^\/]*$/, '');
   var PRESET = {
     'Trim Band': { k: 'taper', p: 'trim', a: 2, recs: [   // a trim band on its own, with a design in the middle
-      { trim: '862 Twilight Black', stripes: [['862 Twilight Black', 1]], tb: { mm: 50.8, c: '862 Twilight Black',
-        bands: [['9100 Metallic Yellow Gold', 4], ['862 Twilight Black', 2], ['807 White', 1, 'mid', '862 Twilight Black'], ['807 White', 2], ['', 3, 'fade'], ['862 Twilight Black', 6], ['9100 Metallic Yellow Gold', 4], ['9100 Metallic Yellow Gold', 1, 'mid', '862 Twilight Black']],
+      { trim: '862 Black', stripes: [['862 Black', 1]], tb: { mm: 50.8, c: '862 Black',
+        bands: [['9100 Metallic Yellow Gold', 4], ['862 Black', 2], ['807 White', 1, 'mid', '862 Black'], ['807 White', 2], ['', 3, 'fade'], ['862 Black', 6], ['9100 Metallic Yellow Gold', 4], ['9100 Metallic Yellow Gold', 1, 'mid', '862 Black']],
         ends: [['9100 Metallic Yellow Gold', 6]] } },
       { trim: '404 Teal', stripes: [['404 Teal', 1]], tb: Object.assign({ mm: 50.8 }, { c: '404 Teal', bands: [['404 Teal', 2], ['464 Blurple', 4], ['404 Teal', 1, 'tip', '464 Blurple'], ['404 Teal', 3], ['404 Teal', 1, 'tip', '464 Blurple'], ['464 Blurple', 2], ['', 3, 'fade']], noFill: true,
         ends: [['404 Teal', 4], ['', 3, 'fade'], ['434 Maui Surf', 4], ['', 3, 'fade'], ['428 Summer Sky', 4], ['', 3, 'fade'], ['449 Wildberry', 4], ['', 3, 'fade'], ['455 Cobalt', 4], ['', 3, 'fade'], ['464 Blurple', 4], ['', 3, 'fade'], ['455 Cobalt', 4], ['', 3, 'fade'], ['449 Wildberry', 4], ['', 3, 'fade'], ['428 Summer Sky', 4], ['', 3, 'fade'], ['434 Maui Surf', 4], ['', 3, 'fade'], ['404 Teal', 4]] }) },   // example 2: teal to blurple fade
       { trim: '404 Teal', stripes: [['404 Teal', 1]], tb: { mm: 50.8, c: '404 Teal',   // example 3: teal and neon pink
-        bands: [['361 Neon Pink', 2], ['862 Twilight Black', 2], ['361 Neon Pink', 1, 'mid', '862 Twilight Black'], ['361 Neon Pink', 3], ['404 Teal', 1, 'mid', '361 Neon Pink'], ['404 Teal', 4]],
-        ends: [['361 Neon Pink', 3], ['', 4, 'fade'], ['404 Teal', 7], ['404 Teal', 1, 'mid', '361 Neon Pink'], ['361 Neon Pink', 3], ['862 Twilight Black', 2], ['361 Neon Pink', 2], ['862 Twilight Black', 2], ['361 Neon Pink', 3], ['404 Teal', 1, 'mid', '361 Neon Pink'], ['404 Teal', 7], ['', 4, 'fade'], ['361 Neon Pink', 3]] } } ] },
+        bands: [['361 Neon Pink', 2], ['862 Black', 2], ['361 Neon Pink', 1, 'mid', '862 Black'], ['361 Neon Pink', 3], ['404 Teal', 1, 'mid', '361 Neon Pink'], ['404 Teal', 4]],
+        ends: [['361 Neon Pink', 3], ['', 4, 'fade'], ['404 Teal', 7], ['404 Teal', 1, 'mid', '361 Neon Pink'], ['361 Neon Pink', 3], ['862 Black', 2], ['361 Neon Pink', 2], ['862 Black', 2], ['361 Neon Pink', 3], ['404 Teal', 1, 'mid', '361 Neon Pink'], ['404 Teal', 7], ['', 4, 'fade'], ['361 Neon Pink', 3]] } } ] },
     'Diamond — 2 Axis': { k: 'taper', p: 'diamond', a: 2, recs: [   // one design per photo, in photo order; the first stripe is the center
       { trim: '479 Gulfstream',
-        stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 4], ['9860 Metallic Silver', 4], ['841 Iron Ore', 4], ['479 Gulfstream', 6], ['862S Metallic Twist Black/Silver', 2],
-          ['479 Gulfstream', 3], ['841 Iron Ore', 3], ['479 Gulfstream', 4], ['9860 Metallic Silver', 2], ['862 Twilight Black', 1]] },
+        stripes: [['9860 Metallic Silver', 1], ['862 Black', 4], ['9860 Metallic Silver', 4], ['841 Iron Ore', 4], ['479 Gulfstream', 6], ['862S Metallic Twist Black/Silver', 2],
+          ['479 Gulfstream', 3], ['841 Iron Ore', 3], ['479 Gulfstream', 4], ['9860 Metallic Silver', 2], ['862 Black', 1]] },
       { trim: '513 Guacamole',
-        stripes: [['9520 Metallic Green', 1], ['862 Twilight Black', 4], ['9520 Metallic Green', 3], ['807 White', 2], ['513 Guacamole', 6], ['807 White', 2],
-          ['9520 Metallic Green', 2], ['862 Twilight Black', 2], ['9520 Metallic Green', 1], ['862 Twilight Black', 2], ['9520 Metallic Green', 2], ['807 White', 2],
+        stripes: [['9520 Metallic Green', 1], ['862 Black', 4], ['9520 Metallic Green', 3], ['807 White', 2], ['513 Guacamole', 6], ['807 White', 2],
+          ['9520 Metallic Green', 2], ['862 Black', 2], ['9520 Metallic Green', 1], ['862 Black', 2], ['9520 Metallic Green', 2], ['807 White', 2],
           ['819 Ghost Grey', 6], ['807 White', 2]] },
-      { trim: '862 Twilight Black',
-        stripes: [['9100 Metallic Yellow Gold', 1], ['862 Twilight Black', 4], ['9100 Metallic Yellow Gold', 3], ['813 Silver Shiner', 6], ['862 Twilight Black', 6],
-          ['9100 Metallic Yellow Gold', 6], ['819 Ghost Grey', 2], ['862 Twilight Black', 2], ['9100 Metallic Yellow Gold', 2]] } ] }, 'Chevron — 2 Axis': { k: 'taper', p: 'chevron', a: 2, recs: [   // example 1 points to the tip, example 2 to the butt
+      { trim: '862 Black',
+        stripes: [['9100 Metallic Yellow Gold', 1], ['862 Black', 4], ['9100 Metallic Yellow Gold', 3], ['813 Silver Shiner', 6], ['862 Black', 6],
+          ['9100 Metallic Yellow Gold', 6], ['819 Ghost Grey', 2], ['862 Black', 2], ['9100 Metallic Yellow Gold', 2]] } ] }, 'Chevron — 2 Axis': { k: 'taper', p: 'chevron', a: 2, recs: [   // example 1 points to the tip, example 2 to the butt
       { trim: '484 Deep Sea', chevTo: 'tip', stripes: [['9860 Metallic Silver', 5], ['484 Deep Sea', 2], ['9860 Metallic Silver', 4], ['484 Deep Sea', 3], ['9860 Metallic Silver', 3], ['479 Gulfstream', 4],
           ['9860 Metallic Silver', 2], ['484 Deep Sea', 5]] },
-      { trim: '484 Deep Sea', chevTo: 'butt', stripes: [['807 White', 5], ['862 Twilight Black', 2], ['807 White', 4], ['862 Twilight Black', 3], ['807 White', 3], ['862 Twilight Black', 4],
-          ['807 White', 2], ['862 Twilight Black', 5], ['9860 Metallic Silver', 2]] } ] },
+      { trim: '484 Deep Sea', chevTo: 'butt', stripes: [['807 White', 5], ['862 Black', 2], ['807 White', 4], ['862 Black', 3], ['807 White', 3], ['862 Black', 4],
+          ['807 White', 2], ['862 Black', 5], ['9860 Metallic Silver', 2]] } ] },
     'Dragon Scale': { k: 'taper', p: 'dragon', a: 8, recs: [   // photo 1: metallic green scales, photo 3: metallic silver at 30°, photo 2: metallic blue; the trim bands start in the scales' metallic
-      { trim: '9520 Metallic Green', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9520 Metallic Green', line: '862 Twilight Black' } },
-      { trim: '9860 Metallic Silver', angle: '30', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9860 Metallic Silver', line: '862 Twilight Black' } },
-      { trim: '9460 Metallic Deep Blue', stripes: [['862 Twilight Black', 1]], dragon: { metal: '9460 Metallic Deep Blue', line: '862 Twilight Black' } } ] }, 'Chevron — 4 Axis': { k: 'taper', p: 'chevron', a: 4, recs: [
+      { trim: '9520 Metallic Green', stripes: [['862 Black', 1]], dragon: { metal: '9520 Metallic Green', line: '862 Black' } },
+      { trim: '9860 Metallic Silver', angle: '30', stripes: [['862 Black', 1]], dragon: { metal: '9860 Metallic Silver', line: '862 Black' } },
+      { trim: '9460 Metallic Deep Blue', stripes: [['862 Black', 1]], dragon: { metal: '9460 Metallic Deep Blue', line: '862 Black' } } ] }, 'Chevron — 4 Axis': { k: 'taper', p: 'chevron', a: 4, recs: [
       { trim: '484 Deep Sea', stripes: [['807 White', 2], ['9860 Metallic Silver', 4], ['807 White', 3], ['9860 Metallic Silver', 3], ['807 White', 4], ['9860 Metallic Silver', 2], ['484 Deep Sea', 2], ['807 White', 4],
           ['484 Deep Sea', 3], ['807 White', 3], ['484 Deep Sea', 4], ['807 White', 2], ['9120 Metallic Goldenrod', 2], ['484 Deep Sea', 3], ['9120 Metallic Goldenrod', 3], ['484 Deep Sea', 2], ['9120 Metallic Goldenrod', 4]] },   // example 1; example 2:
-      { trim: '484 Deep Sea', stripes: [['807 White', 5], ['862 Twilight Black', 2], ['807 White', 4], ['862 Twilight Black', 3], ['807 White', 3], ['862 Twilight Black', 4], ['807 White', 2], ['862 Twilight Black', 5],
-          ['9860 Metallic Silver', 2], ['862 Twilight Black', 4], ['9860 Metallic Silver', 3], ['862 Twilight Black', 3], ['9860 Metallic Silver', 4], ['862 Twilight Black', 2], ['9860 Metallic Silver', 5]] },   // example 3 has a chevron pattern between, against the main pattern, pointing to the butt
-      { trim: '862 Twilight Black', chevTo: 'butt', stripes: [['807 White', 3], ['850 Storm Cloud', 1], ['807 White', 2], ['850 Storm Cloud', 2], ['807 White', 1], ['850 Storm Cloud', 3], ['862 Twilight Black', 1], ['850 Storm Cloud', 2],
-          ['862 Twilight Black', 2], ['850 Storm Cloud', 1], ['862 Twilight Black', 3], ['325 Fire Red', 8], ['862 Twilight Black', 3]],
+      { trim: '484 Deep Sea', stripes: [['807 White', 5], ['862 Black', 2], ['807 White', 4], ['862 Black', 3], ['807 White', 3], ['862 Black', 4], ['807 White', 2], ['862 Black', 5],
+          ['9860 Metallic Silver', 2], ['862 Black', 4], ['9860 Metallic Silver', 3], ['862 Black', 3], ['9860 Metallic Silver', 4], ['862 Black', 2], ['9860 Metallic Silver', 5]] },   // example 3 has a chevron pattern between, against the main pattern, pointing to the butt
+      { trim: '862 Black', chevTo: 'butt', stripes: [['807 White', 3], ['850 Storm Cloud', 1], ['807 White', 2], ['850 Storm Cloud', 2], ['807 White', 1], ['850 Storm Cloud', 3], ['862 Black', 1], ['850 Storm Cloud', 2],
+          ['862 Black', 2], ['850 Storm Cloud', 1], ['862 Black', 3], ['325 Fire Red', 8], ['862 Black', 3]],
         inner: { pattern: 'chevron', place: 'against', chevTo: 'tip', stripes: [['325 Fire Red', 2], ['807 White', 4], ['325 Fire Red', 2], ['807 White', 4], ['325 Fire Red', 4]] } }] },
     'Chevron — 8 Axis': { k: 'taper', p: 'chevron', a: 8, recs: [   // Brett's three 8 axis examples (all point toward the tip)
       { trim: '9470 Metallic Bluefin', chevTo: 'tip', stripes: [['807 White', 4], ['9470 Metallic Bluefin', 4], ['807 White', 4], ['9470 Metallic Bluefin', 4]] },
       { trim: '9470 Metallic Bluefin', chevTo: 'tip', stripes: [['807 White', 4], ['9300 Metallic Red', 4], ['807 White', 2], ['9470 Metallic Bluefin', 2], ['807 White', 2], ['9470 Metallic Bluefin', 2],
           ['807 White', 2], ['9470 Metallic Bluefin', 2]] },
-      { trim: '862 Twilight Black', chevTo: 'tip', stripes: [['807 White', 3], ['9300 Metallic Red', 1], ['807 White', 2], ['9300 Metallic Red', 2], ['807 White', 1], ['9300 Metallic Red', 3],
-          ['862 Twilight Black', 1], ['9300 Metallic Red', 2], ['862 Twilight Black', 2], ['9300 Metallic Red', 1], ['862 Twilight Black', 3]] } ] }, 'Chevron — 16 Axis': { k: 'taper', p: 'chevron', a: 16, recs: [   // Brett's three 16 axis examples (all point toward the tip)
-      { trim: '9600 Metallic Purple', chevTo: 'tip', stripes: [['862 Twilight Black', 3], ['9600 Metallic Purple', 1], ['862 Twilight Black', 2], ['807 White', 2], ['862 Twilight Black', 2],
-          ['9600 Metallic Purple', 3], ['862 Twilight Black', 1]] },
-      { trim: '519 Rainforest', chevTo: 'tip', stripes: [['862 Twilight Black', 3], ['519 Rainforest', 2], ['862 Twilight Black', 2], ['519 Rainforest', 3], ['862 Twilight Black', 2]] },
-      { trim: '404 Teal', chevTo: 'tip', stripes: [['404 Teal', 2], ['862 Twilight Black', 2], ['404 Teal', 2], ['862 Twilight Black', 2], ['404 Teal', 2]] } ] },
+      { trim: '862 Black', chevTo: 'tip', stripes: [['807 White', 3], ['9300 Metallic Red', 1], ['807 White', 2], ['9300 Metallic Red', 2], ['807 White', 1], ['9300 Metallic Red', 3],
+          ['862 Black', 1], ['9300 Metallic Red', 2], ['862 Black', 2], ['9300 Metallic Red', 1], ['862 Black', 3]] } ] }, 'Chevron — 16 Axis': { k: 'taper', p: 'chevron', a: 16, recs: [   // Brett's three 16 axis examples (all point toward the tip)
+      { trim: '9600 Metallic Purple', chevTo: 'tip', stripes: [['862 Black', 3], ['9600 Metallic Purple', 1], ['862 Black', 2], ['807 White', 2], ['862 Black', 2],
+          ['9600 Metallic Purple', 3], ['862 Black', 1]] },
+      { trim: '519 Rainforest', chevTo: 'tip', stripes: [['862 Black', 3], ['519 Rainforest', 2], ['862 Black', 2], ['519 Rainforest', 3], ['862 Black', 2]] },
+      { trim: '404 Teal', chevTo: 'tip', stripes: [['404 Teal', 2], ['862 Black', 2], ['404 Teal', 2], ['862 Black', 2], ['404 Teal', 2]] } ] },
     'Diamond — 4 Axis': { k: 'taper', p: 'diamond', a: 4, recs: [   // examples 1-3, in photo order; the first stripe is the center
       { trim: '479 Gulfstream',
-        stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 3], ['9860 Metallic Silver', 4], ['479 Gulfstream', 8], ['862S Metallic Twist Black/Silver', 2], ['862 Twilight Black', 3]] },
+        stripes: [['9860 Metallic Silver', 1], ['862 Black', 3], ['9860 Metallic Silver', 4], ['479 Gulfstream', 8], ['862S Metallic Twist Black/Silver', 2], ['862 Black', 3]] },
       { trim: '9470 Metallic Bluefin',
         stripes: [['9870 Metallic Gunmetal', 1], ['807 White', 2], ['9870 Metallic Gunmetal', 4], ['807 White', 3], ['9470 Metallic Bluefin', 2], ['807 White', 3],
           ['9470 Metallic Bluefin', 4], ['807 White', 1]] },
       { trim: '479 Gulfstream',
-        stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 3], ['9860 Metallic Silver', 3], ['479 Gulfstream', 8], ['862S Metallic Twist Black/Silver', 2], ['862 Twilight Black', 3],
-          ['479 Gulfstream', 1], ['862 Twilight Black', 2], ['479 Gulfstream', 2], ['862 Twilight Black', 1], ['479 Gulfstream', 3], ['9860 Metallic Silver', 1]] },
+        stripes: [['9860 Metallic Silver', 1], ['862 Black', 3], ['9860 Metallic Silver', 3], ['479 Gulfstream', 8], ['862S Metallic Twist Black/Silver', 2], ['862 Black', 3],
+          ['479 Gulfstream', 1], ['862 Black', 2], ['479 Gulfstream', 2], ['862 Black', 1], ['479 Gulfstream', 3], ['9860 Metallic Silver', 1]] },
       { trim: '479 Gulfstream',   // example 4
         stripes: [['9860 Metallic Silver', 6], ['479 Gulfstream', 3], ['455 Cobalt', 1], ['479 Gulfstream', 2], ['455 Cobalt', 2], ['479 Gulfstream', 1], ['455 Cobalt', 3], ['836 Forged Steel', 1],
           ['455 Cobalt', 2], ['836 Forged Steel', 2], ['455 Cobalt', 1], ['836 Forged Steel', 3], ['807 White', 1], ['836 Forged Steel', 2], ['807 White', 2]] } ] },
     '8 Axis Wrap': { k: 'taper', p: 'diamond', a: 8, recs: [   // our own designs in the style of the 4 axis examples (fewer threads per color with more axes)
-      { trim: '479 Gulfstream', stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 2], ['9860 Metallic Silver', 2], ['479 Gulfstream', 4], ['862S Metallic Twist Black/Silver', 1], ['862 Twilight Black', 2]] },
+      { trim: '479 Gulfstream', stripes: [['9860 Metallic Silver', 1], ['862 Black', 2], ['9860 Metallic Silver', 2], ['479 Gulfstream', 4], ['862S Metallic Twist Black/Silver', 1], ['862 Black', 2]] },
       { trim: '9470 Metallic Bluefin', stripes: [['9870 Metallic Gunmetal', 1], ['807 White', 1], ['9470 Metallic Bluefin', 2], ['807 White', 2], ['9870 Metallic Gunmetal', 2], ['807 White', 1]] },
-      { trim: '862 Twilight Black', stripes: [['9100 Metallic Yellow Gold', 1], ['862 Twilight Black', 2], ['9100 Metallic Yellow Gold', 2], ['479 Gulfstream', 3], ['862 Twilight Black', 1], ['9860 Metallic Silver', 2]] } ] },
+      { trim: '862 Black', stripes: [['9100 Metallic Yellow Gold', 1], ['862 Black', 2], ['9100 Metallic Yellow Gold', 2], ['479 Gulfstream', 3], ['862 Black', 1], ['9860 Metallic Silver', 2]] } ] },
     '16 Axis Wrap': { k: 'taper', p: 'diamond', a: 16, recs: [
-      { trim: '479 Gulfstream', stripes: [['9860 Metallic Silver', 1], ['862 Twilight Black', 1], ['479 Gulfstream', 2], ['862S Metallic Twist Black/Silver', 1], ['862 Twilight Black', 1]] },
+      { trim: '479 Gulfstream', stripes: [['9860 Metallic Silver', 1], ['862 Black', 1], ['479 Gulfstream', 2], ['862S Metallic Twist Black/Silver', 1], ['862 Black', 1]] },
       { trim: '9470 Metallic Bluefin', stripes: [['807 White', 1], ['9470 Metallic Bluefin', 1], ['9870 Metallic Gunmetal', 2], ['807 White', 1], ['9470 Metallic Bluefin', 1]] },
-      { trim: '862 Twilight Black', stripes: [['9100 Metallic Yellow Gold', 1], ['862 Twilight Black', 1], ['9860 Metallic Silver', 1], ['479 Gulfstream', 2], ['862 Twilight Black', 1]] } ] },
+      { trim: '862 Black', stripes: [['9100 Metallic Yellow Gold', 1], ['862 Black', 1], ['9860 Metallic Silver', 1], ['479 Gulfstream', 2], ['862 Black', 1]] } ] },
     '2 Axis Wrap Over Dragon Scales': { k: 'taper', p: 'dragon', a: 8, over: true, recs: [   // sax / angle: the scales; over: the diamond wrap on top
-      { trim: '479 Gulfstream', sax: 16, angle: '45', dragon: { metal: '9870 Metallic Gunmetal', line: '862 Twilight Black', over: { on: true, pattern: 'diamond', axes: 2, angle: 60 } },
-        stripes: [['9120 Metallic Goldenrod', 6], ['862 Twilight Black', 2], ['479 Gulfstream', 5], ['862 Twilight Black', 2], ['850 Storm Cloud', 5], ['807 White', 3], ['325 Fire Red', 5],
-          ['807 White', 3], ['862 Twilight Black', 2], ['9120 Metallic Goldenrod', 5], ['862 Twilight Black', 2]] },
-      { trim: '9860 Metallic Silver', sax: 8, angle: '30', dragon: { metal: '9860 Metallic Silver', line: '862 Twilight Black', over: { on: true, pattern: 'diamond', axes: 2, angle: 45 } },
+      { trim: '479 Gulfstream', sax: 16, angle: '45', dragon: { metal: '9870 Metallic Gunmetal', line: '862 Black', over: { on: true, pattern: 'diamond', axes: 2, angle: 60 } },
+        stripes: [['9120 Metallic Goldenrod', 6], ['862 Black', 2], ['479 Gulfstream', 5], ['862 Black', 2], ['850 Storm Cloud', 5], ['807 White', 3], ['325 Fire Red', 5],
+          ['807 White', 3], ['862 Black', 2], ['9120 Metallic Goldenrod', 5], ['862 Black', 2]] },
+      { trim: '9860 Metallic Silver', sax: 8, angle: '30', dragon: { metal: '9860 Metallic Silver', line: '862 Black', over: { on: true, pattern: 'diamond', axes: 2, angle: 45 } },
         stripes: [['Light Blue', 6], ['850 Storm Cloud', 5], ['807 White', 1], ['9470 Metallic Bluefin', 5], ['Light Blue', 5], ['850 Storm Cloud', 4], ['807 White', 1], ['9470 Metallic Bluefin', 5], ['807 White', 1]] },
-      { trim: '9120 Metallic Goldenrod', sax: 8, angle: '45', dragon: { metal: '9120 Metallic Goldenrod', line: '862 Twilight Black', over: { on: true, pattern: 'diamond', axes: 2, angle: 45 } },
-        stripes: [['807 White', 10], ['9120 Metallic Goldenrod', 3], ['862 Twilight Black', 5], ['9120 Metallic Goldenrod', 3], ['807 White', 5], ['9120 Metallic Goldenrod', 3], ['862 Twilight Black', 4]] } ] },
+      { trim: '9120 Metallic Goldenrod', sax: 8, angle: '45', dragon: { metal: '9120 Metallic Goldenrod', line: '862 Black', over: { on: true, pattern: 'diamond', axes: 2, angle: 45 } },
+        stripes: [['807 White', 10], ['9120 Metallic Goldenrod', 3], ['862 Black', 5], ['9120 Metallic Goldenrod', 3], ['807 White', 5], ['9120 Metallic Goldenrod', 3], ['862 Black', 4]] } ] },
     'Snowflake Wrap': { k: 'cross', pat: 'Snowflake', a: 2 }, '2 Axis Cross Wrap': { k: 'cross', a: 2, other: true, recs: [{}, { pat: 'Snowflake' }, {}] }, '4 Axis Cross Wrap': { k: 'cross', a: 4, other: true }
   };
   var WRAPS = val('ROD_WRAPS') || [];
@@ -645,7 +645,7 @@
     return dzReady;
   }
   // every color in a design is one of the SFSW threads (Pro-Wrap solids, Pro-Wrap and Fuji metallics)
-  var START = { stripes: [{ c: '#1e1617', t: 6 }, { c: '#e7e5e3', t: 3 }, { c: '#dabd66', t: 2 }], trim: '#1e1617' };   // 862 Twilight Black, 807 White, 9130 Metallic Gold
+  var START = { stripes: [{ c: '#1e1617', t: 6 }, { c: '#e7e5e3', t: 3 }, { c: '#dabd66', t: 2 }], trim: '#1e1617' };   // 862 Black, 807 White, 9130 Metallic Gold
   function snap(w, cap) {
     var B = w.WL_THREADS && w.WL_THREADS.BRANDS && w.WL_THREADS.BRANDS.sfsw; if (!B) return cap;
     var pal = []; B.groups.forEach(function (g) { g[1].forEach(function (x) { pal.push(x[1].toLowerCase()); }); });
@@ -710,11 +710,11 @@
   var CUSTOM_PRESETS = {};
   var BASE_PRESETS = [   // five different looks: a classic, Brett's black/storm cloud/gold, a striped green, a redfish/copper, a black-out silver
     { name: 'Gulfstream & Gold', trim: '479 Gulfstream', stripes: [['9130 Metallic Gold', 1], ['479 Gulfstream', 4], ['807 White', 2], ['9130 Metallic Gold', 2], ['479 Gulfstream', 3]] },
-    { name: 'Black, Storm Cloud & Gold', trim: '862 Twilight Black', exact: true, stripes: [['862 Twilight Black', 8], ['850 Storm Cloud', 1], ['862 Twilight Black', 2], ['850 Storm Cloud', 2], ['862 Twilight Black', 1], ['850 Storm Cloud', 3],
+    { name: 'Black, Storm Cloud & Gold', trim: '862 Black', exact: true, stripes: [['862 Black', 8], ['850 Storm Cloud', 1], ['862 Black', 2], ['850 Storm Cloud', 2], ['862 Black', 1], ['850 Storm Cloud', 3],
       ['9100 Metallic Yellow Gold', 3], ['850 Storm Cloud', 2], ['9100 Metallic Yellow Gold', 2], ['850 Storm Cloud', 1], ['9100 Metallic Yellow Gold', 3]] },
-    { name: 'Green Stripes', open: 0.4, trim: '9520 Metallic Green', stripes: [['807 White', 3], ['9520 Metallic Green', 2], ['862 Twilight Black', 1], ['9520 Metallic Green', 2], ['862 Twilight Black', 1], ['513 Guacamole', 4], ['807 White', 1], ['513 Guacamole', 2]] },
-    { name: 'Redfish & Copper', open: 0.4, trim: '319 Redfish', stripes: [['740 Copper', 1], ['862 Twilight Black', 2], ['319 Redfish', 5], ['740 Copper', 1], ['862 Twilight Black', 1], ['740 Copper', 1], ['319 Redfish', 2]] },
-    { name: 'Black-Out Silver', open: 0.4, trim: '862 Twilight Black', stripes: [['862 Twilight Black', 3], ['9860 Metallic Silver', 1], ['862 Twilight Black', 1], ['9860 Metallic Silver', 1], ['841 Iron Ore', 4], ['9860 Metallic Silver', 2]] }];
+    { name: 'Green Stripes', open: 0.4, trim: '9520 Metallic Green', stripes: [['807 White', 3], ['9520 Metallic Green', 2], ['862 Black', 1], ['9520 Metallic Green', 2], ['862 Black', 1], ['513 Guacamole', 4], ['807 White', 1], ['513 Guacamole', 2]] },
+    { name: 'Redfish & Copper', open: 0.4, trim: '319 Redfish', stripes: [['740 Copper', 1], ['862 Black', 2], ['319 Redfish', 5], ['740 Copper', 1], ['862 Black', 1], ['740 Copper', 1], ['319 Redfish', 2]] },
+    { name: 'Black-Out Silver', open: 0.4, trim: '862 Black', stripes: [['862 Black', 3], ['9860 Metallic Silver', 1], ['862 Black', 1], ['9860 Metallic Silver', 1], ['841 Iron Ore', 4], ['9860 Metallic Silver', 2]] }];
   // Preset 1-5 (not the photo examples, so no one gets a wrap that's already on someone else's rod); the customizer opens on Preset 1
   // every Chevron Wrap (2 / 4 / 8 / 16 axis): Preset 1-3 are the Chevron 4 Axis examples (counts scaled to the axis count; example 3 has its chevron pattern between)
   (function () { var ex = (PRESET['Chevron — 4 Axis'] || {}).recs || [], L = [0, 1, 2].map(function (i) { var r = ex[i]; return r && r.stripes ? { trim: r.trim, stripes: r.stripes, inner: r.inner, chevTo: r.chevTo, exact: true, ax: 4 } : BASE_PRESETS[i]; }).concat([BASE_PRESETS[3], BASE_PRESETS[4]]);
@@ -777,7 +777,7 @@
   var TRIM_PRESETS = [null];   // Preset 1-3 = the Trim Band examples 1-3 (Preset 1 is filled in where it's used), then Presets 4-5
   (function () { var R = (PRESET['Trim Band'] || {}).recs || []; [1, 2].forEach(function (i) { if (R[i] && R[i].tb) TRIM_PRESETS.push(R[i].tb); }); })();
   TRIM_PRESETS.push(
-    { c: '862 Twilight Black', bands: [['9520 Metallic Green', 4], ['807 White', 2], ['513 Guacamole', 3], ['', 3, 'fade']], ends: [['9520 Metallic Green', 4]] },
+    { c: '862 Black', bands: [['9520 Metallic Green', 4], ['807 White', 2], ['513 Guacamole', 3], ['', 3, 'fade']], ends: [['9520 Metallic Green', 4]] },
     { c: '484 Deep Sea', bands: [['807 White', 2], ['484 Deep Sea', 3], ['807 White', 1, 'mid', '484 Deep Sea'], ['9860 Metallic Silver', 2]], ends: [['807 White', 3]] });
   function trimPresetBox(dd, fw, after) {
     var tw = dd.getElementById('trimWrap'); if (!tw || dd.getElementById('sfswTrimPreset')) return;
@@ -789,7 +789,7 @@
     trimPresetSync(dd, fw);
     sel.addEventListener('change', function () { try {
       var c = fw.wlCapture(), hx = threadHex(fw), mm = (c.trims && c.trims.mm) || 20, ex = ((PRESET['Trim Band'] || {}).recs || [])[0];
-      if (sel.value === 'scratch') c.trims = { on: true, mm: mm, c: (c.trims && c.trims.c) || hx('862 Twilight Black'), bands: [], ends: [] };
+      if (sel.value === 'scratch') c.trims = { on: true, mm: mm, c: (c.trims && c.trims.c) || hx('862 Black'), bands: [], ends: [] };
       else { var T = +sel.value === 0 && ex ? ex.tb : TRIM_PRESETS[+sel.value]; c.trims = tbOf({ mm: S.wrapId === 'trim-band' ? 50.8 : mm, c: T.c, bands: T.bands, ends: T.ends, noFill: T.noFill }, hx); }
       fw.wlApply(c); if (after) after(); } catch (e) {} });
   }
@@ -973,7 +973,8 @@
   function tbOf(T, hx) { var it = function (x) { var o = { c: x[0] ? hx(x[0]) : '', t: x[1] }; if (x[2] === 'fade') o.fade = true; else if (x[2]) { o.saw = x[2]; o.c2 = hx(x[3]); } return o; };
     return { on: true, noFill: !!T.noFill, mm: T.mm, c: hx(T.c), bands: T.bands.map(it), ends: (T.ends || []).map(it) }; }
   function threadHex(w) { var m = {}; try { w.WL_THREADS.BRANDS.sfsw.groups.forEach(function (g) { g[1].forEach(function (x) { m[x[0]] = x[1]; }); }); } catch (e) {}
-    return function (n) { return m[n] || '#1e1617'; }; }
+    return function (n) { return m[n] || GONE[n] || '#1e1617'; }; }
+  var GONE = { '740 Copper': '#cb4e22', '813 Silver Shiner': '#dfdcdd' };   // removed colors an example still uses, until Brett picks their replacements
   var recPick = {}, dzHold = 0;   // which photo design each wrap is on
   function recOf(pr, id) { var r = pr && pr.recs ? pr.recs[Math.min(recPick[id] || 0, pr.recs.length - 1)] : null; return r && (r.stripes || r.pat) ? r : null; }   // a photo-only example has no recipe
   function recInner(R, hx) { var I = R && R.inner; if (!I) return null;   // an example's pattern between
@@ -1110,7 +1111,7 @@
   // Trim bands: on/off, width and thread color, written straight into the wrap design
   var tbEl;   // (set by tbBox while the steps are built, earlier in the file)
   function tbBox() { tbEl = el('div', 'cfg-section rb-tb'); tbEl.innerHTML = '<div class="rb-tb-body"></div>'; setTimeout(renderTB, 0); return tbEl; }
-  function abTrim() { return S.abTrim || (S.abTrim = { on: true, mm: 10, c: '#1e1617' }); }   // abalone's own trim bands (default 862 Twilight Black)
+  function abTrim() { return S.abTrim || (S.abTrim = { on: true, mm: 10, c: '#1e1617' }); }   // abalone's own trim bands (default 862 Black)
   function tbCap() { if (S.wrapId === 'abalone') return { trims: abTrim() }; var w = dw(); try { return w && w.wlCapture ? w.wlCapture() : null; } catch (e) { return null; } }
   function tbSet(fn) { if (S.wrapId === 'abalone') { fn(abTrim()); updateAll(); setTimeout(renderTB, 60); return; } var w = dw(), c = tbCap(); if (!c || !c.trims) return; fn(c.trims); try { w.wlApply(c); } catch (e) {} clearTimeout(readT); readT = setTimeout(readDesign, 200); setTimeout(renderTB, 260); }
   // the Trim Bands tab: the designer's own trim band settings, in a second designer that shows only them;
